@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">MyStyleBox</string>
+    <string name="clothesname"> Добавление вещи </string>
+    <string name="name"> Название </string>
+    <string name="things"> Вещи </string>
+    <string name="category"> Категория </string>
+    <string name="count"> Стоимость </string>
+    <string name="brend"> Бренд </string>
+    <string name="seasons"> Сезоны </string>
+    <string name="status"> Статус </string>
+    <string name="size"> Размер </string>
+    <string name="tegi"> Теги </string>
+    <string name="colors"> Цвета </string>
+    <string name="notes"> Заметки </string>
+    <string name="hint"> Введите текст </string>
+</resources>

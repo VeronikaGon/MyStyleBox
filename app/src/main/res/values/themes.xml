@@ -1,0 +1,18 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.MyStyleBox" parent="Theme.Material3.DayNight.NoActionBar">
+
+    </style>
+
+    <style name="Theme.MyStyleBox" parent="Base.Theme.MyStyleBox" >
+
+    </style>
+    <style name="MyRadioButton" parent="Theme.AppCompat.Light">
+        <item name="colorControlActivated">@color/pink</item>
+    </style>
+
+    <style name="NoRippleNavigation" parent="Widget.MaterialComponents.BottomNavigationView">
+
+    </style>
+
+</resources>
