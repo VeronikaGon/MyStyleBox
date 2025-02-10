@@ -77,27 +77,16 @@ class MainActivity : AppCompatActivity() {
 
         // Создаём адаптер для диалога, который будет использовать layout dialog_item.xml
         val adapter = object : BaseAdapter() {
-            override fun getCount(): Int {
-                return options.size
-            }
-
-            override fun getItem(position: Int): Any {
-                return options[position]
-            }
-
-            override fun getItemId(position: Int): Long {
-                return position.toLong()
-            }
-
+            override fun getCount() = options.size
+            override fun getItem(position: Int) = options[position]
+            override fun getItemId(position: Int) = position.toLong()
             override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-                val view: View = convertView ?: LayoutInflater.from(this@MainActivity).inflate(R.layout.dialog_item, parent, false)
-
-                val icon = view.findViewById<ImageView>(R.id.icon)
-                val text = view.findViewById<TextView>(R.id.text)
-
-                icon.setImageResource(icons[position])
-                text.text = options[position]
-
+                val view = convertView ?: LayoutInflater.from(this@MainActivity)
+                    .inflate(R.layout.dialog_item, parent, false)
+                val iconView = view.findViewById<ImageView>(R.id.icon)
+                val textView = view.findViewById<TextView>(R.id.text)
+                iconView.setImageResource(icons[position])
+                textView.text = options[position]
                 return view
             }
         }
@@ -151,11 +140,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
     private val cameraLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val selectedImageUri: Uri? = result.data?.data
-                startClothesActivity(selectedImageUri)
-            }
+        if (result.resultCode == Activity.RESULT_OK) {
+            startClothesActivity(photoUri)
         }
+    }
+
     private val fileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val selectedImageUri: Uri? = result.data?.data
