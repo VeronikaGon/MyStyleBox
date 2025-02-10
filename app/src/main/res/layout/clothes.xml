@@ -25,8 +25,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <ImageView
-        android:id="@+id/imageView"
+        <ImageView
+        android:id="@+id/clothingImageView"
         android:layout_width="239dp"
         android:layout_height="199dp"
         android:layout_marginTop="8dp"
@@ -48,7 +48,7 @@
         android:padding="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView">
+        app:layout_constraintTop_toBottomOf="@+id/clothingImageView">
 
         <TextView
             android:id="@+id/textView3"
@@ -550,5 +550,19 @@
                 android:textSize="18sp" />
         </LinearLayout>
 
+        <Button
+            android:id="@+id/ButtonSAVE"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawableRight="@drawable/save"
+            android:text="@string/add"
+            android:backgroundTint="#E8A598"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/llNotes" />
 </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

@@ -15,4 +15,8 @@
 
     </style>
 
+    <style name="AppTheme" parent="Base.Theme.MyStyleBox">
+
+    </style>
+
 </resources>
