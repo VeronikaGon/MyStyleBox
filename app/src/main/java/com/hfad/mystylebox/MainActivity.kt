@@ -29,7 +29,7 @@ import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var db: AppDatabase // lateinit, чтобы избежать начальной инициализации
+    private lateinit var db: AppDatabase
 
     private lateinit var imageView: ImageView
     private var photoUri: Uri? = null
