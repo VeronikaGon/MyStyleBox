@@ -41,35 +41,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var adapter: ClothingAdapter
     private var photoUri: Uri? = null
 
-    private val galleryLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val selectedImageUri: Uri? = result.data?.data
-            startClothesActivity(selectedImageUri)
-        }
-    }
-    private val cameraLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val selectedImageUri: Uri? = result.data?.data
-                startClothesActivity(selectedImageUri)
-            }
-        }
-    private val fileLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val selectedImageUri: Uri? = result.data?.data
-                startClothesActivity(selectedImageUri)
-            }
-        }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         recyclerView = findViewById(R.id.recyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
-
 
         val selectPhotoButton = findViewById<Button>(R.id.selectPhotoButton)
         selectPhotoButton.setOnClickListener {
@@ -95,32 +72,40 @@ class MainActivity : AppCompatActivity() {
 
     // Диалог выбора действия с использованием dialog_item.xml для отображения пунктов
     private fun showImagePickerDialog() {
-        // Задаём варианты и соответствующие иконки (укажите свои drawable)
         val options = arrayOf("Выбрать из галереи", "Сфотографировать", "Выбрать из файлов")
         val icons = arrayOf(R.drawable.gallery, R.drawable.camera, R.drawable.file)
 
         // Создаём адаптер для диалога, который будет использовать layout dialog_item.xml
         val adapter = object : BaseAdapter() {
-            override fun getCount() = options.size
-            override fun getItem(position: Int) = options[position]
-            override fun getItemId(position: Int) = position.toLong()
+            override fun getCount(): Int {
+                return options.size
+            }
+
+            override fun getItem(position: Int): Any {
+                return options[position]
+            }
+
+            override fun getItemId(position: Int): Long {
+                return position.toLong()
+            }
+
             override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-                val view = convertView ?: LayoutInflater.from(this@MainActivity)
-                    .inflate(R.layout.dialog_item, parent, false)
-                val iconView = view.findViewById<ImageView>(R.id.icon)
-                val textView = view.findViewById<TextView>(R.id.text)
-                iconView.setImageResource(icons[position])
-                textView.text = options[position]
+                val view: View = convertView ?: LayoutInflater.from(this@MainActivity).inflate(R.layout.dialog_item, parent, false)
+
+                val icon = view.findViewById<ImageView>(R.id.icon)
+                val text = view.findViewById<TextView>(R.id.text)
+
+                icon.setImageResource(icons[position])
+                text.text = options[position]
+
                 return view
             }
         }
-
-        // Построение диалога с адаптером
-        AlertDialog.Builder(this)
+        android.app.AlertDialog.Builder(this)
             .setTitle("Выберите действие")
-            .setAdapter(adapter) { dialog, which ->
+            .setAdapter(adapter) { _, which ->
                 when (which) {
-                    0 -> openGallery()   // Выбран вариант "Выбрать из галереи"
+                    0 -> openGallery()
                     1 -> openCamera()
                     2 -> openFiles()
                 }
@@ -129,34 +114,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openGallery() {
-        if (!checkStoragePermission()) {
-            // Запрашиваем разрешение, если его нет
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE),
-                READ_STORAGE_PERMISSION_CODE
-            )
-        } else {
-            // Если разрешение предоставлено, открываем галерею
-            val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-            galleryLauncher.launch(intent)
-        }
-    }
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == READ_STORAGE_PERMISSION_CODE) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Разрешение получено – запускаем галерею
-                openGallery()
-            } else {
-                // Если разрешение не предоставлено, можно показать сообщение
-                Toast.makeText(this, "Разрешение на чтение хранилища необходимо", Toast.LENGTH_SHORT).show()
-            }
-        }
+        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+        galleryLauncher.launch(intent)
     }
 
     private fun openCamera() {
@@ -184,18 +143,30 @@ class MainActivity : AppCompatActivity() {
         val storageDir = getExternalFilesDir(null)
         return File.createTempFile("JPEG_${timestamp}_", ".jpg", storageDir)
     }
+
+    private val galleryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val selectedImageUri: Uri? = result.data?.data
+            startClothesActivity(selectedImageUri)
+        }
+    }
+    private val cameraLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val selectedImageUri: Uri? = result.data?.data
+                startClothesActivity(selectedImageUri)
+            }
+        }
+    private val fileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val selectedImageUri: Uri? = result.data?.data
+                startClothesActivity(selectedImageUri)
+            }
+        }
+
     // Запускаем ClothesActivity и передаём выбранный URI изображения в виде строки
     private fun startClothesActivity(imageUri: Uri?) {
         val intent = Intent(this, ClothesActivity::class.java)
         intent.putExtra("image_path", imageUri.toString())
         startActivity(intent)
     }
-    //проверка предоставлено ли разрешение
-    private fun checkStoragePermission(): Boolean {
-        return ContextCompat.checkSelfPermission(
-            this,
-            android.Manifest.permission.READ_EXTERNAL_STORAGE
-        ) == PackageManager.PERMISSION_GRANTED
-    }
-
 }
