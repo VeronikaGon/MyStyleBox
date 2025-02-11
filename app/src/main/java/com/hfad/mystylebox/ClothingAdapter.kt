@@ -25,6 +25,12 @@ class ClothingAdapter(private val items: List<ClothingItem>) :
 
     override fun onBindViewHolder(holder: ClothingViewHolder, position: Int) {
         val item = items[position]
+        val maxChars = 15
+        val displayName = if (item.name.length > maxChars) {
+            item.name.take(maxChars) + "..."
+        } else {
+            item.name
+        }
         holder.nameText.text = item.name
         Glide.with(holder.imageView.context).load(item.imagePath).into(holder.imageView)
     }

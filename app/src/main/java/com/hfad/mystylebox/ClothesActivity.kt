@@ -61,19 +61,13 @@ class ClothesActivity : AppCompatActivity() {
             Toast.makeText(this, "Введите название и выберите фото", Toast.LENGTH_SHORT).show()
             return
         }
-
-        // Здесь можно задать дополнительные данные, например, категорию, пол и сезоны.
-        // Для примера установим статичные значения.
         val category = "Одежда"
         val gender = "Универсально"
         val seasons = listOf<String>() // или можно собрать выбранные сезоны
-
         // Создаем объект вещи (убедитесь, что конструктор в ClothingItem соответствует передаваемым параметрам)
         val item = ClothingItem(name, category, gender, imagePath!!, seasons)
-
         // Сохраняем вещь в базу данных
         db.clothingItemDao().insert(item)
-
         Toast.makeText(this, "Вещь сохранена", Toast.LENGTH_SHORT).show()
         // Возвращаемся в MainActivity (или закрываем текущую активность)
         finish()
