@@ -91,15 +91,11 @@
             android:textColor="#000000"
             android:textSize="22sp" />
 
-        <TextView
-            android:id="@+id/textView5"
-            android:padding="5dp"
-            android:paddingStart="10dp"
-            android:textSize="18sp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/edittext_background"
-            android:textColor="#000000" />
+            <Spinner
+                android:id="@+id/categorySpinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/edittext_background" />
         </LinearLayout>
 
         <LinearLayout
@@ -290,8 +286,8 @@
                     android:layout_height="wrap_content"
                     android:id="@+id/radioGroupStatus">
                     <RadioButton
-                        android:theme="@style/MyRadioButton"
                         android:id="@+id/radio_activeuse"
+                        android:theme="@style/MyRadioButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="@drawable/radio_button_background"
@@ -350,6 +346,7 @@
                 android:textSize="22sp" />
 
             <com.google.android.flexbox.FlexboxLayout
+               android:id="@+id/flexboxLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/edittext_background"
