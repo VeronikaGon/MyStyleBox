@@ -13,4 +13,10 @@ public interface SubcategoryDao {
 
     @Query("SELECT * FROM subcategories WHERE id = :id LIMIT 1")
     Subcategory getSubcategoryById(int id);
+
+    @Query("SELECT * FROM subcategories WHERE category_id = :categoryId")
+    List<Subcategory> getSubcategoriesForCategory(int categoryId);
+
+    @Query("SELECT * FROM subcategories")
+    List<Subcategory> getAllSubcategories();
 }

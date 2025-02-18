@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FCD5CE">
+
+     <com.google.android.flexbox.FlexboxLayout
+         xmlns:android="http://schemas.android.com/apk/res/android"
+         xmlns:app="http://schemas.android.com/apk/res-auto"
+         android:id="@+id/containerSubcategories"
+         android:layout_width="match_parent"
+         android:layout_height="wrap_content"
+         android:padding="16dp"
+         app:flexWrap="wrap"
+         app:justifyContent="flex_start"
+         app:alignItems="center">
+     </com.google.android.flexbox.FlexboxLayout>
+
+
+</ScrollView>

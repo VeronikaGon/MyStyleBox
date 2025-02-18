@@ -74,7 +74,6 @@ class MainActivity : AppCompatActivity() {
         val options = arrayOf("Выбрать из галереи", "Сфотографировать", "Выбрать из файлов")
         val icons = arrayOf(R.drawable.gallery, R.drawable.camera, R.drawable.file)
 
-        // Создаём адаптер для диалога, который будет использовать layout dialog_item.xml
         val adapter = object : BaseAdapter() {
             override fun getCount() = options.size
             override fun getItem(position: Int) = options[position]
@@ -132,30 +131,27 @@ class MainActivity : AppCompatActivity() {
         val storageDir = getExternalFilesDir(null)
         return File.createTempFile("JPEG_${timestamp}_", ".jpg", storageDir)
     }
-
     private val galleryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             val selectedImageUri: Uri? = result.data?.data
-            startClothesActivity(selectedImageUri)
+            startCategorySelectionActivity(selectedImageUri)
         }
     }
     private val cameraLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            startClothesActivity(photoUri)
+            startCategorySelectionActivity(photoUri)
         }
     }
-
     private val fileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val selectedImageUri: Uri? = result.data?.data
-                startClothesActivity(selectedImageUri)
+                startCategorySelectionActivity(selectedImageUri)
             }
         }
-
-    // Запускаем ClothesActivity и передаём выбранный URI изображения в виде строки
-    private fun startClothesActivity(imageUri: Uri?) {
-        val intent = Intent(this, ClothesActivity::class.java)
-        intent.putExtra("image_path", imageUri.toString())
+    private fun startCategorySelectionActivity(imageUri: Uri?) {
+        if (imageUri == null) return
+        val intent = Intent(this, CategorySelectionActivity::class.java)
+        intent.putExtra("image_uri", imageUri.toString())  // Передаём строковый путь к изображению
         startActivity(intent)
     }
 }

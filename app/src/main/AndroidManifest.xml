@@ -31,6 +31,8 @@
         </provider>
         <activity android:name=".ClothesActivity"
             android:screenOrientation="portrait"/>
+        <activity android:name=".CategorySelectionActivity"
+            android:screenOrientation="portrait"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"

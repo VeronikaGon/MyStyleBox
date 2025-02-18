@@ -49,19 +49,49 @@ public abstract class AppDatabase extends RoomDatabase {
                 CategoryDao categoryDao = database.categoryDao();
                 SubcategoryDao subcategoryDao = database.subcategoryDao();
 
-                // Вставляем категории
-                Category topCategory = new Category("Верх");
-                Category bottomCategory = new Category("Низ");
-                categoryDao.insert(topCategory);
-                categoryDao.insert(bottomCategory);
+                // Вставляем категории и сохраняем их ID
+                long topId = categoryDao.insert(new Category("Верх"));
+                long bottomId = categoryDao.insert(new Category("Низ"));
+                long dressId = categoryDao.insert(new Category("Платья"));
+                long shoesId = categoryDao.insert(new Category("Обувь"));
+                long accessoriesId = categoryDao.insert(new Category("Аксессуары"));
+                long costumesId = categoryDao.insert(new Category("Костюмы"));
+                long overallsId = categoryDao.insert(new Category("Комбинезоны"));
+                long bagsId = categoryDao.insert(new Category("Сумки"));
+                long outerwearId = categoryDao.insert(new Category("Верхняя одежда"));
+                long headwearId = categoryDao.insert(new Category("Головные уборы"));
+                long sportswearId = categoryDao.insert(new Category("Спортивная одежда"));
+                long beachwearId = categoryDao.insert(new Category("Одежда для пляжа"));
 
-                // Вставляем подкатегории
-                subcategoryDao.insert(new Subcategory(1, "Футболки"));
-                subcategoryDao.insert(new Subcategory(1, "Блузки"));
-                subcategoryDao.insert(new Subcategory(1, "Рубашки"));
-                subcategoryDao.insert(new Subcategory(2, "Брюки"));
-                subcategoryDao.insert(new Subcategory(2, "Юбки"));
-                subcategoryDao.insert(new Subcategory(2, "Шорты"));
+
+                // Вставляем подкатегории, используя правильные ID категорий
+                subcategoryDao.insert(new Subcategory((int)topId, "Футболка"));
+                subcategoryDao.insert(new Subcategory((int)topId, "Блузка"));
+                subcategoryDao.insert(new Subcategory((int)topId, "Рубашка"));
+                subcategoryDao.insert(new Subcategory((int)topId, "Топ"));
+                subcategoryDao.insert(new Subcategory((int)topId, "Свитер"));
+                subcategoryDao.insert(new Subcategory((int)topId, "Джемпер"));
+                subcategoryDao.insert(new Subcategory((int)topId, "Толстовка"));
+                subcategoryDao.insert(new Subcategory((int)topId, "Худи"));
+
+                subcategoryDao.insert(new Subcategory((int)bottomId, "Брюки"));
+                subcategoryDao.insert(new Subcategory((int)bottomId, "Джинсы"));
+                subcategoryDao.insert(new Subcategory((int)bottomId, "Леггинсы"));
+                subcategoryDao.insert(new Subcategory((int)bottomId, "Юбка"));
+                subcategoryDao.insert(new Subcategory((int)bottomId, "Шорты"));
+                subcategoryDao.insert(new Subcategory((int)bottomId, "Классические штаны"));
+                subcategoryDao.insert(new Subcategory((int)bottomId, "Спортивные штаны"));
+
+                subcategoryDao.insert(new Subcategory((int)dressId, "Повседневное платье"));
+                subcategoryDao.insert(new Subcategory((int)dressId, "Вечернее платье"));
+                subcategoryDao.insert(new Subcategory((int)dressId, "Коктейльное платье"));
+                subcategoryDao.insert(new Subcategory((int)dressId, "Летнее платье"));
+                subcategoryDao.insert(new Subcategory((int)dressId, "Трикотажное платье"));
+
+                subcategoryDao.insert(new Subcategory((int)shoesId, "Кроссовки"));
+                subcategoryDao.insert(new Subcategory((int)shoesId, "Туфли"));
+                subcategoryDao.insert(new Subcategory((int)accessoriesId, "Очки"));
+                subcategoryDao.insert(new Subcategory((int)accessoriesId, "Перчатки"));
             });
         }
     };

@@ -32,6 +32,7 @@ class ClothesActivity : AppCompatActivity() {
     private lateinit var categorySpinner: Spinner
     private lateinit var saveButton: Button
     private var imagePath: String? = null
+    private var subcategory: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,7 +45,6 @@ class ClothesActivity : AppCompatActivity() {
         categorySpinner = findViewById(R.id.categorySpinner)
         saveButton = findViewById(R.id.ButtonSAVE)
 
-
         db = Room.databaseBuilder(
             applicationContext,
             AppDatabase::class.java,
@@ -52,7 +52,7 @@ class ClothesActivity : AppCompatActivity() {
         )
             .allowMainThreadQueries()
             .build()
-
+        subcategory = intent.getStringExtra("subcategory")
         imagePath = intent.getStringExtra("image_path")
         if (!imagePath.isNullOrEmpty()) {
             // Отображаем изображение в ImageView
