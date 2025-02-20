@@ -1,5 +1,6 @@
 package com.hfad.mystylebox
 
+import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -13,7 +14,10 @@ import android.widget.ImageView
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.Spinner
+import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.room.Room
 import com.google.android.flexbox.FlexboxLayout
@@ -29,10 +33,12 @@ class ClothesActivity : AppCompatActivity() {
     private lateinit var clothingBrendEditText: EditText
     private lateinit var clothingCostEditText: EditText
     private lateinit var clothingNotesEditText: EditText
-    private lateinit var categorySpinner: Spinner
     private lateinit var saveButton: Button
+    private lateinit var categoryField: TextView
     private var imagePath: String? = null
     private var subcategory: String? = null
+    private var selectedSubcategoryId: Int = -1
+    private lateinit var categoryResultLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,9 +48,24 @@ class ClothesActivity : AppCompatActivity() {
         clothingBrendEditText = findViewById(R.id.enterBrend)
         clothingCostEditText = findViewById(R.id.enterStoimost)
         clothingNotesEditText = findViewById(R.id.enterNotes)
-        categorySpinner = findViewById(R.id.categorySpinner)
+        clothingNameEditText = findViewById(R.id.enterName)
         saveButton = findViewById(R.id.ButtonSAVE)
+        categoryField = findViewById(R.id.categoryField)
 
+        categoryResultLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val subcategory = result.data?.getStringExtra("subcategory")
+                selectedSubcategoryId = result.data?.getIntExtra("selected_subcategory_id", -1) ?: -1
+                categoryField.text = subcategory ?: "Не выбрано"
+            }
+        }
+        categoryField.setOnClickListener {
+            val intent = Intent(this, CategorySelectionActivity::class.java)
+            intent.putExtra("image_uri", imagePath.toString())
+            categoryResultLauncher.launch(intent)
+        }
         db = Room.databaseBuilder(
             applicationContext,
             AppDatabase::class.java,
@@ -52,11 +73,27 @@ class ClothesActivity : AppCompatActivity() {
         )
             .allowMainThreadQueries()
             .build()
+
         subcategory = intent.getStringExtra("subcategory")
         imagePath = intent.getStringExtra("image_path")
         if (!imagePath.isNullOrEmpty()) {
-            // Отображаем изображение в ImageView
             clothingImageView.setImageURI(Uri.parse(imagePath))
+        }
+        if (subcategory != null) {
+            categoryField.text = subcategory
+        }
+
+        val flexboxLayout = findViewById<FlexboxLayout>(R.id.flexboxLayout)
+        for (i in 0 until flexboxLayout.childCount) {
+            val child = flexboxLayout.getChildAt(i)
+            if (child is RadioButton) {
+                child.setOnClickListener {
+                    for (j in 0 until flexboxLayout.childCount) {
+                        (flexboxLayout.getChildAt(j) as? RadioButton)?.isChecked = false
+                    }
+                    child.isChecked = true
+                }
+            }
         }
 
         saveButton.setOnClickListener {
@@ -91,22 +128,20 @@ class ClothesActivity : AppCompatActivity() {
                 Toast.makeText(this, "Выберите размер", Toast.LENGTH_SHORT).show()
                 return
             }
-
-        // Получаем DAO для Subcategory
-        val subcategoryDao = db.subcategoryDao()
-
-// Проверяем, существует ли подкатегория с id = 1
-        val subcategory = subcategoryDao.getSubcategoryById(1)
-
-// Если подкатегория не существует, создаем её
-        if (subcategory == null) {
-            val newSubcategory = Subcategory(1, "Футболки")
-            subcategoryDao.insert(newSubcategory)
+        val genderRadioGroup = findViewById<RadioGroup>(R.id.radioGroupGender)
+        val selectedGenderId = genderRadioGroup.checkedRadioButtonId
+        val gender = if (selectedGenderId != -1) {
+            findViewById<RadioButton>(selectedGenderId).text.toString()
+        } else {
+            "Универсально"
         }
-        val subcategoryId = 1
-        val gender = "Универсально"
+        if (selectedSubcategoryId == -1) {
+            Toast.makeText(this, "Выберите подкатегорию", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         val seasons = listOf<String>()
-        val item = ClothingItem(name, subcategoryId, brend, gender, imagePath!!, seasons,cost,status, size,notes)
+        val item = ClothingItem(name, selectedSubcategoryId, brend, gender, imagePath!!, seasons,cost,status, size,notes)
 
         db.clothingItemDao().insert(item)
         Toast.makeText(this, "Вещь сохранена", Toast.LENGTH_SHORT).show()

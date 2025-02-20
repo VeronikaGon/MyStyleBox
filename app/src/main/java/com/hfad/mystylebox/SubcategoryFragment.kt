@@ -53,7 +53,7 @@ class SubcategoryFragment : Fragment() {
             button.text = subcategory.name
             button.setBackgroundResource(R.drawable.checkbox_background)
 
-            button.setPadding(5, 2, 5, 2)
+            button.setPadding(15, 2, 15, 2)
             val layoutParams = FlexboxLayout.LayoutParams(
                 FlexboxLayout.LayoutParams.WRAP_CONTENT,
                 FlexboxLayout.LayoutParams.WRAP_CONTENT
@@ -61,7 +61,7 @@ class SubcategoryFragment : Fragment() {
             layoutParams.setMargins(8, 8, 8, 8)
             button.layoutParams = layoutParams
             button.setOnClickListener {
-                (activity as? CategorySelectionActivity)?.onSubcategorySelected(subcategory.name)
+                (activity as? CategorySelectionActivity)?.onSubcategorySelected(subcategory.name,subcategory.id)
             }
             containerLayout.addView(button)
         }

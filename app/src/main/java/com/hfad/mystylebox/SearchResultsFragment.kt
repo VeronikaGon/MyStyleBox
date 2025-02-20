@@ -48,7 +48,8 @@ class SearchResultsFragment : Fragment() {
         layoutParams.setMargins(8, 8, 8, 8)
         button.layoutParams = layoutParams
         button.setOnClickListener {
-            (activity as? CategorySelectionActivity)?.onSubcategorySelected(subcategory.name)
+            (activity as? CategorySelectionActivity)?.onSubcategorySelected(    subcategory.name,
+                subcategory.id)
         }
         return button
     }

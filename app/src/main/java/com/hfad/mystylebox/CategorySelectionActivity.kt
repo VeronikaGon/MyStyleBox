@@ -1,10 +1,12 @@
 package com.hfad.mystylebox
 
+import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -16,6 +18,8 @@ import com.hfad.mystylebox.database.AppDatabase
 import com.hfad.mystylebox.database.Category
 import androidx.appcompat.widget.SearchView
 import com.hfad.mystylebox.database.Subcategory
+import com.hfad.mystylebox.R
+
 
 
 class CategorySelectionActivity : AppCompatActivity() {
@@ -65,23 +69,30 @@ class CategorySelectionActivity : AppCompatActivity() {
         tabLayout.getTabAt(0)?.view?.setBackgroundColor(Color.parseColor("#FCD5CE"))
         tabLayout.addOnTabSelectedListener(object : OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
-                tab.view.setBackgroundColor(Color.parseColor("#FCD5CE"))
+                updateTabBackgrounds(tabLayout)
             }
             override fun onTabUnselected(tab: TabLayout.Tab?) {
-                tab?.view?.setBackgroundColor(Color.parseColor("#F8EDEB"))
+                updateTabBackgrounds(tabLayout)
             }
             override fun onTabReselected(tab: TabLayout.Tab) {}
         })
     }
-
-    // Метод, который будет вызываться из фрагментов при выборе подкатегории
-    fun onSubcategorySelected(subcategory: String) {
-        val intent = Intent(this, ClothesActivity::class.java)
-        intent.putExtra("subcategory", subcategory)
-        intent.putExtra("image_path", imageUri.toString())
-        startActivity(intent)
+    // Функция для обновления цвета фона вкладок
+    private fun updateTabBackgrounds(tabLayout: TabLayout) {
+        for (i in 0 until tabLayout.tabCount) {
+            val tab = tabLayout.getTabAt(i)
+            if (tab != null) {
+                val tabView = (tabLayout.getChildAt(0) as ViewGroup).getChildAt(i)
+                if (tab.isSelected) {
+                    tabView.setBackgroundColor(Color.parseColor("#FCD5CE"))
+                } else {
+                    tabView.setBackgroundColor(Color.parseColor("#F8EDEB"))
+                }
+            }
+        }
     }
 
+    private var selectedTabIndex: Int = 0
     private fun filterCategories(query: String?) {
         val viewPager = findViewById<ViewPager2>(R.id.viewPager)
         val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
@@ -94,7 +105,11 @@ class CategorySelectionActivity : AppCompatActivity() {
             TabLayoutMediator(tabLayout, viewPager) { tab, position ->
                 tab.text = categories[position].name
             }.attach()
+            // Возвращаемся к ранее выбранной вкладке
+            viewPager.setCurrentItem(selectedTabIndex, false)
         } else {
+            // Сохраняем индекс текущей вкладки перед началом поиска
+            selectedTabIndex = tabLayout.selectedTabPosition
             // Фильтруем подкатегории по запросу
             val allSubcategories = db.subcategoryDao().getAllSubcategories()
             val filteredList = allSubcategories.filter { subcategory ->
@@ -107,6 +122,18 @@ class CategorySelectionActivity : AppCompatActivity() {
             TabLayoutMediator(tabLayout, viewPager) { tab, _ ->
                 tab.text = "Все"
             }.attach()
+            // Устанавливаем активной вкладку "Все"
+            viewPager.setCurrentItem(0, false)
         }
+    }
+    // Метод, который будет вызываться из фрагментов при выборе подкатегории
+    fun onSubcategorySelected(subcategory: String, selectedSubcategoryId: Int) {
+        val resultIntent = Intent().apply {
+            putExtra("subcategory", subcategory)
+            putExtra("selected_subcategory_id", selectedSubcategoryId)
+            putExtra("image_path", imageUri.toString())
+        }
+        setResult(Activity.RESULT_OK, resultIntent)
+        finish()
     }
 }
