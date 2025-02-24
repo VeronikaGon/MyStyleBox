@@ -9,8 +9,15 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.hfad.mystylebox.database.ClothingItem
 
-class ClothingAdapter(private val items: List<ClothingItem>) :
-    RecyclerView.Adapter<ClothingAdapter.ClothingViewHolder>() {
+class ClothingAdapter(
+    private var items: List<ClothingItem>,
+    private val subcategoryToCategoryMap: Map<Int, String>
+) : RecyclerView.Adapter<ClothingAdapter.ClothingViewHolder>() {
+
+    // Сохраняем полный список для возможности сброса фильтра
+    private val allItems: List<ClothingItem> = items.toList()
+
+    var onItemClick: ((ClothingItem) -> Unit)? = null
 
     class ClothingViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val imageView: ImageView = view.findViewById(R.id.itemImage)
@@ -33,7 +40,22 @@ class ClothingAdapter(private val items: List<ClothingItem>) :
         }
         holder.nameText.text = item.name
         Glide.with(holder.imageView.context).load(item.imagePath).into(holder.imageView)
+        holder.itemView.setOnClickListener {
+            onItemClick?.invoke(item)
+        }
     }
 
     override fun getItemCount() = items.size
+
+    // Метод фильтрации по категории
+    fun filterByCategory(category: String) {
+        items = if (category.equals("Все", ignoreCase = true)) {
+            allItems
+        } else {
+            allItems.filter { clothingItem ->
+                subcategoryToCategoryMap[clothingItem.subcategoryId]?.equals(category, ignoreCase = true) ?: false
+            }
+        }
+        notifyDataSetChanged()
+    }
 }

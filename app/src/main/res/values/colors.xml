@@ -5,5 +5,7 @@
     <color name="red">#D1A098</color>
     <color name="green">#83C9BA</color>
     <color name="pink">#FFB5A7</color>
-
+    <color name="backgroundpink">#FCD5CE</color>
+    <color name="lightpink">#F8EDEB</color>
+    <color name="darkpink">#E8A598</color>
 </resources>

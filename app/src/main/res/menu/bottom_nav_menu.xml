@@ -3,17 +3,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     >
 <item
-        android:id="@+id/nav_home"
+        android:id="@+id/homeFragment"
         android:icon="@drawable/home"
         android:title="Главная" />
 
     <item
-        android:id="@+id/nav_clothes"
+        android:id="@+id/clothesFragment"
         android:icon="@drawable/clothes"
         android:title="Вещи" />
 
     <item
-        android:id="@+id/nav_outfits"
+        android:id="@+id/outfitsFragment"
         android:icon="@drawable/outfits"
         android:title="Комплекты" />
 </menu>

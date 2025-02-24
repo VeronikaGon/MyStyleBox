@@ -128,12 +128,12 @@ class CategorySelectionActivity : AppCompatActivity() {
     }
     // Метод, который будет вызываться из фрагментов при выборе подкатегории
     fun onSubcategorySelected(subcategory: String, selectedSubcategoryId: Int) {
-        val resultIntent = Intent().apply {
+        val intent = Intent(this, ClothesActivity::class.java).apply {
             putExtra("subcategory", subcategory)
             putExtra("selected_subcategory_id", selectedSubcategoryId)
             putExtra("image_path", imageUri.toString())
         }
-        setResult(Activity.RESULT_OK, resultIntent)
+        startActivity(intent)
         finish()
     }
 }
