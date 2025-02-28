@@ -23,7 +23,6 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:padding="8dp"
-        android:text="Выбери категорию"
         android:gravity="center"
         android:textColor="#000000"
         android:textSize="28sp"
@@ -48,7 +47,6 @@
         android:layout_marginTop="16dp"
         android:gravity="center"
         android:padding="8dp"
-        android:text="Активное использование"
         android:textColor="#000000"
         android:textSize="22sp"
         android:background="@drawable/checkbox_background"
@@ -76,10 +74,11 @@
 
             <LinearLayout
                 android:id="@+id/llseason"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/linear_background"
                 android:orientation="vertical"
+                android:layout_marginEnd="16dp"
                 android:padding="8dp">
 
                 <TextView
@@ -155,11 +154,11 @@
             </LinearLayout>
             <LinearLayout
             android:id="@+id/llsize"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="wrap_content"
+            android:layout_height="165dp"
             android:background="@drawable/linear_background"
             android:orientation="vertical"
-            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
             android:padding="8dp">
 
             <TextView
@@ -178,18 +177,17 @@
                 android:background="@drawable/edittext_background"
                 android:padding="5dp"
                 android:gravity="center"
-                android:text="L"
                 android:paddingStart="10dp"
                 android:textColor="#000000"
                 android:textSize="40sp" />
         </LinearLayout>
             <LinearLayout
                 android:id="@+id/llstoimost"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_width="wrap_content"
+                android:layout_height="165dp"
                 android:background="@drawable/linear_background"
                 android:orientation="vertical"
-                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
                 android:padding="8dp">
 
                 <TextView
@@ -208,18 +206,17 @@
                     android:background="@drawable/edittext_background"
                     android:padding="5dp"
                     android:gravity="center"
-                    android:text="750 P"
                     android:paddingStart="10dp"
                     android:textColor="#000000"
                     android:textSize="30sp" />
             </LinearLayout>
             <LinearLayout
                 android:id="@+id/llbrend"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_width="wrap_content"
+                android:layout_height="165dp"
                 android:background="@drawable/linear_background"
                 android:orientation="vertical"
-                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
                 android:padding="8dp">
 
                 <TextView
@@ -244,11 +241,11 @@
             </LinearLayout>
             <LinearLayout
                 android:id="@+id/llcategory"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_width="wrap_content"
+                android:layout_height="165dp"
                 android:background="@drawable/linear_background"
                 android:orientation="vertical"
-                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
                 android:padding="8dp">
 
                 <TextView
@@ -269,7 +266,36 @@
                     android:gravity="center"
                     android:paddingStart="10dp"
                     android:textColor="#000000"
-                    android:textSize="30sp" />
+                    android:textSize="22sp" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/llgender"
+                android:layout_width="wrap_content"
+                android:layout_height="165dp"
+                android:background="@drawable/linear_background"
+                android:orientation="vertical"
+                android:layout_marginEnd="16dp"
+                android:padding="8dp">
+
+                <TextView
+                    android:id="@+id/textView5"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/gender"
+                    android:textColor="#000000"
+                    android:textSize="22sp" />
+
+                <TextView
+                    android:id="@+id/textviewgender"
+                    android:layout_width="130dp"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/edittext_background"
+                    android:padding="10dp"
+                    android:gravity="center"
+                    android:paddingStart="10dp"
+                    android:textColor="#000000"
+                    android:textSize="22sp" />
             </LinearLayout>
         </LinearLayout>
     </HorizontalScrollView>

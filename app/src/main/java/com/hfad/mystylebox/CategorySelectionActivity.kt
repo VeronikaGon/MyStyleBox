@@ -1,14 +1,11 @@
 package com.hfad.mystylebox
 
-import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
-import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayout
@@ -17,9 +14,10 @@ import com.google.android.material.tabs.TabLayoutMediator
 import com.hfad.mystylebox.database.AppDatabase
 import com.hfad.mystylebox.database.Category
 import androidx.appcompat.widget.SearchView
-import com.hfad.mystylebox.database.Subcategory
+import androidx.core.content.ContextCompat
 import com.hfad.mystylebox.R
-
+import com.hfad.mystylebox.adapter.CategoryPagerAdapter
+import com.hfad.mystylebox.adapter.SubcategoryPagerAdapter
 
 
 class CategorySelectionActivity : AppCompatActivity() {
@@ -39,6 +37,8 @@ class CategorySelectionActivity : AppCompatActivity() {
         searchView.queryHint = "Поиск по категориям"
         val searchEditText = searchView.findViewById<EditText>(androidx.appcompat.R.id.search_src_text)
         searchEditText.setPadding(16, 16, 16, 16)
+        searchEditText.setTextColor(ContextCompat.getColor(this, R.color.black))
+        searchEditText.setHintTextColor(ContextCompat.getColor(this, R.color.gray))
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 return false

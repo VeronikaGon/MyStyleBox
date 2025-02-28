@@ -5,12 +5,12 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import android.view.View
-import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TextView
@@ -18,15 +18,24 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
 import com.google.android.flexbox.FlexboxLayout
 import com.hfad.mystylebox.database.AppDatabase
 import com.hfad.mystylebox.database.ClothingItem
-import com.hfad.mystylebox.database.Subcategory
+import com.hfad.mystylebox.database.ClothingItemDao
+import com.hfad.mystylebox.database.SubcategoryDao
+import com.hfad.mystylebox.database.Tag
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class ClothesActivity : AppCompatActivity() {
 
     private lateinit var db: AppDatabase
+    private lateinit var clothingItemDao: ClothingItemDao
+    private lateinit var subcategoryDao: SubcategoryDao
+
     private lateinit var clothingImageView: ImageView
     private lateinit var clothingNameEditText: EditText
     private lateinit var clothingBrendEditText: EditText
@@ -34,6 +43,7 @@ class ClothesActivity : AppCompatActivity() {
     private lateinit var clothingNotesEditText: EditText
     private lateinit var saveButton: Button
     private lateinit var categoryField: TextView
+    private lateinit var textviewTitle: TextView
     private lateinit var cbSummer: CheckBox
     private lateinit var cbSpring: CheckBox
     private lateinit var cbWinter: CheckBox
@@ -42,6 +52,7 @@ class ClothesActivity : AppCompatActivity() {
     private var subcategory: String? = null
     private var selectedSubcategoryId: Int = -1
     private lateinit var categoryResultLauncher: ActivityResultLauncher<Intent>
+    private lateinit var tagEditingLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,7 +68,30 @@ class ClothesActivity : AppCompatActivity() {
         cbWinter = findViewById<CheckBox>(R.id.cbWinter)
         cbAutumn = findViewById<CheckBox>(R.id.cbAutumn)
         saveButton = findViewById(R.id.ButtonSAVE)
+        textviewTitle = findViewById(R.id.textviewtitle)
         categoryField = findViewById(R.id.categoryField)
+
+        tagEditingLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                val selectedTags = result.data?.getParcelableArrayListExtra<Tag>("selected_tags")
+                // Отобразите выбранные теги в интерфейсе ClothesActivity
+                // Например, в FlexboxLayout или TextView
+            }
+        }
+        val llTegi = findViewById<LinearLayout>(R.id.llTegi)
+        llTegi.setOnClickListener {
+            val intent = Intent(this, TagEditingActivity::class.java)
+            tagEditingLauncher.launch(intent)
+        }
+        val tagEditButton = findViewById<ImageButton>(R.id.imageButton)
+        tagEditButton.setOnClickListener {
+            val intent = Intent(this, TagEditingActivity::class.java)
+            startActivity(intent)
+        }
+        tagEditButton.setOnClickListener {
+            val intent = Intent(this, TagEditingActivity::class.java)
+            tagEditingLauncher.launch(intent)
+        }
 
         categoryResultLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
@@ -77,14 +111,14 @@ class ClothesActivity : AppCompatActivity() {
         }
         categoryField.setOnClickListener {
             val intent = Intent(this, CategorySelectionActivity::class.java).apply {
-                intent.putExtra("image_uri", imagePath.toString())
-                intent.putExtra("name", clothingNameEditText.text.toString())
-                intent.putExtra("brend", clothingBrendEditText.text.toString())
-                intent.putExtra("cost", clothingCostEditText.text.toString())
-                intent.putExtra("notes", clothingNotesEditText.text.toString())
-                intent.putExtra("size", getSelectedSize())
-                intent.putExtra("status", getSelectedStatus())
-                intent.putExtra("gender", getSelectedGender())
+                putExtra("image_uri", imagePath.toString())
+                putExtra("name", clothingNameEditText.text.toString())
+                putExtra("brend", clothingBrendEditText.text.toString())
+                putExtra("cost", clothingCostEditText.text.toString())
+                putExtra("notes", clothingNotesEditText.text.toString())
+                putExtra("size", getSelectedSize())
+                putExtra("status", getSelectedStatus())
+                putExtra("gender", getSelectedGender())
             }
             categoryResultLauncher.launch(intent)
         }
@@ -95,6 +129,8 @@ class ClothesActivity : AppCompatActivity() {
         )
             .allowMainThreadQueries()
             .build()
+        clothingItemDao = db.clothingItemDao()
+        subcategoryDao = db.subcategoryDao()
 
         subcategory = intent.getStringExtra("subcategory")
         selectedSubcategoryId = intent.getIntExtra("selected_subcategory_id", -1)
@@ -118,8 +154,88 @@ class ClothesActivity : AppCompatActivity() {
                 }
             }
         }
-        saveButton.setOnClickListener {
-            saveClothingItem()
+        // Проверяем, запущена ли активность в режиме редактирования
+        val editingItem = intent.getParcelableExtra<ClothingItem>("clothingItem")
+        imagePath = intent.getStringExtra("image_path")
+        if (!imagePath.isNullOrEmpty()) {
+            clothingImageView.setImageURI(Uri.parse(imagePath))
+        }
+        if (editingItem != null) {
+            populateFields(editingItem)
+            textviewTitle.text = "Редактирование вещи"
+            saveButton.text = "Обновить"
+            saveButton.setOnClickListener { updateClothingItem(editingItem) }
+        } else {
+            saveButton.setOnClickListener { saveClothingItem() }
+        }
+    }
+    //установка значений для редактирования
+    private fun populateFields(item: ClothingItem) {
+        clothingNameEditText.setText(item.name)
+        clothingBrendEditText.setText(item.brend)
+        clothingCostEditText.setText(item.cost.toString())
+        clothingNotesEditText.setText(item.notes)
+        // Установка сезонов
+        cbSummer.isChecked = item.seasons?.contains("Лето") == true
+        cbSpring.isChecked = item.seasons?.contains("Весна") == true
+        cbWinter.isChecked = item.seasons?.contains("Зима") == true
+        cbAutumn.isChecked = item.seasons?.contains("Осень") == true
+        // Установка размера (предполагается, что flexboxLayout присутствует)
+        setSelectedSize(item.size)
+        setSelectedStatus(item.status)
+        setSelectedGender(item.gender)
+        // Установка изображения (если imagePath не передан в Intent, можно использовать значение из объекта)
+        if (imagePath.isNullOrEmpty() && item.imagePath.isNotEmpty()) {
+            imagePath = item.imagePath
+            clothingImageView.setImageURI(Uri.parse(imagePath))
+        }
+
+        // Установка категории – если необходимо, можно загрузить название подкатегории:
+        lifecycleScope.launch {
+            val subcatName = withContext(Dispatchers.IO) {
+                subcategoryDao.getSubcategoryNameById(item.subcategoryId)
+            }
+            categoryField.text = subcatName
+        }
+        selectedSubcategoryId = item.subcategoryId
+    }
+    private fun updateClothingItem(oldItem: ClothingItem) {
+        val name = clothingNameEditText.text.toString().trim()
+        if (name.isEmpty()) {
+            Toast.makeText(this, "Введите название", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val brend = clothingBrendEditText.text.toString().trim()
+        val cost = clothingCostEditText.text.toString().trim().toFloatOrNull() ?: 0.0f
+        val notes = clothingNotesEditText.text.toString().trim()
+        val seasons = mutableListOf<String>()
+        if (cbSummer.isChecked) seasons.add(cbSummer.text.toString())
+        if (cbSpring.isChecked) seasons.add(cbSpring.text.toString())
+        if (cbWinter.isChecked) seasons.add(cbWinter.text.toString())
+        if (cbAutumn.isChecked) seasons.add(cbAutumn.text.toString())
+        val updatedItem = ClothingItem(
+            name,
+            selectedSubcategoryId,
+            brend,
+            getSelectedGender(),
+            imagePath ?: "",
+            seasons,
+            cost,
+            getSelectedStatus(),
+            getSelectedSize(),
+            notes
+        )
+        updatedItem.id = oldItem.id
+        lifecycleScope.launch(Dispatchers.IO) {
+            clothingItemDao.update(updatedItem)
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@ClothesActivity, "Вещь обновлена", Toast.LENGTH_SHORT).show()
+                val resultIntent = Intent().apply {
+                    putExtra("updated_item", updatedItem)
+                }
+                setResult(RESULT_OK, resultIntent)
+                finish()
+            }
         }
     }
     //метод для получения размера вещи

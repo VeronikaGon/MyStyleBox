@@ -1,4 +1,4 @@
-package com.hfad.mystylebox
+package com.hfad.mystylebox.fragment
 
 import android.net.Uri
 import android.os.Bundle
@@ -8,6 +8,8 @@ import android.view.ViewGroup
 import android.widget.Button
 import androidx.fragment.app.Fragment
 import com.google.android.flexbox.FlexboxLayout
+import com.hfad.mystylebox.CategorySelectionActivity
+import com.hfad.mystylebox.R
 import com.hfad.mystylebox.database.Subcategory
 
 class SearchResultsFragment : Fragment() {

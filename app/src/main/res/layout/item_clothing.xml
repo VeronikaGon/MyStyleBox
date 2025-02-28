@@ -7,6 +7,9 @@
     android:layout_height="wrap_content"
     android:padding="8dp"
     android:layout_margin="8dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:longClickable="true"
     android:background="@drawable/item_background">
 
       <ImageView

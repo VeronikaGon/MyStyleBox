@@ -1,4 +1,4 @@
-package com.hfad.mystylebox
+package com.hfad.mystylebox.adapter
 
 import android.view.LayoutInflater
 import android.view.View
@@ -7,21 +7,33 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.hfad.mystylebox.R
 import com.hfad.mystylebox.database.ClothingItem
 
 class ClothingAdapter(
-    private var items: List<ClothingItem>,
+    initialItems: List<ClothingItem>,
     private val subcategoryToCategoryMap: Map<Int, String>
 ) : RecyclerView.Adapter<ClothingAdapter.ClothingViewHolder>() {
 
-    // Сохраняем полный список для возможности сброса фильтра
-    private val allItems: List<ClothingItem> = items.toList()
+    private var items = initialItems.toMutableList()
+    private val allItems = initialItems.toList()
 
     var onItemClick: ((ClothingItem) -> Unit)? = null
+    var onItemLongClick: ((ClothingItem) -> Unit)? = null
 
-    class ClothingViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+    inner class ClothingViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val imageView: ImageView = view.findViewById(R.id.itemImage)
         val nameText: TextView = view.findViewById(R.id.itemName)
+
+        init {
+            itemView.setOnLongClickListener {
+                val pos = adapterPosition
+                if (pos != RecyclerView.NO_POSITION) {
+                    onItemLongClick?.invoke(items[pos])
+                }
+                true
+            }
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ClothingViewHolder {
@@ -45,17 +57,16 @@ class ClothingAdapter(
         }
     }
 
-    override fun getItemCount() = items.size
-
-    // Метод фильтрации по категории
     fun filterByCategory(category: String) {
-        items = if (category.equals("Все", ignoreCase = true)) {
-            allItems
+        items = if (category == "Все") {
+            allItems.toMutableList()
         } else {
-            allItems.filter { clothingItem ->
-                subcategoryToCategoryMap[clothingItem.subcategoryId]?.equals(category, ignoreCase = true) ?: false
-            }
+            allItems.filter { item ->
+                subcategoryToCategoryMap[item.subcategoryId] == category
+            }.toMutableList()
         }
         notifyDataSetChanged()
     }
+
+    override fun getItemCount() = items.size
 }

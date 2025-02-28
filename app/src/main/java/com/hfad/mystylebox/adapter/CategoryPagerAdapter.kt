@@ -1,9 +1,10 @@
-package com.hfad.mystylebox
+package com.hfad.mystylebox.adapter
 
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
+import com.hfad.mystylebox.fragment.SubcategoryFragment
 import com.hfad.mystylebox.database.Category
 
 class CategoryPagerAdapter(

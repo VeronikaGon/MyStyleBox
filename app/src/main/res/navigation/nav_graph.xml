@@ -7,19 +7,19 @@
 
     <fragment
         android:id="@+id/homeFragment"
-        android:name="com.hfad.mystylebox.HomeFragment"
+        android:name="com.hfad.mystylebox.fragment.HomeFragment"
         android:label="Главная"
         tools:layout="@layout/fragment_home"/>
 
     <fragment
         android:id="@+id/clothesFragment"
-        android:name="com.hfad.mystylebox.ClothesFragment"
+        android:name="com.hfad.mystylebox.fragment.ClothesFragment"
         android:label="Вещи"
         tools:layout="@layout/fragment_clothes"/>
 
     <fragment
         android:id="@+id/outfitsFragment"
-        android:name="com.hfad.mystylebox.OutFitsFragment"
+        android:name="com.hfad.mystylebox.fragment.OutFitsFragment"
         android:label="Комплекты"
         tools:layout="@layout/fragment_out_fits"/>
 </navigation>

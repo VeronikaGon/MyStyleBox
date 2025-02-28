@@ -1,6 +1,7 @@
-package com.hfad.mystylebox
+package com.hfad.mystylebox.fragment
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -23,15 +24,14 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import android.Manifest
-import androidx.core.content.ContextCompat
-import android.content.pm.PackageManager
-import android.util.Log
-import android.view.MenuItem
-import android.widget.Toast
-import android.app.AlertDialog
-import android.widget.SearchView
+import com.hfad.mystylebox.database.ClothingItem
 import com.google.android.material.tabs.TabLayout
+import com.hfad.mystylebox.CategorySelectionActivity
+import com.hfad.mystylebox.EditclothesActivity
+import com.hfad.mystylebox.ItemActionsBottomSheet
+import com.hfad.mystylebox.R
+import com.hfad.mystylebox.adapter.ClothingAdapter
+import com.hfad.mystylebox.database.Category
 
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
@@ -70,6 +70,14 @@ class ClothesFragment : Fragment() {
         tabLayout.addTab(tabLayout.newTab().setText("Платья"))
         tabLayout.addTab(tabLayout.newTab().setText("Обувь"))
         tabLayout.addTab(tabLayout.newTab().setText("Аксессуары"))
+        tabLayout.addTab(tabLayout.newTab().setText("Костюмы"))
+        tabLayout.addTab(tabLayout.newTab().setText("Комбинезоны"))
+        tabLayout.addTab(tabLayout.newTab().setText("Сумки"))
+        tabLayout.addTab(tabLayout.newTab().setText("Верхняя одежда"))
+        tabLayout.addTab(tabLayout.newTab().setText("Головные уборы"))
+        tabLayout.addTab(tabLayout.newTab().setText("Спорт"))
+        tabLayout.addTab(tabLayout.newTab().setText("Пляж"))
+        tabLayout.addTab(tabLayout.newTab().setText("Нижнее белье"))
         tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
                 val selectedCategory = tab.text.toString()
@@ -110,28 +118,73 @@ class ClothesFragment : Fragment() {
             2 to "Низ",
             3 to "Платья",
             4 to "Обувь",
-            5 to "Аксессуары"
+            5 to "Аксессуары",
+            6 to "Костюмы",
+            7 to "Комбинезоны",
+            8 to "Сумки",
+            9 to "Верхняя одежда",
+            10 to "Головные уборы",
+            11 to "Спорт",
+            12 to "Пляж",
+            13 to "Нижнее белье"
         )
         // Формируем мапу: для каждой подкатегории определяем название категории через categoryMap
         val subcategoryToCategoryMap = subcategories.associate { it.id to (categoryMap[it.categoryId] ?: "Неизвестно") }
 
-        val adapter = ClothingAdapter(loadedItems, subcategoryToCategoryMap)
-        recyclerView.adapter = adapter
-
-        adapter.onItemClick = { clothingItem ->
-            val intent = Intent(requireContext(), EditclothesActivity::class.java)
-            intent.putExtra("image_uri", clothingItem.imagePath)
-            intent.putExtra("clothing_item", clothingItem)
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            startActivity(intent)
+        val adapter = ClothingAdapter(loadedItems, subcategoryToCategoryMap).apply {
+            onItemClick = { item ->
+                val intent = Intent(requireContext(), EditclothesActivity::class.java).apply {
+                    putExtra("clothing_item", item)
+                    putExtra("image_uri", item.imagePath)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                startActivity(intent)
+            }
+            onItemLongClick = { clothingItem ->
+                val bottomSheet = ItemActionsBottomSheet.newInstance(
+                    clothingItem.name,
+                    clothingItem.imagePath
+                )
+                bottomSheet.show(parentFragmentManager, bottomSheet.tag)
+                bottomSheet.onDeleteClicked = {
+                        AlertDialog.Builder(requireContext())
+                            .setTitle("Удалить ''${clothingItem.name}''")
+                            .setPositiveButton("Удалить") { _, _ ->
+                                deleteItem(clothingItem)
+                            }
+                            .setNegativeButton("Отмена", null)
+                            .show()
+                    }
+                    bottomSheet.onEditClicked = {
+                        val intent = Intent(requireContext(), EditclothesActivity::class.java).apply {
+                            putExtra("clothing_item", clothingItem)
+                            putExtra("image_uri", clothingItem.imagePath)
+                        }
+                        startActivity(intent)
+                    }
+                }
         }
+
+        recyclerView.adapter = adapter
     }
+    private fun deleteItem(item: ClothingItem) {
+        val db = Room.databaseBuilder(
+            requireContext(),
+            AppDatabase::class.java,
+            "wardrobe_db"
+        )
+            .allowMainThreadQueries()
+            .build()
+
+        db.clothingItemDao().delete(item)
+        loadClothingItems()
+    }
+
     // Метод, который обновляет RecyclerView
     override fun onResume() {
         super.onResume()
         loadClothingItems()
     }
-    // Диалог выбора действия с использованием dialog_item.xml для отображения пунктов
     private fun showImagePickerDialog() {
         val options = arrayOf("Выбрать из галереи", "Сфотографировать", "Выбрать из файлов")
         val icons = arrayOf(R.drawable.gallery, R.drawable.camera, R.drawable.file)
