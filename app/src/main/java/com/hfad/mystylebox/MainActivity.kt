@@ -3,6 +3,7 @@ package com.hfad.mystylebox
 import android.content.Context
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
@@ -18,17 +19,15 @@ class MainActivity : AppCompatActivity() {
     private lateinit var database: AppDatabase
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        installSplashScreen()
         setContentView(R.layout.activity_main)
         database = AppDatabase.getInstance(this)
-
-        // Запускаем проверку предзаполнения базы в отдельном потоке
         Thread {
             val categories = database.categoryDao().getAllCategories()
             if (categories.isEmpty()) {
                 populateInitialData()
             }
         }.start()
-        // Получаем NavHostFragment и NavController
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         val navController = navHostFragment.navController
@@ -40,7 +39,6 @@ class MainActivity : AppCompatActivity() {
         try {
             val categoryDao = database.categoryDao()
             val subcategoryDao = database.subcategoryDao()
-            // Вставка категорий
             val topId = categoryDao.insert(Category("Верх"))
             val bottomId = categoryDao.insert(Category("Низ"))
             val dressId = categoryDao.insert(Category("Платья"))

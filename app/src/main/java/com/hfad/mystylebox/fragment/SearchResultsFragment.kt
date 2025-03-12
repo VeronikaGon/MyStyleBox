@@ -47,7 +47,7 @@ class SearchResultsFragment : Fragment() {
             FlexboxLayout.LayoutParams.WRAP_CONTENT,
             FlexboxLayout.LayoutParams.WRAP_CONTENT
         )
-        layoutParams.setMargins(8, 8, 8, 8)
+        layoutParams.setMargins(16, 16, 16, 16)
         button.layoutParams = layoutParams
         button.setOnClickListener {
             (activity as? CategorySelectionActivity)?.onSubcategorySelected(    subcategory.name,

@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
@@ -30,6 +31,7 @@ import com.hfad.mystylebox.CategorySelectionActivity
 import com.hfad.mystylebox.EditclothesActivity
 import com.hfad.mystylebox.ItemActionsBottomSheet
 import com.hfad.mystylebox.R
+import com.hfad.mystylebox.SearchClothingActivity
 import com.hfad.mystylebox.adapter.ClothingAdapter
 import com.hfad.mystylebox.database.Category
 
@@ -95,13 +97,16 @@ class ClothesFragment : Fragment() {
         recyclerView = view.findViewById(R.id.recyclerView)
         recyclerView.layoutManager = GridLayoutManager(context, 2)
         loadClothingItems()
-        val selectPhotoButton = view.findViewById<Button>(R.id.selectPhotoButton)
+        val selectPhotoButton = view.findViewById<ImageButton>(R.id.selectPhotoButton)
         selectPhotoButton.setOnClickListener {
             showImagePickerDialog()
         }
+        val imageSearch = view.findViewById<ImageButton>(R.id.imageSearch)
+        imageSearch.setOnClickListener {
+            startSearchClothingActivity()
+        }
     }
 
-    // Метод, который получает данные из базы
     private fun loadClothingItems() {
         val db = Room.databaseBuilder(
             requireContext(),
@@ -110,63 +115,51 @@ class ClothesFragment : Fragment() {
         )
             .allowMainThreadQueries()
             .build()
-        val loadedItems = db.clothingItemDao().getAllItems()
-        // Получаем список подкатегорий из базы
-        val subcategories = db.subcategoryDao().getAllSubcategories()
-        val categoryMap = mapOf(
-            1 to "Верх",
-            2 to "Низ",
-            3 to "Платья",
-            4 to "Обувь",
-            5 to "Аксессуары",
-            6 to "Костюмы",
-            7 to "Комбинезоны",
-            8 to "Сумки",
-            9 to "Верхняя одежда",
-            10 to "Головные уборы",
-            11 to "Спорт",
-            12 to "Пляж",
-            13 to "Нижнее белье"
-        )
-        // Формируем мапу: для каждой подкатегории определяем название категории через categoryMap
-        val subcategoryToCategoryMap = subcategories.associate { it.id to (categoryMap[it.categoryId] ?: "Неизвестно") }
 
-        val adapter = ClothingAdapter(loadedItems, subcategoryToCategoryMap).apply {
-            onItemClick = { item ->
+        // Заменяем getAllItems() на JOIN-запрос
+        val loadedItemsWithCategories = db.clothingItemDao().getAllItemsWithCategories()
+
+        // Создаем адаптер с новыми данными
+        val adapter = ClothingAdapter(loadedItemsWithCategories, R.layout.item_clothing).apply {
+            onItemClick = { clothingItemWithCategory ->
                 val intent = Intent(requireContext(), EditclothesActivity::class.java).apply {
-                    putExtra("clothing_item", item)
-                    putExtra("image_uri", item.imagePath)
+                    // Передаем полный объект с категориями
+                    putExtra("clothing_item", clothingItemWithCategory.clothingItem)
+                    putExtra("image_uri", clothingItemWithCategory.clothingItem.imagePath)
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
                 startActivity(intent)
             }
-            onItemLongClick = { clothingItem ->
+            onItemLongClick = { clothingItemWithCategory ->
                 val bottomSheet = ItemActionsBottomSheet.newInstance(
-                    clothingItem.name,
-                    clothingItem.imagePath
+                    clothingItemWithCategory.clothingItem.name,
+                    clothingItemWithCategory.clothingItem.imagePath
                 )
                 bottomSheet.show(parentFragmentManager, bottomSheet.tag)
+
                 bottomSheet.onDeleteClicked = {
-                        AlertDialog.Builder(requireContext())
-                            .setTitle("Удалить ''${clothingItem.name}''")
-                            .setPositiveButton("Удалить") { _, _ ->
-                                deleteItem(clothingItem)
-                            }
-                            .setNegativeButton("Отмена", null)
-                            .show()
-                    }
-                    bottomSheet.onEditClicked = {
-                        val intent = Intent(requireContext(), EditclothesActivity::class.java).apply {
-                            putExtra("clothing_item", clothingItem)
-                            putExtra("image_uri", clothingItem.imagePath)
+                    AlertDialog.Builder(requireContext())
+                        .setTitle("Удалить '${clothingItemWithCategory.clothingItem.name}'")
+                        .setPositiveButton("Удалить") { _, _ ->
+                            deleteItem(clothingItemWithCategory.clothingItem)
                         }
-                        startActivity(intent)
-                    }
+                        .setNegativeButton("Отмена", null)
+                        .show()
                 }
+
+                bottomSheet.onEditClicked = {
+                    val intent = Intent(requireContext(), EditclothesActivity::class.java).apply {
+                        putExtra("clothing_item", clothingItemWithCategory.clothingItem)
+                        putExtra("image_uri", clothingItemWithCategory.clothingItem.imagePath)
+                    }
+                    startActivity(intent)
+                }
+            }
         }
 
         recyclerView.adapter = adapter
     }
+    //метод удаления вещи
     private fun deleteItem(item: ClothingItem) {
         val db = Room.databaseBuilder(
             requireContext(),
@@ -175,16 +168,15 @@ class ClothesFragment : Fragment() {
         )
             .allowMainThreadQueries()
             .build()
-
         db.clothingItemDao().delete(item)
         loadClothingItems()
     }
-
     // Метод, который обновляет RecyclerView
     override fun onResume() {
         super.onResume()
         loadClothingItems()
     }
+    //метод открытия диалогого окна
     private fun showImagePickerDialog() {
         val options = arrayOf("Выбрать из галереи", "Сфотографировать", "Выбрать из файлов")
         val icons = arrayOf(R.drawable.gallery, R.drawable.camera, R.drawable.file)
@@ -203,7 +195,7 @@ class ClothesFragment : Fragment() {
                 return view
             }
         }
-        android.app.AlertDialog.Builder(requireContext())
+        AlertDialog.Builder(requireContext())
             .setTitle("Выберите действие")
             .setAdapter(adapter) { _, which ->
                 when (which) {
@@ -216,7 +208,6 @@ class ClothesFragment : Fragment() {
     }
 
     private fun openGallery() {
-//            val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
         val intent = Intent(Intent.ACTION_PICK).apply {
             setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*")
             putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/jpeg", "image/png"))
@@ -263,8 +254,11 @@ class ClothesFragment : Fragment() {
     private fun startCategorySelectionActivity(imageUri: Uri?) {
         if (imageUri == null) return
         val intent = Intent(requireContext(), CategorySelectionActivity::class.java)
-        intent.putExtra("image_uri", imageUri.toString())  // Передаём строковый путь к изображению
+        intent.putExtra("image_uri", imageUri.toString())
         startActivity(intent)
     }
-
+    private fun startSearchClothingActivity() {
+        val intent = Intent(requireContext(), SearchClothingActivity::class.java)
+        startActivity(intent)
+    }
 }

@@ -63,10 +63,10 @@ class ClothesActivity : AppCompatActivity() {
         clothingCostEditText = findViewById(R.id.enterStoimost)
         clothingNotesEditText = findViewById(R.id.enterNotes)
         clothingNameEditText = findViewById(R.id.enterName)
-        cbSummer = findViewById<CheckBox>(R.id.cbSummer)
-        cbSpring = findViewById<CheckBox>(R.id.cbSpring)
-        cbWinter = findViewById<CheckBox>(R.id.cbWinter)
-        cbAutumn = findViewById<CheckBox>(R.id.cbAutumn)
+        cbSummer = findViewById(R.id.cbSummer)
+        cbSpring = findViewById(R.id.cbSpring)
+        cbWinter = findViewById(R.id.cbWinter)
+        cbAutumn = findViewById(R.id.cbAutumn)
         saveButton = findViewById(R.id.ButtonSAVE)
         textviewTitle = findViewById(R.id.textviewtitle)
         categoryField = findViewById(R.id.categoryField)
@@ -175,7 +175,6 @@ class ClothesActivity : AppCompatActivity() {
         clothingBrendEditText.setText(item.brend)
         clothingCostEditText.setText(item.cost.toString())
         clothingNotesEditText.setText(item.notes)
-        // Установка сезонов
         cbSummer.isChecked = item.seasons?.contains("Лето") == true
         cbSpring.isChecked = item.seasons?.contains("Весна") == true
         cbWinter.isChecked = item.seasons?.contains("Зима") == true
@@ -189,9 +188,7 @@ class ClothesActivity : AppCompatActivity() {
             imagePath = item.imagePath
             clothingImageView.setImageURI(Uri.parse(imagePath))
         }
-
-        // Установка категории – если необходимо, можно загрузить название подкатегории:
-        lifecycleScope.launch {
+   lifecycleScope.launch {
             val subcatName = withContext(Dispatchers.IO) {
                 subcategoryDao.getSubcategoryNameById(item.subcategoryId)
             }
@@ -206,7 +203,13 @@ class ClothesActivity : AppCompatActivity() {
             return
         }
         val brend = clothingBrendEditText.text.toString().trim()
-        val cost = clothingCostEditText.text.toString().trim().toFloatOrNull() ?: 0.0f
+        val costInput  = clothingCostEditText.text.toString().trim()
+        if (!validateCostInput(costInput)) {
+            Toast.makeText(this, "Введите корректное значение для стоимости", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val replacedCost = costInput.replace(',', '.')
+        val cost = replacedCost.toFloatOrNull() ?: 0.0f
         val notes = clothingNotesEditText.text.toString().trim()
         val seasons = mutableListOf<String>()
         if (cbSummer.isChecked) seasons.add(cbSummer.text.toString())
@@ -301,7 +304,14 @@ class ClothesActivity : AppCompatActivity() {
             Toast.makeText(this, "Введите название ", Toast.LENGTH_SHORT).show()
             return
         }
-        val cost = clothingCostEditText.text.toString().trim().toFloatOrNull() ?: 0.0f
+        val costInput  = clothingCostEditText.text.toString().trim()
+        if (!validateCostInput(costInput)) {
+            Toast.makeText(this, "Введите корректное значение для стоимости", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val replacedCost = costInput.replace(',', '.')
+        val cost = replacedCost.toFloatOrNull() ?: 0.0f
+
         val notes = clothingNotesEditText.text.toString().trim().ifEmpty { "" }
         val status = getSelectedStatus()
         val size = getSelectedSize()
@@ -321,4 +331,9 @@ class ClothesActivity : AppCompatActivity() {
         Toast.makeText(this, "Вещь сохранена", Toast.LENGTH_SHORT).show()
         finish()
     }
+    private fun validateCostInput(costString: String): Boolean {
+        val regex = Regex("^\\d+([.,]\\d{1,2})?\$")
+        return regex.matches(costString.trim())
+    }
+
 }

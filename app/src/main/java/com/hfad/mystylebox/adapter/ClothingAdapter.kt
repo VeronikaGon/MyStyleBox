@@ -9,21 +9,24 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.hfad.mystylebox.R
 import com.hfad.mystylebox.database.ClothingItem
+import com.hfad.mystylebox.database.ClothingItemWithCategory
+import com.hfad.mystylebox.database.Subcategory
 
 class ClothingAdapter(
-    initialItems: List<ClothingItem>,
-    private val subcategoryToCategoryMap: Map<Int, String>
+    private val initialItems: List<ClothingItemWithCategory>,
+    private val layoutResId: Int
 ) : RecyclerView.Adapter<ClothingAdapter.ClothingViewHolder>() {
 
     private var items = initialItems.toMutableList()
     private val allItems = initialItems.toList()
 
-    var onItemClick: ((ClothingItem) -> Unit)? = null
-    var onItemLongClick: ((ClothingItem) -> Unit)? = null
+    var onItemClick: ((ClothingItemWithCategory) -> Unit)? = null
+    var onItemLongClick: ((ClothingItemWithCategory) -> Unit)? = null
 
     inner class ClothingViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val imageView: ImageView = view.findViewById(R.id.itemImage)
         val nameText: TextView = view.findViewById(R.id.itemName)
+        val categoryText: TextView? = view.findViewById(R.id.itemCategory)
 
         init {
             itemView.setOnLongClickListener {
@@ -38,33 +41,43 @@ class ClothingAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ClothingViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_clothing, parent, false)
+            .inflate(layoutResId, parent, false)
         return ClothingViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ClothingViewHolder, position: Int) {
         val item = items[position]
         val maxChars = 15
-        val displayName = if (item.name.length > maxChars) {
-            item.name.take(maxChars) + "..."
+        holder.nameText.text = if (item.clothingItem.name.length > maxChars) {
+            item.clothingItem.name.take(maxChars) + "..."
         } else {
-            item.name
+            item.clothingItem.name
         }
-        holder.nameText.text = item.name
-        Glide.with(holder.imageView.context).load(item.imagePath).into(holder.imageView)
+
+        holder.categoryText?.text = "${item.categoryName} > ${item.subcategoryName}"
+
+        Glide.with(holder.imageView.context)
+            .load(item.clothingItem.imagePath)
+            .into(holder.imageView)
+
         holder.itemView.setOnClickListener {
             onItemClick?.invoke(item)
         }
     }
 
-    fun filterByCategory(category: String) {
-        items = if (category == "Все") {
+    fun filterByCategory(targetCategory: String) {
+        items = if (targetCategory == "Все") {
             allItems.toMutableList()
         } else {
-            allItems.filter { item ->
-                subcategoryToCategoryMap[item.subcategoryId] == category
+            allItems.filter {
+                it.categoryName == targetCategory
             }.toMutableList()
         }
+        notifyDataSetChanged()
+    }
+
+    fun updateData(newItems: List<ClothingItemWithCategory>) { // Изменен тип
+        this.items = newItems.toMutableList()
         notifyDataSetChanged()
     }
 

@@ -228,20 +228,21 @@ class EditclothesActivity : AppCompatActivity() {
             Toast.makeText(this, "Данные не получены", Toast.LENGTH_SHORT).show()
         }
     }
+
     //Обновление после редактирования
     private fun updatePreviewUI(item: ClothingItem) {
-        findViewById<TextView>(R.id.textviewname).text = item.name
-        findViewById<TextView>(R.id.status).text = item.status
-        findViewById<TextView>(R.id.textviewsize).text = item.size
-        findViewById<TextView>(R.id.textviewbrend).text = item.brend
-        findViewById<TextView>(R.id.textViewNotes).text = item.notes
+            findViewById<TextView>(R.id.status).text = item.status
+            findViewById<TextView>(R.id.textviewsize).text = item.size
+            findViewById<TextView>(R.id.textviewbrend).text = item.brend
+            findViewById<TextView>(R.id.textViewNotes).text = item.notes
+            findViewById<CheckBox>(R.id.cbSummer).isChecked = item.seasons.contains("Лето")
+            findViewById<CheckBox>(R.id.cbSpring).isChecked = item.seasons.contains("Весна")
+            findViewById<CheckBox>(R.id.cbAutumn).isChecked = item.seasons.contains("Осень")
+            findViewById<CheckBox>(R.id.cbWinter).isChecked = item.seasons.contains("Зима")
+            findViewById<TextView>(R.id.textviewstoimost).text = item.cost.toString()
         findViewById<TextView>(R.id.textviewgender).text = item.gender
-        findViewById<CheckBox>(R.id.cbSummer).isChecked = item.seasons.contains("Лето")
-        findViewById<CheckBox>(R.id.cbSpring).isChecked = item.seasons.contains("Весна")
-        findViewById<CheckBox>(R.id.cbAutumn).isChecked = item.seasons.contains("Осень")
-        findViewById<CheckBox>(R.id.cbWinter).isChecked = item.seasons.contains("Зима")
+        findViewById<TextView>(R.id.textviewname).text = item.name
         currentClothingItem = item
-        //обновление подкатегории её название,тегов
     }
 
     private fun navigateToClothesActivity() {

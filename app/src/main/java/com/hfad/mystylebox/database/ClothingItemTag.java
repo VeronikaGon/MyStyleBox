@@ -8,11 +8,11 @@ import androidx.room.ForeignKey;
         primaryKeys = {"clothingItemId", "tagId"},
         foreignKeys = {
                 @ForeignKey(entity = ClothingItem.class,
-                        parentColumns = "id", // Это должно совпадать с `ClothingItem`
+                        parentColumns = "id",
                         childColumns = "clothingItemId",
                         onDelete = ForeignKey.CASCADE),
                 @ForeignKey(entity = Tag.class,
-                        parentColumns = "id", // Это должно совпадать с `Tag`
+                        parentColumns = "id",
                         childColumns = "tagId",
                         onDelete = ForeignKey.CASCADE)
         }

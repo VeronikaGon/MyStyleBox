@@ -15,10 +15,8 @@ import com.hfad.mystylebox.database.AppDatabase
 import com.hfad.mystylebox.database.Category
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
-import com.hfad.mystylebox.R
 import com.hfad.mystylebox.adapter.CategoryPagerAdapter
 import com.hfad.mystylebox.adapter.SubcategoryPagerAdapter
-
 
 class CategorySelectionActivity : AppCompatActivity() {
 
@@ -61,7 +59,6 @@ class CategorySelectionActivity : AppCompatActivity() {
         val viewPager = findViewById<ViewPager2>(R.id.viewPager)
         val adapter = CategoryPagerAdapter(this, categories, imageUri)
         viewPager.adapter = adapter
-        // Настраиваем TabLayout и связываем его с ViewPager2
         val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
             tab.text = categories[position].name
