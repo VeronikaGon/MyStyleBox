@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
@@ -18,12 +17,15 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.view.ContextThemeWrapper
 import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
 import com.google.android.flexbox.FlexboxLayout
 import com.hfad.mystylebox.database.AppDatabase
 import com.hfad.mystylebox.database.ClothingItem
 import com.hfad.mystylebox.database.ClothingItemDao
+import com.hfad.mystylebox.database.ClothingItemTag
+import com.hfad.mystylebox.database.ClothingItemTagDao
 import com.hfad.mystylebox.database.SubcategoryDao
 import com.hfad.mystylebox.database.Tag
 import kotlinx.coroutines.Dispatchers
@@ -35,6 +37,9 @@ class ClothesActivity : AppCompatActivity() {
     private lateinit var db: AppDatabase
     private lateinit var clothingItemDao: ClothingItemDao
     private lateinit var subcategoryDao: SubcategoryDao
+    private lateinit var clothingItemTagDao: ClothingItemTagDao
+    private lateinit var flexboxTags: FlexboxLayout
+    private var selectedTagIds: MutableSet<Int> = mutableSetOf()
 
     private lateinit var clothingImageView: ImageView
     private lateinit var clothingNameEditText: EditText
@@ -54,9 +59,12 @@ class ClothesActivity : AppCompatActivity() {
     private lateinit var categoryResultLauncher: ActivityResultLauncher<Intent>
     private lateinit var tagEditingLauncher: ActivityResultLauncher<Intent>
 
+    private var selectedTags: List<Tag> = listOf()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.clothes)
+        flexboxTags = findViewById(R.id.Tags)
         clothingImageView = findViewById(R.id.clothingImageView)
         clothingNameEditText = findViewById(R.id.enterName)
         clothingBrendEditText = findViewById(R.id.enterBrend)
@@ -73,9 +81,15 @@ class ClothesActivity : AppCompatActivity() {
 
         tagEditingLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
-                val selectedTags = result.data?.getParcelableArrayListExtra<Tag>("selected_tags")
-                // Отобразите выбранные теги в интерфейсе ClothesActivity
-                // Например, в FlexboxLayout или TextView
+                val returnedTags = result.data?.getParcelableArrayListExtra<Tag>("selected_tags")
+                if (returnedTags != null) {
+                    selectedTagIds.clear()
+                    selectedTags = returnedTags
+                    returnedTags.forEach { tag ->
+                        selectedTagIds.add(tag.id)
+                    }
+                    displayTagsAsCheckboxes(returnedTags, selectedTagIds)
+                }
             }
         }
         val llTegi = findViewById<LinearLayout>(R.id.llTegi)
@@ -84,10 +98,6 @@ class ClothesActivity : AppCompatActivity() {
             tagEditingLauncher.launch(intent)
         }
         val tagEditButton = findViewById<ImageButton>(R.id.imageButton)
-        tagEditButton.setOnClickListener {
-            val intent = Intent(this, TagEditingActivity::class.java)
-            startActivity(intent)
-        }
         tagEditButton.setOnClickListener {
             val intent = Intent(this, TagEditingActivity::class.java)
             tagEditingLauncher.launch(intent)
@@ -131,6 +141,7 @@ class ClothesActivity : AppCompatActivity() {
             .build()
         clothingItemDao = db.clothingItemDao()
         subcategoryDao = db.subcategoryDao()
+        clothingItemTagDao = db.clothingItemTagDao()
 
         subcategory = intent.getStringExtra("subcategory")
         selectedSubcategoryId = intent.getIntExtra("selected_subcategory_id", -1)
@@ -168,6 +179,7 @@ class ClothesActivity : AppCompatActivity() {
         } else {
             saveButton.setOnClickListener { saveClothingItem() }
         }
+        loadTagsFromDatabase()
     }
     //установка значений для редактирования
     private fun populateFields(item: ClothingItem) {
@@ -195,6 +207,19 @@ class ClothesActivity : AppCompatActivity() {
             categoryField.text = subcatName
         }
         selectedSubcategoryId = item.subcategoryId
+        // Загружаем выбранные теги для данной вещи из базы:
+        lifecycleScope.launch(Dispatchers.IO) {
+            val savedTagIds = clothingItemTagDao.getTagsForClothingItem(item.id)
+                .map { it.id }
+                .toSet()
+            selectedTagIds.clear()
+            selectedTagIds.addAll(savedTagIds)
+            // Также можно загрузить полный список тегов, чтобы отобразить все варианты:
+            val allTags = db.tagDao().getAllTags()
+            withContext(Dispatchers.Main) {
+                displayTagsAsCheckboxes(allTags, selectedTagIds)
+            }
+        }
     }
     private fun updateClothingItem(oldItem: ClothingItem) {
         val name = clothingNameEditText.text.toString().trim()
@@ -203,13 +228,14 @@ class ClothesActivity : AppCompatActivity() {
             return
         }
         val brend = clothingBrendEditText.text.toString().trim()
-        val costInput  = clothingCostEditText.text.toString().trim()
-        if (!validateCostInput(costInput)) {
-            Toast.makeText(this, "Введите корректное значение для стоимости", Toast.LENGTH_SHORT).show()
-            return
+        val costInput = clothingCostEditText.text.toString().trim()
+        val cost = if (costInput.isEmpty()) { 0.0f } else {
+            if (!validateCostInput(costInput)) {
+                Toast.makeText(this, "Введите корректное значение для стоимости", Toast.LENGTH_SHORT).show()
+                return
+            }
+            costInput.replace(',', '.').toFloatOrNull() ?: 0.0f
         }
-        val replacedCost = costInput.replace(',', '.')
-        val cost = replacedCost.toFloatOrNull() ?: 0.0f
         val notes = clothingNotesEditText.text.toString().trim()
         val seasons = mutableListOf<String>()
         if (cbSummer.isChecked) seasons.add(cbSummer.text.toString())
@@ -217,20 +243,16 @@ class ClothesActivity : AppCompatActivity() {
         if (cbWinter.isChecked) seasons.add(cbWinter.text.toString())
         if (cbAutumn.isChecked) seasons.add(cbAutumn.text.toString())
         val updatedItem = ClothingItem(
-            name,
-            selectedSubcategoryId,
-            brend,
-            getSelectedGender(),
-            imagePath ?: "",
-            seasons,
-            cost,
-            getSelectedStatus(),
-            getSelectedSize(),
-            notes
+            name, selectedSubcategoryId, brend, getSelectedGender(),
+            imagePath ?: "", seasons, cost, getSelectedStatus(), getSelectedSize(), notes
         )
         updatedItem.id = oldItem.id
         lifecycleScope.launch(Dispatchers.IO) {
             clothingItemDao.update(updatedItem)
+            clothingItemTagDao.deleteTagsForClothingItem(updatedItem.id)
+            selectedTagIds.forEach { tagId ->
+                clothingItemTagDao.insert(ClothingItemTag(updatedItem.id, tagId))
+            }
             withContext(Dispatchers.Main) {
                 Toast.makeText(this@ClothesActivity, "Вещь обновлена", Toast.LENGTH_SHORT).show()
                 val resultIntent = Intent().apply {
@@ -238,6 +260,21 @@ class ClothesActivity : AppCompatActivity() {
                 }
                 setResult(RESULT_OK, resultIntent)
                 finish()
+            }
+        }
+    }
+    private fun loadTagsFromDatabase() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val allTags = db.tagDao().getAllTags()
+            val preselectedIds = intent.getParcelableExtra<ClothingItem>("clothingItem")?.let { editingItem ->
+                clothingItemTagDao.getTagsForClothingItem(editingItem.id)
+                    .map { it.id }
+                    .toSet()
+            } ?: emptySet()
+            selectedTagIds.clear()
+            selectedTagIds.addAll(preselectedIds)
+            withContext(Dispatchers.Main) {
+                displayTagsAsCheckboxes(allTags, selectedTagIds)
             }
         }
     }
@@ -284,6 +321,10 @@ class ClothesActivity : AppCompatActivity() {
             }
         }
     }
+    override fun onResume() {
+        super.onResume()
+        loadTagsFromDatabase()
+    }
     //метод для задавания пола для конкретной вещи
     private fun setSelectedGender(gender: String) {
         val genderRadioGroup = findViewById<RadioGroup>(R.id.radioGroupGender)
@@ -295,7 +336,33 @@ class ClothesActivity : AppCompatActivity() {
             }
         }
     }
-
+    private fun displayTagsAsCheckboxes(allTags: List<Tag>, preselectedTagIds: Set<Int> = emptySet()) {
+        flexboxTags.removeAllViews()
+        allTags.forEach { tag ->
+            val checkBox = CheckBox(this).apply {
+                text = tag.name
+                id = tag.id
+                setBackgroundResource(R.drawable.checkbox_background)
+                setButtonDrawable(null)
+                setPadding(16, 5, 16, 5)
+                isChecked = tag.id in preselectedTagIds
+            }
+            checkBox.setOnClickListener {
+                if (checkBox.isChecked) {
+                    selectedTagIds.add(tag.id)
+                } else {
+                    selectedTagIds.remove(tag.id)
+                }
+            }
+            val params = FlexboxLayout.LayoutParams(
+                FlexboxLayout.LayoutParams.WRAP_CONTENT,
+                FlexboxLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(5, 5, 5, 5)
+            }
+            flexboxTags.addView(checkBox, params)
+        }
+    }
     //метод сохранение вещи в базе
     private fun saveClothingItem() {
         val brend = clothingBrendEditText.text.toString().trim().ifEmpty { "" }
@@ -304,21 +371,20 @@ class ClothesActivity : AppCompatActivity() {
             Toast.makeText(this, "Введите название ", Toast.LENGTH_SHORT).show()
             return
         }
-        val costInput  = clothingCostEditText.text.toString().trim()
-        if (!validateCostInput(costInput)) {
-            Toast.makeText(this, "Введите корректное значение для стоимости", Toast.LENGTH_SHORT).show()
-            return
+        val costInput = clothingCostEditText.text.toString().trim()
+        val cost = if (costInput.isEmpty()) { 0.0f } else {
+            if (!validateCostInput(costInput)) {
+                Toast.makeText(this, "Введите корректное значение для стоимости", Toast.LENGTH_SHORT).show()
+                return
+            }
+            costInput.replace(',', '.').toFloatOrNull() ?: 0.0f
         }
-        val replacedCost = costInput.replace(',', '.')
-        val cost = replacedCost.toFloatOrNull() ?: 0.0f
-
         val notes = clothingNotesEditText.text.toString().trim().ifEmpty { "" }
         val status = getSelectedStatus()
         val size = getSelectedSize()
         val gender = getSelectedGender()
         val seasons = mutableListOf<String>()
         if (selectedSubcategoryId == -1) {
-            Log.d("ClothesActivity", "Selected Subcategory ID: $selectedSubcategoryId")
             Toast.makeText(this, "Выберите подкатегорию", Toast.LENGTH_SHORT).show()
             return
         }
@@ -328,6 +394,10 @@ class ClothesActivity : AppCompatActivity() {
         if (cbAutumn.isChecked) seasons.add(cbAutumn.text.toString())
         val item = ClothingItem(name, selectedSubcategoryId, brend, gender, imagePath!!, seasons,cost,status, size,notes)
         db.clothingItemDao().insert(item)
+        val newItemId = clothingItemDao.insert(item)
+        selectedTagIds.forEach { tagId ->
+            clothingItemTagDao.insert(ClothingItemTag(newItemId.toInt(), tagId))
+        }
         Toast.makeText(this, "Вещь сохранена", Toast.LENGTH_SHORT).show()
         finish()
     }
@@ -335,5 +405,4 @@ class ClothesActivity : AppCompatActivity() {
         val regex = Regex("^\\d+([.,]\\d{1,2})?\$")
         return regex.matches(costString.trim())
     }
-
 }

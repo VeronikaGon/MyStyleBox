@@ -31,12 +31,7 @@ class CategorySelectionActivity : AppCompatActivity() {
 
         db = AppDatabase.getInstance(this)
         val searchView = findViewById<SearchView>(R.id.searchView)
-        searchView.isIconified = false
-        searchView.queryHint = "Поиск по категориям"
-        val searchEditText = searchView.findViewById<EditText>(androidx.appcompat.R.id.search_src_text)
-        searchEditText.setPadding(16, 16, 16, 16)
-        searchEditText.setTextColor(ContextCompat.getColor(this, R.color.black))
-        searchEditText.setHintTextColor(ContextCompat.getColor(this, R.color.gray))
+
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 return false

@@ -14,7 +14,7 @@ import java.util.List;
 public interface ClothingItemDao {
     // Вставка нового элемента
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void insert(ClothingItem item);
+    long insert(ClothingItem item);
 
     // Обновление существующего элемента
     @Update

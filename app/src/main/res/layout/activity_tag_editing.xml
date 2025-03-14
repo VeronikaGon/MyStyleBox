@@ -2,51 +2,62 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/white"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
+
     <TextView
         android:id="@+id/edittitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Редактирование тегов"
-        android:textSize="24sp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="16dp"
+        android:text="@string/edittags"
+        android:textSize="30sp"
+        android:textColor="#000000"
         app:layout_constraintEnd_toEndOf="parent"
- />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.appcompat.widget.SearchView
         android:id="@+id/searchView"
         android:layout_width="0dp"
-        android:background="@drawable/rounded_search_view"
         android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        app:searchIcon="@drawable/search"
+        android:background="@drawable/rounded_search_view"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/edittitle" />
+        app:layout_constraintTop_toBottomOf="@id/edittitle"
+        app:queryHint="@string/search"
+        app:iconifiedByDefault="false"
+        />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewTags"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="@color/backgroundpink"
         android:layout_marginTop="16dp"
-        app:layout_constraintBottom_toTopOf="@id/btnCreateTag"
+        android:background="@color/backgroundpink"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/searchView" />
 
-
-    <com.google.android.material.button.MaterialButton
-        app:cornerRadius="15dp"
-        android:id="@+id/btnCreateTag"
-        android:backgroundTint="@color/darkpink"
-        android:textColor="@color/black"
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAddTag"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Создать тег"
+        android:layout_margin="16dp"
+        app:backgroundTint="@color/darkpink"
+        app:srcCompat="@drawable/plus"
+        android:contentDescription="@string/addtag"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

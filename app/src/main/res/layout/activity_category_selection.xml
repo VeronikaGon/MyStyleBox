@@ -24,6 +24,8 @@
         android:id="@+id/searchView"
         android:layout_width="0dp"
         app:searchIcon="@drawable/search"
+        app:queryHint="@string/searchsubcategory"
+        app:iconifiedByDefault="false"
         android:background="@drawable/rounded_search_view"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"

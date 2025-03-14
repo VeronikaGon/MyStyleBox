@@ -14,4 +14,10 @@ public interface ClothingItemTagDao {
 
     @Query("SELECT tag.* FROM tag INNER JOIN clothing_item_tag ON tag.id = clothing_item_tag.tagId WHERE clothing_item_tag.clothingItemId = :clothingItemId")
     List<Tag> getTagsForClothingItem(int clothingItemId);
+
+    @Query("SELECT COUNT(*) FROM clothing_item_tag WHERE tagId = :tagId")
+    int getCountForTag(int tagId);
+
+    @Query("DELETE FROM clothing_item_tag WHERE clothingItemId = :clothingItemId")
+    void deleteTagsForClothingItem(int clothingItemId);
 }

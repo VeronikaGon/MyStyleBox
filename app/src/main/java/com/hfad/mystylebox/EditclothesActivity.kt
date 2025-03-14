@@ -23,9 +23,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
 import com.bumptech.glide.Glide
+import com.google.android.flexbox.FlexboxLayout
 import com.hfad.mystylebox.database.AppDatabase
 import com.hfad.mystylebox.database.ClothingItemDao
+import com.hfad.mystylebox.database.ClothingItemTagDao
 import com.hfad.mystylebox.database.SubcategoryDao
+import com.hfad.mystylebox.database.Tag
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -34,6 +37,8 @@ class EditclothesActivity : AppCompatActivity() {
     private val REQUEST_READ_STORAGE = 101
     private lateinit var subcategoryDao: SubcategoryDao
     private lateinit var clothingItemDao: ClothingItemDao
+    private lateinit var clothingItemTagDao: ClothingItemTagDao
+    private lateinit var flexboxTags: FlexboxLayout
     private var currentClothingItem: ClothingItem? = null
     private val editResultLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -46,6 +51,26 @@ class EditclothesActivity : AppCompatActivity() {
             }
         }
     }
+    private fun displayTagsForPreview(tags: List<Tag>) {
+        flexboxTags.removeAllViews()
+        tags.forEach { tag ->
+            val textView = TextView(this).apply {
+                text = tag.name
+                setPadding(16, 8, 16, 8)
+
+                setBackgroundResource(R.drawable.checkbox_background)
+                isClickable = false
+            }
+            val params = FlexboxLayout.LayoutParams(
+                FlexboxLayout.LayoutParams.WRAP_CONTENT,
+                FlexboxLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(8, 8, 8, 8)
+            }
+            flexboxTags.addView(textView, params)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Инициализация базы данных и DAO
@@ -55,9 +80,10 @@ class EditclothesActivity : AppCompatActivity() {
         ).build()
         subcategoryDao = db.subcategoryDao()
         clothingItemDao = db.clothingItemDao()
+        clothingItemTagDao = db.clothingItemTagDao()
         enableEdgeToEdge()
         setContentView(R.layout.activity_editclothes)
-
+        flexboxTags = findViewById(R.id.Tags)
         // Выбор разрешения в зависимости от версии Android
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES)
@@ -105,6 +131,7 @@ class EditclothesActivity : AppCompatActivity() {
         val llSize = findViewById<LinearLayout>(R.id.llsize)
         val llBrend = findViewById<LinearLayout>(R.id.llbrend)
         val llNotes = findViewById<LinearLayout>(R.id.llNotes)
+        val llTegi = findViewById<LinearLayout>(R.id.llTegi)
         val textViewStoimost = findViewById<TextView>(R.id.textviewstoimost)
         val sizeTextView = findViewById<TextView>(R.id.textviewsize)
         val nameTextView = findViewById<TextView>(R.id.textviewname)
@@ -209,7 +236,17 @@ class EditclothesActivity : AppCompatActivity() {
                 }
                 subcategoryTextView.text = subcategoryName
             }
-
+            lifecycleScope.launch(Dispatchers.IO) {
+                val tags = clothingItemTagDao.getTagsForClothingItem(item.id)
+                withContext(Dispatchers.Main) {
+                    if (tags.isNotEmpty()) {
+                        llTegi.visibility = View.VISIBLE
+                        displayTagsForPreview(tags)
+                    } else {
+                        llTegi.visibility = View.GONE
+                    }
+                }
+            }
             // Установка изображения
             val imageUriString = intent.getStringExtra("image_uri")
             if (!imageUriString.isNullOrEmpty()) {
@@ -243,6 +280,17 @@ class EditclothesActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.textviewgender).text = item.gender
         findViewById<TextView>(R.id.textviewname).text = item.name
         currentClothingItem = item
+        lifecycleScope.launch(Dispatchers.IO) {
+            val tags = clothingItemTagDao.getTagsForClothingItem(item.id)
+            withContext(Dispatchers.Main) {
+                if (tags.isNotEmpty()) {
+                    flexboxTags.visibility = View.VISIBLE
+                    displayTagsForPreview(tags)
+                } else {
+                    flexboxTags.visibility = View.GONE
+                }
+            }
+        }
     }
 
     private fun navigateToClothesActivity() {
