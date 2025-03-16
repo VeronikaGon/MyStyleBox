@@ -3,6 +3,7 @@ package com.hfad.mystylebox.fragment
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -11,7 +12,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
-import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
@@ -29,159 +29,207 @@ import com.hfad.mystylebox.database.ClothingItem
 import com.google.android.material.tabs.TabLayout
 import com.hfad.mystylebox.CategorySelectionActivity
 import com.hfad.mystylebox.EditclothesActivity
+import com.hfad.mystylebox.FilterActivity
 import com.hfad.mystylebox.ItemActionsBottomSheet
 import com.hfad.mystylebox.R
 import com.hfad.mystylebox.SearchClothingActivity
 import com.hfad.mystylebox.adapter.ClothingAdapter
-import com.hfad.mystylebox.database.Category
+import com.hfad.mystylebox.database.ClothingItemFull
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
 
 class ClothesFragment : Fragment() {
-    private var param1: String? = null
-    private var param2: String? = null
+
+    private var currentItems: List<ClothingItemFull> = emptyList()
+    private var isFilterActive: Boolean = false
+    private var currentFilters: Bundle? = null
     private lateinit var recyclerView: RecyclerView
+    private lateinit var imageFilter: ImageButton
     private var photoUri: Uri? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    // Запуск FilterActivity для получения фильтров
+    private val filterActivityLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val data = result.data ?: return@registerForActivityResult
+            val selectedSeasons = data.getStringArrayListExtra("selectedSeasons") ?: arrayListOf()
+            val selectedSizes = data.getStringArrayListExtra("selectedSizes") ?: arrayListOf()
+            val selectedStatuses = data.getStringArrayListExtra("selectedStatuses") ?: arrayListOf()
+            val selectedTags = data.getStringArrayListExtra("selectedTags") ?: arrayListOf()
 
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+            currentFilters = Bundle().apply {
+                putStringArrayList("seasons", selectedSeasons)
+                putStringArrayList("sizes", selectedSizes)
+                putStringArrayList("statuses", selectedStatuses)
+                putStringArrayList("tags", selectedTags)
+            }
+
+            val hasFilters = listOf(selectedSeasons, selectedSizes, selectedStatuses, selectedTags)
+                .any { it.isNotEmpty() }
+            imageFilter.setColorFilter(
+                if (hasFilters) Color.parseColor("#FFB5A7")
+                else Color.parseColor("#000000")
+            )
+            updateFilteredItems(selectedSeasons, selectedSizes, selectedStatuses, selectedTags)
         }
-
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
+    // Фильтрация по размерам, статусу, сезонам и тегам.
+    private fun updateFilteredItems(
+        selectedSeasons: List<String>,
+        selectedSizes: List<String>,
+        selectedStatuses: List<String>,
+        selectedTags: List<String>
+    ) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val db = Room.databaseBuilder(
+                requireContext(), AppDatabase::class.java, "wardrobe_db"
+            ).build()
+
+            val allItems: List<ClothingItemFull> = db.clothingItemDao().getAllItemsFull()
+            val filteredItems = allItems.filter { itemFull: ClothingItemFull ->
+                val item = itemFull.clothingItem
+                val sizeMatch = selectedSizes.isEmpty() ||
+                        selectedSizes.any { size -> size.equals(item.size, ignoreCase = true) }
+                val statusMatch = selectedStatuses.isEmpty() ||
+                        selectedStatuses.any { stat -> stat.equals(item.status, ignoreCase = true) }
+                val seasonList = item.seasons?.map { it.trim().lowercase() } ?: emptyList()
+                val seasonMatch = selectedSeasons.isEmpty() ||
+                        selectedSeasons.any { sel -> seasonList.contains(sel.trim().lowercase()) }
+                val itemTagNames = itemFull.tags.map { it.name.trim().lowercase() }
+                val tagMatch = selectedTags.isEmpty() ||
+                        selectedTags.any { sel -> itemTagNames.contains(sel.trim().lowercase()) }
+                sizeMatch && statusMatch && seasonMatch && tagMatch
+            }
+            withContext(Dispatchers.Main) {
+                currentItems = filteredItems
+                isFilterActive = true
+                (recyclerView.adapter as? ClothingAdapter)?.updateData(filteredItems)
+            }
+        }
+    }
+
+    // Загрузка всех вещей (без фильтров) и сохранение в currentItems.
+    private fun loadClothingItems() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val db = Room.databaseBuilder(
+                requireContext(), AppDatabase::class.java, "wardrobe_db"
+            ).build()
+            val items: List<ClothingItemFull> = db.clothingItemDao().getAllItemsFull()
+            withContext(Dispatchers.Main) {
+                currentItems = items
+                isFilterActive = false
+                (recyclerView.adapter as? ClothingAdapter)?.updateData(items)
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!isFilterActive) {
+            loadClothingItems()
+        }
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_clothes, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         val tabLayout = view.findViewById<TabLayout>(R.id.tabLayout)
-        tabLayout.addTab(tabLayout.newTab().setText("Все"))
-        tabLayout.addTab(tabLayout.newTab().setText("Верх"))
-        tabLayout.addTab(tabLayout.newTab().setText("Низ"))
-        tabLayout.addTab(tabLayout.newTab().setText("Платья"))
-        tabLayout.addTab(tabLayout.newTab().setText("Обувь"))
-        tabLayout.addTab(tabLayout.newTab().setText("Аксессуары"))
-        tabLayout.addTab(tabLayout.newTab().setText("Костюмы"))
-        tabLayout.addTab(tabLayout.newTab().setText("Комбинезоны"))
-        tabLayout.addTab(tabLayout.newTab().setText("Сумки"))
-        tabLayout.addTab(tabLayout.newTab().setText("Верхняя одежда"))
-        tabLayout.addTab(tabLayout.newTab().setText("Головные уборы"))
-        tabLayout.addTab(tabLayout.newTab().setText("Спорт"))
-        tabLayout.addTab(tabLayout.newTab().setText("Пляж"))
-        tabLayout.addTab(tabLayout.newTab().setText("Нижнее белье"))
-        tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-            override fun onTabSelected(tab: TabLayout.Tab) {
-                val selectedCategory = tab.text.toString()
-                (recyclerView.adapter as? ClothingAdapter)?.filterByCategory(selectedCategory)
+        CoroutineScope(Dispatchers.IO).launch {
+            val db = Room.databaseBuilder(
+                requireContext(), AppDatabase::class.java, "wardrobe_db"
+            ).build()
+            val allItemsFull: List<ClothingItemFull> = db.clothingItemDao().getAllItemsFull()
+            val categories = allItemsFull.map { it.categoryName }.distinct().sorted()
+            withContext(Dispatchers.Main) {
+                tabLayout.removeAllTabs()
+                tabLayout.addTab(tabLayout.newTab().setText("Все"))
+                for (cat in categories) {
+                    tabLayout.addTab(tabLayout.newTab().setText(cat))
+                }
+                for (i in 0 until tabLayout.tabCount) {
+                    val tab = (tabLayout.getChildAt(0) as ViewGroup).getChildAt(i)
+                    val layoutParams = tab.layoutParams as ViewGroup.MarginLayoutParams
+                    layoutParams.setMargins(4, 0, 4, 0)
+                    tab.requestLayout()
+                }
             }
-            override fun onTabUnselected(tab: TabLayout.Tab) {}
-            override fun onTabReselected(tab: TabLayout.Tab) {}
-        })
-        for (i in 0 until tabLayout.tabCount) {
-            val tab = (tabLayout.getChildAt(0) as ViewGroup).getChildAt(i)
-            val layoutParams = tab.layoutParams as ViewGroup.MarginLayoutParams
-            layoutParams.setMargins(4, 0, 4, 0)
-            tab.requestLayout()
         }
+
         recyclerView = view.findViewById(R.id.recyclerView)
         recyclerView.layoutManager = GridLayoutManager(context, 2)
-        loadClothingItems()
-        val selectPhotoButton = view.findViewById<ImageButton>(R.id.selectPhotoButton)
-        selectPhotoButton.setOnClickListener {
-            showImagePickerDialog()
-        }
-        val imageSearch = view.findViewById<ImageButton>(R.id.imageSearch)
-        imageSearch.setOnClickListener {
-            startSearchClothingActivity()
-        }
-    }
-
-    private fun loadClothingItems() {
-        val db = Room.databaseBuilder(
-            requireContext(),
-            AppDatabase::class.java,
-            "wardrobe_db"
-        )
-            .allowMainThreadQueries()
-            .build()
-
-        // Заменяем getAllItems() на JOIN-запрос
-        val loadedItemsWithCategories = db.clothingItemDao().getAllItemsWithCategories()
-
-        // Создаем адаптер с новыми данными
-        val adapter = ClothingAdapter(loadedItemsWithCategories, R.layout.item_clothing).apply {
-            onItemClick = { clothingItemWithCategory ->
+        recyclerView.adapter = ClothingAdapter(emptyList(), R.layout.item_clothing).apply {
+            onItemClick = { itemFull ->
                 val intent = Intent(requireContext(), EditclothesActivity::class.java).apply {
-                    // Передаем полный объект с категориями
-                    putExtra("clothing_item", clothingItemWithCategory.clothingItem)
-                    putExtra("image_uri", clothingItemWithCategory.clothingItem.imagePath)
+                    putExtra("clothing_item", itemFull.clothingItem)
+                    putExtra("image_uri", itemFull.clothingItem.imagePath)
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
                 startActivity(intent)
             }
-            onItemLongClick = { clothingItemWithCategory ->
+            onItemLongClick = { itemFull ->
                 val bottomSheet = ItemActionsBottomSheet.newInstance(
-                    clothingItemWithCategory.clothingItem.name,
-                    clothingItemWithCategory.clothingItem.imagePath
+                    itemFull.clothingItem.name,
+                    itemFull.clothingItem.imagePath
                 )
                 bottomSheet.show(parentFragmentManager, bottomSheet.tag)
-
                 bottomSheet.onDeleteClicked = {
                     AlertDialog.Builder(requireContext())
-                        .setTitle("Удалить '${clothingItemWithCategory.clothingItem.name}'")
-                        .setPositiveButton("Удалить") { _, _ ->
-                            deleteItem(clothingItemWithCategory.clothingItem)
-                        }
+                        .setTitle("Удалить '${itemFull.clothingItem.name}'")
+                        .setPositiveButton("Удалить") { _, _ -> deleteItem(itemFull.clothingItem) }
                         .setNegativeButton("Отмена", null)
                         .show()
                 }
-
-                bottomSheet.onEditClicked = {
-                    val intent = Intent(requireContext(), EditclothesActivity::class.java).apply {
-                        putExtra("clothing_item", clothingItemWithCategory.clothingItem)
-                        putExtra("image_uri", clothingItemWithCategory.clothingItem.imagePath)
-                    }
-                    startActivity(intent)
-                }
             }
         }
+        loadClothingItems()
 
-        recyclerView.adapter = adapter
+        val selectPhotoButton = view.findViewById<ImageButton>(R.id.selectPhotoButton)
+        selectPhotoButton.setOnClickListener { showImagePickerDialog() }
+        val imageSearch = view.findViewById<ImageButton>(R.id.imageSearch)
+        imageSearch.setOnClickListener { startSearchClothingActivity() }
+        imageFilter = view.findViewById(R.id.imageFilter)
+        imageFilter.setOnClickListener { startFilterActivity() }
+
+        val tabLayoutView = view.findViewById<TabLayout>(R.id.tabLayout)
+        tabLayoutView.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab) {
+                val selectedCategory = tab.text.toString()
+                val filtered = if (selectedCategory.equals("Все", ignoreCase = true))
+                    currentItems
+                else
+                    currentItems.filter { it.categoryName.equals(selectedCategory, ignoreCase = true) }
+                (recyclerView.adapter as? ClothingAdapter)?.updateData(filtered)
+            }
+            override fun onTabUnselected(tab: TabLayout.Tab) {}
+            override fun onTabReselected(tab: TabLayout.Tab) {}
+        })
     }
-    //метод удаления вещи
+
     private fun deleteItem(item: ClothingItem) {
-        val db = Room.databaseBuilder(
-            requireContext(),
-            AppDatabase::class.java,
-            "wardrobe_db"
-        )
-            .allowMainThreadQueries()
-            .build()
-        db.clothingItemDao().delete(item)
-        loadClothingItems()
+        CoroutineScope(Dispatchers.IO).launch {
+            val db = Room.databaseBuilder(
+                requireContext(), AppDatabase::class.java, "wardrobe_db"
+            ).build()
+            db.clothingItemDao().delete(item)
+            withContext(Dispatchers.Main) { loadClothingItems() }
+        }
     }
-    // Метод, который обновляет RecyclerView
-    override fun onResume() {
-        super.onResume()
-        loadClothingItems()
-    }
-    //метод открытия диалогого окна
+
+    // Метод для выбора изображения (галерея, камера, файлы)
     private fun showImagePickerDialog() {
         val options = arrayOf("Выбрать из галереи", "Сфотографировать", "Выбрать из файлов")
         val icons = arrayOf(R.drawable.gallery, R.drawable.camera, R.drawable.file)
-
-        val adapter = object : BaseAdapter() {
+        val adapterDialog = object : BaseAdapter() {
             override fun getCount() = options.size
             override fun getItem(position: Int) = options[position]
             override fun getItemId(position: Int) = position.toLong()
@@ -197,7 +245,7 @@ class ClothesFragment : Fragment() {
         }
         AlertDialog.Builder(requireContext())
             .setTitle("Выберите действие")
-            .setAdapter(adapter) { _, which ->
+            .setAdapter(adapterDialog) { _, which ->
                 when (which) {
                     0 -> openGallery()
                     1 -> openCamera()
@@ -214,18 +262,20 @@ class ClothesFragment : Fragment() {
         }
         galleryLauncher.launch(intent)
     }
+
     private fun openCamera() {
         val photoFile = createImageFile()
-        photoUri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", photoFile)
+        photoUri = FileProvider.getUriForFile(
+            requireContext(), "${requireContext().packageName}.fileprovider", photoFile
+        )
         val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
             putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
         }
         cameraLauncher.launch(intent)
     }
+
     private fun openFiles() {
-        val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
-            type = "image/*"
-        }
+        val intent = Intent(Intent.ACTION_GET_CONTENT).apply { type = "image/*" }
         fileLauncher.launch(intent)
     }
 
@@ -234,31 +284,47 @@ class ClothesFragment : Fragment() {
         val storageDir = requireContext().getExternalFilesDir(null)
         return File.createTempFile("JPEG_${timestamp}_", ".jpg", storageDir)
     }
-    private val galleryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+
+    private val galleryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()
+    ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             val selectedImageUri: Uri? = result.data?.data
             startCategorySelectionActivity(selectedImageUri)
         }
     }
-    private val cameraLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            startCategorySelectionActivity(photoUri)
-        }
+    private val cameraLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) startCategorySelectionActivity(photoUri)
     }
-    private val fileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+    private val fileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()
+    ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             val selectedImageUri: Uri? = result.data?.data
             startCategorySelectionActivity(selectedImageUri)
         }
     }
+
     private fun startCategorySelectionActivity(imageUri: Uri?) {
         if (imageUri == null) return
         val intent = Intent(requireContext(), CategorySelectionActivity::class.java)
         intent.putExtra("image_uri", imageUri.toString())
         startActivity(intent)
     }
+
     private fun startSearchClothingActivity() {
         val intent = Intent(requireContext(), SearchClothingActivity::class.java)
         startActivity(intent)
+    }
+
+    private fun startFilterActivity() {
+        val intent = Intent(requireContext(), FilterActivity::class.java).apply {
+            currentFilters?.let {
+                putStringArrayListExtra("selectedSeasons", it.getStringArrayList("seasons"))
+                putStringArrayListExtra("selectedSizes", it.getStringArrayList("sizes"))
+                putStringArrayListExtra("selectedStatuses", it.getStringArrayList("statuses"))
+                putStringArrayListExtra("selectedTags", it.getStringArrayList("tags"))
+            }
+        }
+        filterActivityLauncher.launch(intent)
     }
 }

@@ -8,20 +8,23 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.hfad.mystylebox.R
-import com.hfad.mystylebox.database.ClothingItem
-import com.hfad.mystylebox.database.ClothingItemWithCategory
-import com.hfad.mystylebox.database.Subcategory
+import com.hfad.mystylebox.database.ClothingItemFull
 
 class ClothingAdapter(
-    private val initialItems: List<ClothingItemWithCategory>,
+    initialItems: List<ClothingItemFull>,
     private val layoutResId: Int
 ) : RecyclerView.Adapter<ClothingAdapter.ClothingViewHolder>() {
 
-    private var items = initialItems.toMutableList()
-    private val allItems = initialItems.toList()
+    private var items = mutableListOf<ClothingItemFull>()
+    private val allItems = mutableListOf<ClothingItemFull>()
 
-    var onItemClick: ((ClothingItemWithCategory) -> Unit)? = null
-    var onItemLongClick: ((ClothingItemWithCategory) -> Unit)? = null
+    init {
+        items.addAll(initialItems)
+        allItems.addAll(initialItems)
+    }
+
+    var onItemClick: ((ClothingItemFull) -> Unit)? = null
+    var onItemLongClick: ((ClothingItemFull) -> Unit)? = null
 
     inner class ClothingViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val imageView: ImageView = view.findViewById(R.id.itemImage)
@@ -29,7 +32,13 @@ class ClothingAdapter(
         val categoryText: TextView? = view.findViewById(R.id.itemCategory)
 
         init {
-            itemView.setOnLongClickListener {
+            view.setOnClickListener {
+                val pos = adapterPosition
+                if (pos != RecyclerView.NO_POSITION) {
+                    onItemClick?.invoke(items[pos])
+                }
+            }
+            view.setOnLongClickListener {
                 val pos = adapterPosition
                 if (pos != RecyclerView.NO_POSITION) {
                     onItemLongClick?.invoke(items[pos])
@@ -46,40 +55,40 @@ class ClothingAdapter(
     }
 
     override fun onBindViewHolder(holder: ClothingViewHolder, position: Int) {
-        val item = items[position]
+        val itemFull = items[position]
+        val item = itemFull.clothingItem
         val maxChars = 15
-        holder.nameText.text = if (item.clothingItem.name.length > maxChars) {
-            item.clothingItem.name.take(maxChars) + "..."
+        holder.nameText.text = if (item.name.length > maxChars) {
+            item.name.take(maxChars) + "..."
         } else {
-            item.clothingItem.name
+            item.name
         }
-
-        holder.categoryText?.text = "${item.categoryName} > ${item.subcategoryName}"
+        holder.categoryText?.text = "${itemFull.categoryName} > ${itemFull.subcategoryName}"
 
         Glide.with(holder.imageView.context)
-            .load(item.clothingItem.imagePath)
+            .load(item.imagePath)
             .into(holder.imageView)
-
-        holder.itemView.setOnClickListener {
-            onItemClick?.invoke(item)
-        }
     }
 
     fun filterByCategory(targetCategory: String) {
-        items = if (targetCategory == "Все") {
-            allItems.toMutableList()
+        items.clear()
+        if (targetCategory.equals("Все", ignoreCase = true)) {
+            items.addAll(allItems)
         } else {
-            allItems.filter {
-                it.categoryName == targetCategory
-            }.toMutableList()
+            items.addAll(
+                allItems.filter { it.categoryName.equals(targetCategory, ignoreCase = true) }
+            )
         }
         notifyDataSetChanged()
     }
 
-    fun updateData(newItems: List<ClothingItemWithCategory>) { // Изменен тип
-        this.items = newItems.toMutableList()
+    fun updateData(newItems: List<ClothingItemFull>) {
+        items.clear()
+        items.addAll(newItems)
+        allItems.clear()
+        allItems.addAll(newItems)
         notifyDataSetChanged()
     }
 
-    override fun getItemCount() = items.size
+    override fun getItemCount(): Int = items.size
 }

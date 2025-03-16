@@ -4,16 +4,12 @@ import android.content.Context
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.android.material.navigation.NavigationView
 import com.hfad.mystylebox.database.AppDatabase
 import com.hfad.mystylebox.database.Category
-import com.hfad.mystylebox.database.CategoryDao
 import com.hfad.mystylebox.database.Subcategory
-import com.hfad.mystylebox.database.SubcategoryDao
 
 class MainActivity : AppCompatActivity() {
     private lateinit var database: AppDatabase

@@ -28,6 +28,9 @@
             android:name=".TagEditingActivity"
             android:exported="false" />
         <activity
+            android:name=".FilterActivity"
+            android:exported="false" />
+        <activity
             android:name=".EditclothesActivity"
             android:screenOrientation="portrait" />
 

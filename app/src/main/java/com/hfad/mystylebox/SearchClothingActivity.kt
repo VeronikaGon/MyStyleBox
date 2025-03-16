@@ -11,30 +11,36 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import com.hfad.mystylebox.adapter.ClothingAdapter
 import com.hfad.mystylebox.database.AppDatabase
+import com.hfad.mystylebox.database.ClothingItemFull
+import com.hfad.mystylebox.database.ClothingItemWithTags
+import com.hfad.mystylebox.databinding.ActivitySearchClothingBinding
 
 class SearchClothingActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivitySearchClothingBinding
     private lateinit var searchView: SearchView
-    private lateinit var recyclerView: RecyclerView
+    private lateinit var recyclerView: androidx.recyclerview.widget.RecyclerView
     private lateinit var adapter: ClothingAdapter
     private lateinit var db: AppDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_search_clothing)
+        binding = ActivitySearchClothingBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        searchView = findViewById(R.id.searchView)
+        searchView = binding.searchView
         searchView.isIconified = false
 
+        // Настройка внешнего вида SearchView
         val searchText = searchView.findViewById<EditText>(androidx.appcompat.R.id.search_src_text)
-        searchText.setTextColor(Color.BLACK) // Цвет вводимого текста
-        searchText.setHintTextColor(Color.GRAY) // Цвет hint
-        searchView.setBackgroundColor(Color.WHITE) // Фон SearchView
+        searchText.setTextColor(Color.BLACK)
+        searchText.setHintTextColor(Color.GRAY)
+        searchView.setBackgroundColor(Color.WHITE)
 
-        recyclerView = findViewById(R.id.recyclerViewSearch)
+        recyclerView = binding.recyclerViewSearch
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        // Инициализация базы данных Room (работа в основном потоке для простоты)
+        // Инициализация базы данных Room (для простоты работаем в основном потоке)
         db = Room.databaseBuilder(
             applicationContext,
             AppDatabase::class.java,
@@ -43,15 +49,11 @@ class SearchClothingActivity : AppCompatActivity() {
             .allowMainThreadQueries()
             .build()
 
-        val itemsWithCategories = db.clothingItemDao().getAllItemsWithCategories()
+        // Загружаем все вещи с полной информацией (включая категорию, подкатегорию и теги)
+        val itemsFull: List<ClothingItemFull> = db.clothingItemDao().getAllItemsFull()
 
-        // Создаем список для адаптера
-        val categorySubcategoryList = itemsWithCategories.map {
-            Pair(it.categoryName, it.subcategoryName)
-        }
-
-        // Передаем полные данные в адаптер
-        adapter = ClothingAdapter(itemsWithCategories, R.layout.item_clothing1)
+        // Инициализируем адаптер с типом ClothingItemFull
+        adapter = ClothingAdapter(itemsFull, R.layout.item_clothing1)
         recyclerView.adapter = adapter
 
         setupSearchView()
@@ -65,11 +67,12 @@ class SearchClothingActivity : AppCompatActivity() {
                     val trimmedQuery = it.trim()
                     if (trimmedQuery.isNotEmpty()) {
                         val queryPattern = "%$trimmedQuery%"
-                        var results = db.clothingItemDao().searchByNameWithCategories(queryPattern)
+                        var results: List<ClothingItemFull> =
+                            db.clothingItemDao().searchByNameWithFull(queryPattern)
                         if (results.isEmpty()) {
-                            results = db.clothingItemDao().searchByDescriptionWithCategories(queryPattern)
+                            results = db.clothingItemDao().searchByDescriptionWithFull(queryPattern)
                         }
-                        adapter.updateData(results) // Теперь совпадает тип
+                        adapter.updateData(results)
                     }
                 }
                 return true
@@ -79,9 +82,10 @@ class SearchClothingActivity : AppCompatActivity() {
                 val trimmedQuery = newText?.trim() ?: ""
                 if (trimmedQuery.isNotEmpty()) {
                     val queryPattern = "%$trimmedQuery%"
-                    var results = db.clothingItemDao().searchByNameWithCategories(queryPattern)
+                    var results: List<ClothingItemFull> =
+                        db.clothingItemDao().searchByNameWithFull(queryPattern)
                     if (results.isEmpty()) {
-                        results = db.clothingItemDao().searchByDescriptionWithCategories(queryPattern)
+                        results = db.clothingItemDao().searchByDescriptionWithFull(queryPattern)
                     }
                     adapter.updateData(results)
                 } else {
@@ -92,14 +96,13 @@ class SearchClothingActivity : AppCompatActivity() {
         })
     }
 
-    // Исправление putExtra
     private fun setupItemClick() {
-        adapter.onItemClick = { itemWithCategory ->
-            val intent = Intent(this, EditclothesActivity::class.java).apply {
+        adapter.onItemClick = { itemFull ->
+            val intent = android.content.Intent(this, EditclothesActivity::class.java).apply {
                 // Передаем базовый объект ClothingItem
-                putExtra("clothing_item", itemWithCategory.clothingItem)
-                putExtra("image_uri", itemWithCategory.clothingItem.imagePath)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                putExtra("clothing_item", itemFull.clothingItem)
+                putExtra("image_uri", itemFull.clothingItem.imagePath)
+                addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
             startActivity(intent)
         }

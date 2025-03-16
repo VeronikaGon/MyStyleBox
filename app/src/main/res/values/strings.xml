@@ -22,10 +22,12 @@
     <string name="delete"> Удалить </string>
     <string name="save"> Сохранить </string>
     <string name="home"> Главная </string>
+    <string name="reset"> Сбросить </string>
     <string name="search"> Поиск </string>
     <string name="searchsubcategory"> Поиск по категориям </string>
     <string name="outfits"> Комплекты </string>
     <string name="hintsearch"> Поиск по названию вещи </string>
     <string name="edittags">  Редактирование тегов </string>
+    <string name="filterclothing">  Фильтр вещей </string>
     <string name="clothingtagscount">  Вещей с тегом: 0</string>
 </resources>
