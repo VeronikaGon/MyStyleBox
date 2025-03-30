@@ -4,12 +4,12 @@ import androidx.room.Entity;
 import androidx.room.ForeignKey;
 
 @Entity(
-        tableName = "clothing_item_tag",
-        primaryKeys = {"clothingItemId", "tagId"},
+        tableName = "outfit_tag",
+        primaryKeys = {"outfitId", "tagId"},
         foreignKeys = {
-                @ForeignKey(entity = ClothingItem.class,
+                @ForeignKey(entity = Outfit.class,
                         parentColumns = "id",
-                        childColumns = "clothingItemId",
+                        childColumns = "outfitId",
                         onDelete = ForeignKey.CASCADE),
                 @ForeignKey(entity = Tag.class,
                         parentColumns = "id",
@@ -17,12 +17,12 @@ import androidx.room.ForeignKey;
                         onDelete = ForeignKey.CASCADE)
         }
 )
-public class ClothingItemTag {
-    public int clothingItemId;
+public class OutfitTag {
+    public int outfitId;
     public int tagId;
 
-    public ClothingItemTag(int clothingItemId, int tagId) {
-        this.clothingItemId = clothingItemId;
+    public OutfitTag(int outfitId, int tagId) {
+        this.outfitId = outfitId;
         this.tagId = tagId;
     }
 }

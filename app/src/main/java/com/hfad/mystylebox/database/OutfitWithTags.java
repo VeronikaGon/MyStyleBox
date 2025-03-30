@@ -6,7 +6,7 @@ import androidx.room.Relation;
 
 import java.util.List;
 
-public class ClothingItemWithTags {
+public class OutfitWithTags {
     @Embedded
     public ClothingItem clothingItem;
 
@@ -15,8 +15,8 @@ public class ClothingItemWithTags {
             entity = Tag.class,
             entityColumn = "id",
             associateBy = @Junction(
-                    value = ClothingItemTag.class,
-                    parentColumn = "clothingItemId",
+                    value = Outfit.class,
+                    parentColumn = "outfitId",
                     entityColumn = "tagId"
             )
     )

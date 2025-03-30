@@ -92,9 +92,5 @@
             app:layout_constraintEnd_toEndOf="parent"
             android:scaleType="centerInside" />
 
-
     </androidx.constraintlayout.widget.ConstraintLayout>
-
-
 </LinearLayout>
-

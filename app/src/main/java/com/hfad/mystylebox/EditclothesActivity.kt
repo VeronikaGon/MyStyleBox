@@ -46,28 +46,8 @@ class EditclothesActivity : AppCompatActivity() {
         if (result.resultCode == RESULT_OK) {
             val updatedItem = result.data?.getParcelableExtra<ClothingItem>("updated_item")
             if (updatedItem != null) {
-                // Обновляем UI предварительного просмотра с обновлёнными данными
                 updatePreviewUI(updatedItem)
             }
-        }
-    }
-    private fun displayTagsForPreview(tags: List<Tag>) {
-        flexboxTags.removeAllViews()
-        tags.forEach { tag ->
-            val textView = TextView(this).apply {
-                text = tag.name
-                setPadding(16, 8, 16, 8)
-
-                setBackgroundResource(R.drawable.checkbox_background)
-                isClickable = false
-            }
-            val params = FlexboxLayout.LayoutParams(
-                FlexboxLayout.LayoutParams.WRAP_CONTENT,
-                FlexboxLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                setMargins(8, 8, 8, 8)
-            }
-            flexboxTags.addView(textView, params)
         }
     }
 
@@ -111,6 +91,7 @@ class EditclothesActivity : AppCompatActivity() {
 
 
     }
+
     private fun setupUI() {
         // Инициализация отступов с учётом системных окон
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
@@ -265,34 +246,94 @@ class EditclothesActivity : AppCompatActivity() {
             Toast.makeText(this, "Данные не получены", Toast.LENGTH_SHORT).show()
         }
     }
-
     //Обновление после редактирования
     private fun updatePreviewUI(item: ClothingItem) {
-            findViewById<TextView>(R.id.status).text = item.status
-            findViewById<TextView>(R.id.textviewsize).text = item.size
-            findViewById<TextView>(R.id.textviewbrend).text = item.brend
-            findViewById<TextView>(R.id.textViewNotes).text = item.notes
-            findViewById<CheckBox>(R.id.cbSummer).isChecked = item.seasons.contains("Лето")
-            findViewById<CheckBox>(R.id.cbSpring).isChecked = item.seasons.contains("Весна")
-            findViewById<CheckBox>(R.id.cbAutumn).isChecked = item.seasons.contains("Осень")
-            findViewById<CheckBox>(R.id.cbWinter).isChecked = item.seasons.contains("Зима")
-            findViewById<TextView>(R.id.textviewstoimost).text = item.cost.toString()
+        currentClothingItem = item
+        // Обновление текстовых полей
+        findViewById<TextView>(R.id.status).text = item.status
+        findViewById<TextView>(R.id.textviewsize).text = item.size
+        findViewById<TextView>(R.id.textviewbrend).text = item.brend
+        findViewById<TextView>(R.id.textViewNotes).text = item.notes
+        findViewById<TextView>(R.id.textviewstoimost).text = item.cost.toString()
         findViewById<TextView>(R.id.textviewgender).text = item.gender
         findViewById<TextView>(R.id.textviewname).text = item.name
-        currentClothingItem = item
+
+        lifecycleScope.launch {
+            val subcategoryName = withContext(Dispatchers.IO) {
+                subcategoryDao.getSubcategoryNameById(item.subcategoryId)
+            }
+            findViewById<TextView>(R.id.textviewcategory).text  = subcategoryName
+        }
+// Обновление видимости контейнеров в зависимости от наличия данных
+        val llNotes = findViewById<LinearLayout>(R.id.llNotes)
+        llNotes.visibility = if (!item.notes.isNullOrEmpty()) View.VISIBLE else View.GONE
+
+        val llSize = findViewById<LinearLayout>(R.id.llsize)
+        llSize.visibility = if (!item.size.isNullOrEmpty()) View.VISIBLE else View.GONE
+
+        val llBrend = findViewById<LinearLayout>(R.id.llbrend)
+        llBrend.visibility = if (!item.brend.isNullOrEmpty()) View.VISIBLE else View.GONE
+
+        val llStoimost = findViewById<LinearLayout>(R.id.llstoimost)
+        llStoimost.visibility = if (item.cost != 0f) View.VISIBLE else View.GONE
+
+        val llSeason = findViewById<LinearLayout>(R.id.llseason)
+        llSeason.visibility = if (!item.seasons.isNullOrEmpty()) View.VISIBLE else View.GONE
+
+        // Обновление состояний сезонов
+        findViewById<CheckBox>(R.id.cbSummer).isChecked = item.seasons.contains("Лето")
+        findViewById<CheckBox>(R.id.cbSpring).isChecked = item.seasons.contains("Весна")
+        findViewById<CheckBox>(R.id.cbAutumn).isChecked = item.seasons.contains("Осень")
+        findViewById<CheckBox>(R.id.cbWinter).isChecked = item.seasons.contains("Зима")
+
+        // Обновление изображения
+        val imageView = findViewById<ImageView>(R.id.clothingImageView)
+        val imageUriString = item.imagePath ?: intent.getStringExtra("image_uri")
+        if (!imageUriString.isNullOrEmpty()) {
+            try {
+                val uri = Uri.parse(imageUriString)
+                Glide.with(this)
+                    .load(uri)
+                    .into(imageView)
+            } catch (e: Exception) {
+                Toast.makeText(this, "Некорректный URI изображения", Toast.LENGTH_SHORT).show()
+            }
+        }
+        val llTegi = findViewById<LinearLayout>(R.id.llTegi)
+        // Обновление тегов
         lifecycleScope.launch(Dispatchers.IO) {
             val tags = clothingItemTagDao.getTagsForClothingItem(item.id)
             withContext(Dispatchers.Main) {
                 if (tags.isNotEmpty()) {
+                    llTegi.visibility = View.VISIBLE
                     flexboxTags.visibility = View.VISIBLE
                     displayTagsForPreview(tags)
                 } else {
+                    llTegi.visibility = View.GONE
                     flexboxTags.visibility = View.GONE
                 }
             }
         }
     }
+    private fun displayTagsForPreview(tags: List<Tag>) {
+        flexboxTags.removeAllViews()
+        tags.forEach { tag ->
+            val textView = TextView(this).apply {
+                text = tag.name
+                setPadding(16, 8, 16, 8)
 
+                setBackgroundResource(R.drawable.checkbox_background)
+                isClickable = false
+            }
+            val params = FlexboxLayout.LayoutParams(
+                FlexboxLayout.LayoutParams.WRAP_CONTENT,
+                FlexboxLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(8, 8, 8, 8)
+            }
+            flexboxTags.addView(textView, params)
+        }
+    }
     private fun navigateToClothesActivity() {
         currentClothingItem?.let { item ->
             val intent = Intent(this, ClothesActivity::class.java).apply {

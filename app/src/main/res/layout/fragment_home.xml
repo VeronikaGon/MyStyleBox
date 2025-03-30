@@ -5,8 +5,8 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity"
     android:orientation="vertical"
+    tools:context=".MainActivity"
     android:background="#FCD5CE"
     android:padding="16dp">
 
@@ -17,8 +17,6 @@
         android:layout_height="0dp"
         android:layout_marginBottom="102dp"
         android:layout_weight="1">
-
-
 
         <TextView
             android:id="@+id/textView2"

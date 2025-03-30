@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout  xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FCD5CE">
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/ButtonSAVE">
+    <androidx.constraintlayout.widget.ConstraintLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingBottom="16dp"
+    >
+    <TextView
+        android:id="@+id/textviewtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/outfitname"
+        android:textSize="30sp"
+        android:textColor="#000000"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+        android:id="@+id/clothingImageView"
+        android:layout_width="250dp"
+        android:layout_height="250dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textviewtitle"
+        tools:ignore="MissingConstraints" />
+
+        <LinearLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="32dp"
+        android:background="@drawable/linear_background"
+        android:orientation="vertical"
+        android:padding="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/clothingImageView">
+
+        <TextView
+            android:id="@+id/textView3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/name"
+            android:textColor="#000000"
+            android:textSize="22sp" />
+
+        <EditText
+            android:id="@+id/enterName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/edittext_background"
+            android:padding="5dp"
+            android:paddingStart="10dp"
+            android:textColor="#000000"
+            android:textSize="18sp" />
+    </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/llseason"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="32dp"
+            android:background="@drawable/linear_background"
+            android:orientation="vertical"
+            android:padding="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/linearLayout">
+
+            <TextView
+                android:id="@+id/textView8"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/seasons"
+                android:textColor="#000000"
+                android:textSize="22sp" />
+
+            <com.google.android.flexbox.FlexboxLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/edittext_background"
+                android:padding="5dp"
+                android:paddingStart="10dp"
+                app:flexWrap="wrap"
+                android:textColor="#000000"
+                android:textSize="18sp" >
+
+                <CheckBox
+                    android:id="@+id/cbSummer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/checkbox_background"
+                    android:gravity="center_vertical"
+                    android:padding="8dp"
+                    android:text="Лето"
+                    android:button="@null"
+                    android:layout_margin="3dp"
+                    android:drawableStart="@drawable/summer"
+                    android:drawablePadding="8dp" />
+
+                <CheckBox
+                    android:id="@+id/cbSpring"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Весна"
+                    android:background="@drawable/checkbox_background"
+                    android:padding="8dp"
+                    android:button="@null"
+                    android:gravity="center_vertical"
+                    android:drawableStart="@drawable/sprimg"
+                    android:drawablePadding="8dp"
+                    android:layout_margin="3dp"
+                    android:minHeight="32dp"/>
+                <CheckBox
+                    android:id="@+id/cbWinter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Зима"
+                    android:drawableLeft="@drawable/winter"
+                    android:background="@drawable/checkbox_background"
+                    android:padding="8dp"
+                    android:button="@null"
+                    android:gravity="center_vertical"
+                    android:layout_margin="3dp"
+                    android:minHeight="32dp"/>
+                <CheckBox
+                    android:id="@+id/cbAutumn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Осень"
+                    android:drawableLeft="@drawable/autumn"
+                    android:background="@drawable/checkbox_background"
+                    android:padding="8dp"
+                    android:button="@null"
+                    android:layout_margin="3dp"
+                    android:gravity="center_vertical"
+                    android:minHeight="32dp"/>
+            </com.google.android.flexbox.FlexboxLayout>
+        </LinearLayout>
+        <LinearLayout
+        android:id="@+id/llWeather"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="32dp"
+        android:background="@drawable/linear_background"
+        android:orientation="vertical"
+        android:padding="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/llseason">
+
+        <TextView
+            android:id="@+id/textView6"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/weather"
+            android:textColor="#000000"
+            android:textSize="22sp" />
+
+            <com.google.android.material.slider.RangeSlider
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:valueFrom="-50"
+            android:valueTo="50"
+            app:trackColor="@color/backgroundpink"
+            app:tickColorActive="@android:color/transparent"
+            android:stepSize="1"
+            app:values="@array/initial_slider_values"  />
+    </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/llTegi"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="32dp"
+            android:background="@drawable/linear_background"
+            android:orientation="vertical"
+            android:padding="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/llWeather">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/textView11"
+                    android:layout_gravity="left"
+                    android:gravity="center"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="@string/tegi"
+                    android:textColor="#000000"
+                    android:textSize="22sp" />
+                <ImageButton
+                   android:paddingBottom="8dp"
+                    android:layout_gravity="right"
+                    android:id="@+id/imageButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/transparent"
+                    app:srcCompat="@drawable/edit" />
+            </FrameLayout>
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="vertical">
+                <com.google.android.flexbox.FlexboxLayout
+                    android:id="@+id/Tags"
+                    android:layout_width="match_parent"
+                    android:layout_height="150dp"
+                    android:background="@drawable/edittext_background"
+                    android:padding="5dp"
+                    android:paddingStart="10dp"
+                    app:flexWrap="wrap"
+                    android:textColor="#000000"
+                    android:textSize="18sp"
+                    app:alignItems="flex_start"
+                    app:alignContent="flex_start">
+                </com.google.android.flexbox.FlexboxLayout>
+            </ScrollView>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/llNotes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="32dp"
+            android:background="@drawable/linear_background"
+            android:orientation="vertical"
+            android:padding="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/llTegi">
+
+            <TextView
+                android:id="@+id/textView14"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/notes"
+                android:textColor="#000000"
+                android:textSize="22sp" />
+
+            <EditText
+                android:id="@+id/enterNotes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/edittext_background"
+                android:padding="5dp"
+                android:hint="@string/hint"
+                android:paddingStart="10dp"
+                android:textColor="#000000"
+                android:textSize="18sp" />
+        </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>
+
+    <Button
+        android:id="@+id/ButtonSAVE"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:drawableRight="@drawable/save"
+        android:text="@string/add"
+        android:backgroundTint="#E8A598"
+        android:textColor="@color/black"
+        android:textSize="18sp"
+        android:layout_marginBottom="2dp"
+        android:gravity="center"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

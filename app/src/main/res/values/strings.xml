@@ -1,10 +1,12 @@
 <resources>
     <string name="app_name">MyStyleBox</string>
     <string name="clothesname"> Добавление вещи </string>
+    <string name="outfitname"> Добавление комплекта </string>
     <string name="addtag"> Добавить новый тег </string>
     <string name="name"> Название </string>
     <string name="cancel"> Отмена </string>
     <string name="things"> Вещи </string>
+    <string name="weather"> Погода </string>
     <string name="category"> Категория </string>
     <string name="count"> Стоимость </string>
     <string name="brend"> Бренд </string>

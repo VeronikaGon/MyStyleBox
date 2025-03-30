@@ -16,10 +16,12 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity.RESULT_OK
 import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
+import com.bumptech.glide.Glide
 import com.hfad.mystylebox.database.AppDatabase
 import java.io.File
 import java.text.SimpleDateFormat
@@ -28,6 +30,7 @@ import java.util.Locale
 import com.hfad.mystylebox.database.ClothingItem
 import com.google.android.material.tabs.TabLayout
 import com.hfad.mystylebox.CategorySelectionActivity
+import com.hfad.mystylebox.EditImageActivity
 import com.hfad.mystylebox.EditclothesActivity
 import com.hfad.mystylebox.FilterActivity
 import com.hfad.mystylebox.ItemActionsBottomSheet
@@ -285,30 +288,39 @@ class ClothesFragment : Fragment() {
         return File.createTempFile("JPEG_${timestamp}_", ".jpg", storageDir)
     }
 
-    private val galleryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()
-    ) { result ->
+    private val galleryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             val selectedImageUri: Uri? = result.data?.data
-            startCategorySelectionActivity(selectedImageUri)
+            startEditActivity(selectedImageUri)
         }
     }
-    private val cameraLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) startCategorySelectionActivity(photoUri)
+    private val cameraLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            startEditActivity(photoUri)
+        }
     }
-    private val fileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()
-    ) { result ->
+    private val fileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             val selectedImageUri: Uri? = result.data?.data
-            startCategorySelectionActivity(selectedImageUri)
+            startEditActivity(selectedImageUri)
+        }
+    }
+    private val editLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val editedImageUriString = result.data?.getStringExtra("result_image_uri")
+            if (!editedImageUriString.isNullOrEmpty()) {
+                val editedImageUri = Uri.parse(editedImageUriString)
+                val imageView = requireView().findViewById<ImageView>(R.id.image)
+                Glide.with(this).load(editedImageUri).into(imageView)
+            }
         }
     }
 
-    private fun startCategorySelectionActivity(imageUri: Uri?) {
+    private fun startEditActivity(imageUri: Uri?) {
         if (imageUri == null) return
-        val intent = Intent(requireContext(), CategorySelectionActivity::class.java)
-        intent.putExtra("image_uri", imageUri.toString())
-        startActivity(intent)
+        val intent = Intent(requireContext(), EditImageActivity::class.java)
+        intent.putExtra("imageUri", imageUri.toString())
+        editLauncher.launch(intent)
     }
 
     private fun startSearchClothingActivity() {

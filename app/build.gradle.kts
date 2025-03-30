@@ -58,11 +58,13 @@ android {
 }
 
 dependencies {
+    implementation ("com.google.android.material:material:1.6.0")
     implementation ("androidx.core:core-splashscreen:1.0.1")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.0")
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
+    implementation("com.github.yalantis:ucrop:2.2.6")
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

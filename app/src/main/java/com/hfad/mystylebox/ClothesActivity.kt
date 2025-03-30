@@ -1,6 +1,7 @@
 package com.hfad.mystylebox
 
 import android.app.Activity
+import android.content.DialogInterface
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -16,6 +17,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
@@ -37,6 +39,7 @@ class ClothesActivity : AppCompatActivity() {
     private lateinit var clothingItemDao: ClothingItemDao
     private lateinit var subcategoryDao: SubcategoryDao
     private lateinit var clothingItemTagDao: ClothingItemTagDao
+
     private lateinit var flexboxTags: FlexboxLayout
     private var selectedTagIds: MutableSet<Int> = mutableSetOf()
 
@@ -52,24 +55,27 @@ class ClothesActivity : AppCompatActivity() {
     private lateinit var cbSpring: CheckBox
     private lateinit var cbWinter: CheckBox
     private lateinit var cbAutumn: CheckBox
+
     private var imagePath: String? = null
     private var subcategory: String? = null
     private var selectedSubcategoryId: Int = -1
+    private var isReselection: Boolean = false
+    private var isInEditMode: Boolean = false
+
     private lateinit var categoryResultLauncher: ActivityResultLauncher<Intent>
     private lateinit var tagEditingLauncher: ActivityResultLauncher<Intent>
-
     private var selectedTags: List<Tag> = listOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.clothes)
+
         flexboxTags = findViewById(R.id.Tags)
         clothingImageView = findViewById(R.id.clothingImageView)
         clothingNameEditText = findViewById(R.id.enterName)
         clothingBrendEditText = findViewById(R.id.enterBrend)
         clothingCostEditText = findViewById(R.id.enterStoimost)
         clothingNotesEditText = findViewById(R.id.enterNotes)
-        clothingNameEditText = findViewById(R.id.enterName)
         cbSummer = findViewById(R.id.cbSummer)
         cbSpring = findViewById(R.id.cbSpring)
         cbWinter = findViewById(R.id.cbWinter)
@@ -78,8 +84,9 @@ class ClothesActivity : AppCompatActivity() {
         textviewTitle = findViewById(R.id.textviewtitle)
         categoryField = findViewById(R.id.categoryField)
 
+        // Инициализация лончеров для запуска активностей и получения результатов
         tagEditingLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK) {
+            if (result.resultCode == Activity.RESULT_OK) {
                 val returnedTags = result.data?.getParcelableArrayListExtra<Tag>("selected_tags")
                 if (returnedTags != null) {
                     selectedTagIds.clear()
@@ -91,6 +98,8 @@ class ClothesActivity : AppCompatActivity() {
                 }
             }
         }
+
+        // Запуск TagEditingActivity при клике по блоку с тегами
         val llTegi = findViewById<LinearLayout>(R.id.llTegi)
         llTegi.setOnClickListener {
             val intent = Intent(this, TagEditingActivity::class.java)
@@ -102,22 +111,20 @@ class ClothesActivity : AppCompatActivity() {
             tagEditingLauncher.launch(intent)
         }
 
-        categoryResultLauncher = registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult()
-        ) { result ->
+        // Лончер для CategorySelectionActivity – теперь возвращаем результат через ActivityResult
+        categoryResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
-                val subcategory = result.data?.getStringExtra("subcategory")
+                val returnedSubcategory = result.data?.getStringExtra("subcategory")
                 selectedSubcategoryId = result.data?.getIntExtra("selected_subcategory_id", -1) ?: -1
-                categoryField.text = subcategory ?: "Не выбрано"
-                clothingNameEditText.setText(result.data?.getStringExtra("name") ?: "")
-                clothingBrendEditText.setText(result.data?.getStringExtra("brend") ?: "")
-                clothingCostEditText.setText(result.data?.getStringExtra("cost") ?: "")
-                clothingNotesEditText.setText(result.data?.getStringExtra("notes") ?: "")
-                setSelectedSize(result.data?.getStringExtra("size") ?: "")
-                setSelectedStatus(result.data?.getStringExtra("status") ?: "")
-                setSelectedGender(result.data?.getStringExtra("gender") ?: "Универсально")
+                categoryField.text = returnedSubcategory ?: "Не выбрано"
+                // Если название вещи не заполнено – подставляем выбранную подкатегорию
+                if (clothingNameEditText.text.toString().trim().isEmpty()) {
+                    clothingNameEditText.setText(returnedSubcategory ?: "")
+                }
             }
         }
+
+        // При клике на поле выбора категории открываем CategorySelectionActivity с передачей данных
         categoryField.setOnClickListener {
             val intent = Intent(this, CategorySelectionActivity::class.java).apply {
                 putExtra("image_uri", imagePath.toString())
@@ -128,35 +135,50 @@ class ClothesActivity : AppCompatActivity() {
                 putExtra("size", getSelectedSize())
                 putExtra("status", getSelectedStatus())
                 putExtra("gender", getSelectedGender())
+                putExtra("is_reselection", true)
             }
             categoryResultLauncher.launch(intent)
         }
+
+        // Восстанавливаем состояние, если оно было сохранено
+        savedInstanceState?.let {
+            clothingNameEditText.setText(it.getString("name"))
+            clothingBrendEditText.setText(it.getString("brend"))
+            clothingCostEditText.setText(it.getString("cost"))
+            clothingNotesEditText.setText(it.getString("notes"))
+            categoryField.text = it.getString("subcategory") ?: "Не выбрано"
+            imagePath = it.getString("image_path")
+        }
+
+        // Инициализация БД и DAO
         db = Room.databaseBuilder(
             applicationContext,
             AppDatabase::class.java,
             "wardrobe_db"
-        )
-            .allowMainThreadQueries()
-            .build()
+        ).allowMainThreadQueries().build()
         clothingItemDao = db.clothingItemDao()
         subcategoryDao = db.subcategoryDao()
         clothingItemTagDao = db.clothingItemTagDao()
 
+        // Получаем данные, переданные через Intent
         subcategory = intent.getStringExtra("subcategory")
         selectedSubcategoryId = intent.getIntExtra("selected_subcategory_id", -1)
+        isReselection = intent.getBooleanExtra("is_reselection", false)
         imagePath = intent.getStringExtra("image_path")
-        if (!imagePath.isNullOrEmpty()) {
-            clothingImageView.setImageURI(Uri.parse(imagePath))
+        imagePath?.let { path ->
+            clothingImageView.setImageURI(Uri.parse(path))
         }
-        if (subcategory != null) {
-            categoryField.text = subcategory
+        subcategory?.let {
+            categoryField.text = it
         }
 
+        // Обработка выбора размера через FlexboxLayout
         val flexboxLayout = findViewById<FlexboxLayout>(R.id.flexboxLayout)
         for (i in 0 until flexboxLayout.childCount) {
             val child = flexboxLayout.getChildAt(i)
             if (child is RadioButton) {
                 child.setOnClickListener {
+                    // Снимаем выбор со всех RadioButton
                     for (j in 0 until flexboxLayout.childCount) {
                         (flexboxLayout.getChildAt(j) as? RadioButton)?.isChecked = false
                     }
@@ -164,23 +186,63 @@ class ClothesActivity : AppCompatActivity() {
                 }
             }
         }
-        // Проверяем, запущена ли активность в режиме редактирования
+
+        // Если активность запущена для редактирования, заполняем поля данными существующего элемента
         val editingItem = intent.getParcelableExtra<ClothingItem>("clothingItem")
-        imagePath = intent.getStringExtra("image_path")
-        if (!imagePath.isNullOrEmpty()) {
-            clothingImageView.setImageURI(Uri.parse(imagePath))
+        imagePath?.let { path ->
+            clothingImageView.setImageURI(Uri.parse(path))
         }
         if (editingItem != null) {
             populateFields(editingItem)
             textviewTitle.text = "Редактирование вещи"
             saveButton.text = "Обновить"
-            saveButton.setOnClickListener { updateClothingItem(editingItem) }
+            isInEditMode = true
+            saveButton.setOnClickListener { updateClothingItem(editingItem)
+            }
         } else {
             saveButton.setOnClickListener { saveClothingItem() }
         }
         loadTagsFromDatabase()
     }
-    //установка значений для редактирования
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString("name", clothingNameEditText.text.toString())
+        outState.putString("brend", clothingBrendEditText.text.toString())
+        outState.putString("cost", clothingCostEditText.text.toString())
+        outState.putString("notes", clothingNotesEditText.text.toString())
+        outState.putString("subcategory", categoryField.text.toString())
+        outState.putString("image_path", imagePath)
+    }
+
+    override fun onBackPressed() {
+        if (clothingNameEditText.text.toString().isNotEmpty() ||
+            clothingBrendEditText.text.toString().isNotEmpty() ||
+            clothingCostEditText.text.toString().isNotEmpty() ||
+            clothingNotesEditText.text.toString().isNotEmpty()
+        ) {
+            if (isInEditMode) {
+                AlertDialog.Builder(this)
+                    .setTitle("Выход")
+                    .setMessage("Вы точно хотите выйти? Данные не будут обновлены.")
+                    .setPositiveButton("Да") { _: DialogInterface, _: Int -> finish() }
+                    .setNegativeButton("Нет", null)
+                    .show()
+            }
+            else {
+                AlertDialog.Builder(this)
+                    .setTitle("Выход")
+                    .setMessage("Вы точно хотите выйти? Данная вещь не будет сохранена.")
+                    .setPositiveButton("Да") { _: DialogInterface, _: Int -> finish() }
+                    .setNegativeButton("Нет", null)
+                    .show()
+            }
+        } else {
+            super.onBackPressed()
+        }
+    }
+
+    // Метод для заполнения полей при редактировании
     private fun populateFields(item: ClothingItem) {
         clothingNameEditText.setText(item.name)
         clothingBrendEditText.setText(item.brend)
@@ -190,36 +252,27 @@ class ClothesActivity : AppCompatActivity() {
         cbSpring.isChecked = item.seasons?.contains("Весна") == true
         cbWinter.isChecked = item.seasons?.contains("Зима") == true
         cbAutumn.isChecked = item.seasons?.contains("Осень") == true
-        // Установка размера (предполагается, что flexboxLayout присутствует)
         setSelectedSize(item.size)
         setSelectedStatus(item.status)
         setSelectedGender(item.gender)
-        // Установка изображения (если imagePath не передан в Intent, можно использовать значение из объекта)
         if (imagePath.isNullOrEmpty() && item.imagePath.isNotEmpty()) {
             imagePath = item.imagePath
             clothingImageView.setImageURI(Uri.parse(imagePath))
         }
-   lifecycleScope.launch {
-            val subcatName = withContext(Dispatchers.IO) {
-                subcategoryDao.getSubcategoryNameById(item.subcategoryId)
-            }
+        lifecycleScope.launch {
+            val subcatName = withContext(Dispatchers.IO) { subcategoryDao.getSubcategoryNameById(item.subcategoryId) }
             categoryField.text = subcatName
         }
         selectedSubcategoryId = item.subcategoryId
-        // Загружаем выбранные теги для данной вещи из базы:
         lifecycleScope.launch(Dispatchers.IO) {
-            val savedTagIds = clothingItemTagDao.getTagsForClothingItem(item.id)
-                .map { it.id }
-                .toSet()
+            val savedTagIds = clothingItemTagDao.getTagsForClothingItem(item.id).map { it.id }.toSet()
             selectedTagIds.clear()
             selectedTagIds.addAll(savedTagIds)
-            // Также можно загрузить полный список тегов, чтобы отобразить все варианты:
             val allTags = db.tagDao().getAllTags()
-            withContext(Dispatchers.Main) {
-                displayTagsAsCheckboxes(allTags, selectedTagIds)
-            }
+            withContext(Dispatchers.Main) { displayTagsAsCheckboxes(allTags, selectedTagIds) }
         }
     }
+    // Метод для обновления существующего элемента
     private fun updateClothingItem(oldItem: ClothingItem) {
         val name = clothingNameEditText.text.toString().trim()
         if (name.isEmpty()) {
@@ -228,7 +281,7 @@ class ClothesActivity : AppCompatActivity() {
         }
         val brend = clothingBrendEditText.text.toString().trim()
         val costInput = clothingCostEditText.text.toString().trim()
-        val cost = if (costInput.isEmpty()) { 0.0f } else {
+        val cost = if (costInput.isEmpty()) 0.0f else {
             if (!validateCostInput(costInput)) {
                 Toast.makeText(this, "Введите корректное значение для стоимости", Toast.LENGTH_SHORT).show()
                 return
@@ -242,10 +295,19 @@ class ClothesActivity : AppCompatActivity() {
         if (cbWinter.isChecked) seasons.add(cbWinter.text.toString())
         if (cbAutumn.isChecked) seasons.add(cbAutumn.text.toString())
         val updatedItem = ClothingItem(
-            name, selectedSubcategoryId, brend, getSelectedGender(),
-            imagePath ?: "", seasons, cost, getSelectedStatus(), getSelectedSize(), notes
+            name,
+            selectedSubcategoryId,
+            brend,
+            getSelectedGender(),
+            imagePath ?: "",
+            seasons,
+            cost,
+            getSelectedStatus(),
+            getSelectedSize(),
+            notes
         )
         updatedItem.id = oldItem.id
+
         lifecycleScope.launch(Dispatchers.IO) {
             clothingItemDao.update(updatedItem)
             clothingItemTagDao.deleteTagsForClothingItem(updatedItem.id)
@@ -254,51 +316,44 @@ class ClothesActivity : AppCompatActivity() {
             }
             withContext(Dispatchers.Main) {
                 Toast.makeText(this@ClothesActivity, "Вещь обновлена", Toast.LENGTH_SHORT).show()
-                val resultIntent = Intent().apply {
-                    putExtra("updated_item", updatedItem)
-                }
+                val resultIntent = Intent().apply { putExtra("updated_item", updatedItem) }
                 setResult(RESULT_OK, resultIntent)
                 finish()
             }
         }
     }
+    // Загрузка тегов из БД и отображение их в виде CheckBox
     private fun loadTagsFromDatabase() {
         lifecycleScope.launch(Dispatchers.IO) {
             val allTags = db.tagDao().getAllTags()
             val preselectedIds = intent.getParcelableExtra<ClothingItem>("clothingItem")?.let { editingItem ->
-                clothingItemTagDao.getTagsForClothingItem(editingItem.id)
-                    .map { it.id }
-                    .toSet()
+                clothingItemTagDao.getTagsForClothingItem(editingItem.id).map { it.id }.toSet()
             } ?: emptySet()
             selectedTagIds.clear()
             selectedTagIds.addAll(preselectedIds)
-            withContext(Dispatchers.Main) {
-                displayTagsAsCheckboxes(allTags, selectedTagIds)
-            }
+            withContext(Dispatchers.Main) { displayTagsAsCheckboxes(allTags, selectedTagIds) }
         }
     }
-    //метод для получения размера вещи
+    // Получение выбранного размера через FlexboxLayout
     private fun getSelectedSize(): String {
         val flexboxLayout = findViewById<FlexboxLayout>(R.id.flexboxLayout)
         return (0 until flexboxLayout.childCount)
             .map { flexboxLayout.getChildAt(it) }
             .filterIsInstance<RadioButton>()
             .firstOrNull { it.isChecked }
-            ?.text
-            ?.toString()
-            ?: ""
+            ?.text?.toString() ?: ""
     }
-    //метод для получения статуса вещи
+    // Получение выбранного статуса
     private fun getSelectedStatus(): String {
         val statusRadioGroup = findViewById<RadioGroup>(R.id.radioGroupStatus)
         return findViewById<RadioButton>(statusRadioGroup.checkedRadioButtonId)?.text?.toString() ?: ""
     }
-    //метод для получения пола для конкретной вещи
+    // Получение выбранного гендера
     private fun getSelectedGender(): String {
         val genderRadioGroup = findViewById<RadioGroup>(R.id.radioGroupGender)
         return findViewById<RadioButton>(genderRadioGroup.checkedRadioButtonId)?.text?.toString() ?: "Универсально"
     }
-    //метод для задавания размера вещи
+    // Установка выбранного размера
     private fun setSelectedSize(size: String) {
         val flexboxLayout = findViewById<FlexboxLayout>(R.id.flexboxLayout)
         for (i in 0 until flexboxLayout.childCount) {
@@ -309,7 +364,7 @@ class ClothesActivity : AppCompatActivity() {
             }
         }
     }
-    //метод для задавания статуса вещи
+    // Установка выбранного статуса
     private fun setSelectedStatus(status: String) {
         val statusRadioGroup = findViewById<RadioGroup>(R.id.radioGroupStatus)
         for (i in 0 until statusRadioGroup.childCount) {
@@ -320,11 +375,7 @@ class ClothesActivity : AppCompatActivity() {
             }
         }
     }
-    override fun onResume() {
-        super.onResume()
-        loadTagsFromDatabase()
-    }
-    //метод для задавания пола для конкретной вещи
+    // Установка выбранного гендера
     private fun setSelectedGender(gender: String) {
         val genderRadioGroup = findViewById<RadioGroup>(R.id.radioGroupGender)
         for (i in 0 until genderRadioGroup.childCount) {
@@ -335,6 +386,7 @@ class ClothesActivity : AppCompatActivity() {
             }
         }
     }
+    // Отображение тегов в виде CheckBox с возможностью выбора/снятия выбора
     private fun displayTagsAsCheckboxes(allTags: List<Tag>, preselectedTagIds: Set<Int> = emptySet()) {
         flexboxTags.removeAllViews()
         allTags.forEach { tag ->
@@ -356,22 +408,25 @@ class ClothesActivity : AppCompatActivity() {
             val params = FlexboxLayout.LayoutParams(
                 FlexboxLayout.LayoutParams.WRAP_CONTENT,
                 FlexboxLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                setMargins(5, 5, 5, 5)
-            }
+            ).apply { setMargins(5, 5, 5, 5) }
             flexboxTags.addView(checkBox, params)
         }
     }
-    //метод сохранение вещи в базе
+    // Валидация ввода стоимости
+    private fun validateCostInput(costString: String): Boolean {
+        val regex = Regex("^\\d+([.,]\\d{1,2})?\$")
+        return regex.matches(costString.trim())
+    }
+    // Метод для сохранения новой вещи
     private fun saveClothingItem() {
         val brend = clothingBrendEditText.text.toString().trim().ifEmpty { "" }
         val name = clothingNameEditText.text.toString().trim()
         if (name.isEmpty()) {
-            Toast.makeText(this, "Введите название ", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Введите название", Toast.LENGTH_SHORT).show()
             return
         }
         val costInput = clothingCostEditText.text.toString().trim()
-        val cost = if (costInput.isEmpty()) { 0.0f } else {
+        val cost = if (costInput.isEmpty()) 0.0f else {
             if (!validateCostInput(costInput)) {
                 Toast.makeText(this, "Введите корректное значение для стоимости", Toast.LENGTH_SHORT).show()
                 return
@@ -382,17 +437,18 @@ class ClothesActivity : AppCompatActivity() {
         val status = getSelectedStatus()
         val size = getSelectedSize()
         val gender = getSelectedGender()
-        val seasons = mutableListOf<String>()
+
         if (selectedSubcategoryId == -1) {
             Toast.makeText(this, "Выберите подкатегорию", Toast.LENGTH_SHORT).show()
             return
         }
+        val seasons = mutableListOf<String>()
         if (cbSummer.isChecked) seasons.add(cbSummer.text.toString())
         if (cbSpring.isChecked) seasons.add(cbSpring.text.toString())
         if (cbWinter.isChecked) seasons.add(cbWinter.text.toString())
         if (cbAutumn.isChecked) seasons.add(cbAutumn.text.toString())
-        val item = ClothingItem(name, selectedSubcategoryId, brend, gender, imagePath!!, seasons,cost,status, size,notes)
-        db.clothingItemDao().insert(item)
+
+        val item = ClothingItem(name, selectedSubcategoryId, brend, gender, imagePath!!, seasons, cost, status, size, notes)
         val newItemId = clothingItemDao.insert(item)
         selectedTagIds.forEach { tagId ->
             clothingItemTagDao.insert(ClothingItemTag(newItemId.toInt(), tagId))
@@ -400,8 +456,9 @@ class ClothesActivity : AppCompatActivity() {
         Toast.makeText(this, "Вещь сохранена", Toast.LENGTH_SHORT).show()
         finish()
     }
-    private fun validateCostInput(costString: String): Boolean {
-        val regex = Regex("^\\d+([.,]\\d{1,2})?\$")
-        return regex.matches(costString.trim())
+
+    override fun onResume() {
+        super.onResume()
+        loadTagsFromDatabase()
     }
 }

@@ -12,13 +12,14 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 import java.util.concurrent.Executors;
 import androidx.room.migration.Migration;
 
-        @Database(entities = {Category.class, Subcategory.class, ClothingItem.class, ClothingItemTag.class, Tag.class}, version = 3, exportSchema = true)
+        @Database(entities = {Category.class, Subcategory.class, ClothingItem.class, ClothingItemTag.class, Tag.class, Outfit.class, OutfitClothingItem.class,}, version = 4, exportSchema = true)
         @TypeConverters(Converters.class)
         public abstract class AppDatabase extends RoomDatabase {
             public abstract CategoryDao categoryDao();
             public abstract SubcategoryDao subcategoryDao();
             public abstract ClothingItemDao clothingItemDao();
             public abstract TagDao tagDao();
+            public abstract OutfitDao outfitDao();
             public abstract ClothingItemTagDao clothingItemTagDao();
             private static volatile AppDatabase INSTANCE;
             private static Context appContext;
@@ -26,10 +27,9 @@ import androidx.room.migration.Migration;
             static final Migration MIGRATION_2_3 = new Migration(2, 3) {
                 @Override
                 public void migrate(@NonNull SupportSQLiteDatabase database) {
-                    // Схема не изменилась, миграция не требуется.
+
                 }
             };
-
 
             public static AppDatabase getInstance(Context context) {
                 if (INSTANCE == null) {
@@ -38,20 +38,12 @@ import androidx.room.migration.Migration;
                             appContext = context.getApplicationContext();
                             INSTANCE = Room.databaseBuilder(appContext, AppDatabase.class, "wardrobe_db")
                                     .addMigrations(MIGRATION_2_3)
-                                    .allowMainThreadQueries() // для тестирования, не в продакшене
+                                    .allowMainThreadQueries()
                                     .addCallback(prepopulateCallback)
                                     .build();
-
                         }
                     }
                 }
-                return INSTANCE;
-            }
-
-            private static Context context;
-
-
-            private static AppDatabase getInstanceInternal() {
                 return INSTANCE;
             }
 

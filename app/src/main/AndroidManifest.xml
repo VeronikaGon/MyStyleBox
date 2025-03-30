@@ -19,16 +19,30 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyStyleBox"
         tools:targetApi="31">
+        <activity android:name=".EditImageActivity" />
+        <activity
+            android:name="com.yalantis.ucrop.UCropActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+        <activity
+            android:name=".EraserActivity"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".SearchClothingActivity"
+            android:screenOrientation="portrait"
             android:exported="true"
             android:theme="@style/Theme.MyStyleBox">
         </activity>
+        <activity android:name=".OutfitActivity"
+            android:screenOrientation="portrait"
+        android:exported="false"/>
         <activity
             android:name=".TagEditingActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
             android:name=".FilterActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
             android:name=".EditclothesActivity"

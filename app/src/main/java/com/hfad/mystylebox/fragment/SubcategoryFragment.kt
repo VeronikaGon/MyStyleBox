@@ -63,7 +63,13 @@ class SubcategoryFragment : Fragment() {
             layoutParams.setMargins(8, 8, 8, 8)
             button.layoutParams = layoutParams
             button.setOnClickListener {
-                (activity as? CategorySelectionActivity)?.onSubcategorySelected(subcategory.name,subcategory.id)
+                (activity as? CategorySelectionActivity)?.let { catSelectActivity ->
+                    if (catSelectActivity.isReselection) {
+                        catSelectActivity.onSubcategorySelected(subcategory.name, subcategory.id)
+                    } else {
+                        catSelectActivity.onSubcategorySelectedStart(subcategory.name, subcategory.id)
+                    }
+                }
             }
             containerLayout.addView(button)
         }
