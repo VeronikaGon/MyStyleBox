@@ -20,6 +20,7 @@ import android.Manifest
 import android.content.Intent
 import android.widget.ImageButton
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
 import com.bumptech.glide.Glide
@@ -32,6 +33,7 @@ import com.hfad.mystylebox.database.Tag
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 
 class EditclothesActivity : AppCompatActivity() {
     private val REQUEST_READ_STORAGE = 101
@@ -160,19 +162,24 @@ class EditclothesActivity : AppCompatActivity() {
         shareButton.setOnClickListener {
             val imageUriString = intent.getStringExtra("image_uri")
             if (!imageUriString.isNullOrEmpty()) {
-                val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                    type = "image/*"
-                    putExtra(Intent.EXTRA_STREAM, Uri.parse(imageUriString))
-                    putExtra(Intent.EXTRA_TEXT, "Посмотрите на эту вещь!")
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                try {
+                    val file = File(Uri.parse(imageUriString).path!!)
+                    val contentUri = FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "image/*"
+                        putExtra(Intent.EXTRA_STREAM, contentUri)
+                        putExtra(Intent.EXTRA_TEXT, "Посмотрите на эту вещь!")
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    startActivity(Intent.createChooser(shareIntent, "Поделиться изображением"))
+                } catch (e: Exception) {
+                    Toast.makeText(this, "Ошибка при подготовке изображения: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
-                startActivity(Intent.createChooser(shareIntent, "Поделиться изображением"))
             } else {
                 Toast.makeText(this, "Изображение не найдено", Toast.LENGTH_SHORT).show()
             }
         }
-        // Далее – обновление остальных полей (имя, статус, стоимость, размеры, бренды, сезоны, подкатегория, и т.д.)
-        clothingItem?.let { item ->
+           clothingItem?.let { item ->
             genderTextView.text = item.gender
             nameTextView.text = item.name
             statusTextView.text = item.status

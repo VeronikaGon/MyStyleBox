@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/lightpink">
+
+    <FrameLayout
+        android:id="@+id/boardContainer"
+        android:layout_width="match_parent"
+        android:layout_height="400dp"
+        android:layout_marginTop="16dp"
+        android:background="@color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"></FrameLayout>
+    <LinearLayout
+        android:id="@+id/lldialog_adjustment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:visibility="visible"
+        android:layout_marginTop="16dp"
+        android:background="@color/darkpink"
+        android:gravity="center"
+        app:layout_constraintTop_toBottomOf="@+id/boardContainer"
+        >
+        <TextView
+            android:id="@+id/textViewAdjustment"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Значение: 0" />
+
+        <SeekBar
+            android:id="@+id/seekBarAdjustment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:indeterminateTint="#FFEB3B"
+            android:max="100"
+            android:thumb="@drawable/ic_blur"
+            app:tickMarkTint="#9C27B0" />
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/ll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/darkpink"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/lldialog_adjustment">
+
+        <ImageButton
+            android:id="@+id/btnforeground"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            app:srcCompat="@drawable/ic_foreground" />
+        <ImageButton
+            android:id="@+id/btnbackground"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:background="@android:color/transparent"
+            app:srcCompat="@drawable/ic_background" />
+        <ImageButton
+            android:id="@+id/btnblur"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:background="@android:color/transparent"
+            app:srcCompat="@drawable/ic_blur" />
+        <ImageButton
+            android:id="@+id/btnturn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:background="@android:color/transparent"
+            app:srcCompat="@drawable/ic_turn" />
+
+        <ImageButton
+            android:id="@+id/btnscaling"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:background="@android:color/transparent"
+            app:srcCompat="@drawable/ic_scaling" />
+
+        <ImageButton
+            android:id="@+id/btnDelete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:background="@android:color/transparent"
+            app:srcCompat="@drawable/delete" />
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/llclothes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="center"
+        app:layout_constraintTop_toBottomOf="@+id/ll"
+        >
+        <ImageButton
+            android:id="@+id/addclothes"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/edittext_background"
+            android:backgroundTint="@color/pink"
+            app:srcCompat="@drawable/ic_plus" />
+    </LinearLayout>
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/saveButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="8dp"
+        android:layout_weight="1"
+        android:padding="12dp"
+        android:textAllCaps="false"
+        android:text="Сохранить"
+        android:fontFamily="sans-serif"
+        android:textColor="@color/black"
+        android:textSize="18sp"
+        android:background="@drawable/button_background"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/llclothes" />
+</androidx.constraintlayout.widget.ConstraintLayout>

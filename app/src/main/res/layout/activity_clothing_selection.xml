@@ -5,7 +5,6 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity"
     android:orientation="vertical"
     android:background="#FCD5CE"
     android:padding="16dp">
@@ -15,11 +14,10 @@
         android:layout_width="match_parent"
         android:background="@drawable/scrollview_background"
         android:layout_height="0dp"
-        android:layout_marginBottom="102dp"
         android:layout_weight="1">
 
         <ImageButton
-            android:id="@+id/imageFilter"
+            android:id="@+id/imageBack"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
@@ -27,22 +25,22 @@
             android:background="@android:color/transparent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/filter" />
+            app:srcCompat="@drawable/ic_back" />
 
         <TextView
             android:id="@+id/textView2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="@string/things"
+            android:text="@string/selectionclothes"
             android:textColor="#000000"
-            android:textSize="30sp"
+            android:textSize="28sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <ImageButton
-            android:id="@+id/imageSearch"
+            android:id="@+id/imageFilter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
@@ -50,7 +48,7 @@
             android:background="@android:color/transparent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/search" />
+            app:srcCompat="@drawable/filter" />
 
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tabLayout"
@@ -76,21 +74,36 @@
             android:layout_height="0dp"
             android:padding="8dp"
             app:layout_constraintTop_toBottomOf="@+id/tabLayout"
-            app:layout_constraintBottom_toTopOf="@+id/selectPhotoButton"
+            app:layout_constraintBottom_toTopOf="@+id/clayout"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
-
+    <LinearLayout
+        android:id="@+id/clayout"
+        android:layout_width="45dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/edittext_background"
+        android:backgroundTint="@color/orange"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+        <TextView
+            android:id="@+id/SelectedCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="3dp"
+            android:layout_marginTop="3dp"
+            android:text="0"
+            android:textColor="@color/black"/>
         <ImageButton
-            android:id="@+id/selectPhotoButton"
+            android:id="@+id/selectclothingButton"
             android:layout_width="45dp"
             android:layout_height="45dp"
-            app:srcCompat="@drawable/ic_plus"
-            android:layout_marginBottom="8dp"
-            android:layout_marginEnd="8dp"
-            android:background="@drawable/item_background"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="-19dp"
+            android:background="@android:color/transparent"
+            app:srcCompat="@drawable/ic_check"
             android:scaleType="centerInside" />
-
+    </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </LinearLayout>

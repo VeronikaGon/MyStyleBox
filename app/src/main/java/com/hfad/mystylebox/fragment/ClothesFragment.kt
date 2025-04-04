@@ -29,7 +29,6 @@ import java.util.Date
 import java.util.Locale
 import com.hfad.mystylebox.database.ClothingItem
 import com.google.android.material.tabs.TabLayout
-import com.hfad.mystylebox.CategorySelectionActivity
 import com.hfad.mystylebox.EditImageActivity
 import com.hfad.mystylebox.EditclothesActivity
 import com.hfad.mystylebox.FilterActivity
@@ -276,12 +275,10 @@ class ClothesFragment : Fragment() {
         }
         cameraLauncher.launch(intent)
     }
-
     private fun openFiles() {
         val intent = Intent(Intent.ACTION_GET_CONTENT).apply { type = "image/*" }
         fileLauncher.launch(intent)
     }
-
     private fun createImageFile(): File {
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val storageDir = requireContext().getExternalFilesDir(null)

@@ -8,9 +8,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import androidx.recyclerview.widget.RecyclerView
-import com.hfad.mystylebox.OutfitActivity
+import com.hfad.mystylebox.ClothingSelectionActivity
 import com.hfad.mystylebox.R
-import com.hfad.mystylebox.SearchClothingActivity
 
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
@@ -51,7 +50,7 @@ class OutFitsFragment : Fragment() {
     }
 
     private fun startOutfitActivity() {
-        val intent = Intent(requireContext(), OutfitActivity::class.java)
+        val intent = Intent(requireContext(), ClothingSelectionActivity::class.java)
         startActivity(intent)
     }
 }

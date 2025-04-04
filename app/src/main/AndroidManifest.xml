@@ -47,7 +47,12 @@
         <activity
             android:name=".EditclothesActivity"
             android:screenOrientation="portrait" />
-
+        <activity
+            android:name=".ClothingSelectionActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".BoardActivity"
+            android:screenOrientation="portrait" />
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -64,17 +69,14 @@
         <activity
             android:name=".CategorySelectionActivity"
             android:screenOrientation="portrait" />
-
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
     </application>
-
 </manifest>

@@ -154,14 +154,25 @@ class EditImageActivity : AppCompatActivity() {
             currentBitmap?.let { bitmap ->
                 val matrix = android.graphics.Matrix().apply { postRotate(degrees.toFloat()) }
                 val rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+                // Обновляем currentBitmap и сохраняем повернутое изображение во временный файл
+                currentBitmap = rotatedBitmap
+                // Сохраняем повернутое изображение во временный файл и обновляем imageUri
+                val newUri = updateImageUriFromBitmap(rotatedBitmap)
                 withContext(Dispatchers.Main) {
                     imageView.setImageBitmap(rotatedBitmap)
-                    currentBitmap = rotatedBitmap
+                    imageUri = newUri
                 }
             }
         }
     }
-
+    // Сохраняет переданный Bitmap во временный файл и возвращает его URI.
+    private fun updateImageUriFromBitmap(bitmap: Bitmap): Uri {
+        val file = createImageFile()
+        FileOutputStream(file).use { outputStream ->
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+        }
+        return Uri.fromFile(file)
+    }
     //Масштабирует изображение так, чтобы его наибольшая сторона была равна targetSize.
     private fun scaleBitmap(bitmap: Bitmap): Bitmap {
         val targetSize = 1080
@@ -220,12 +231,17 @@ class EditImageActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
+        override fun onBackPressed() {
+            showCancelConfirmation()
+    }
     // Показывает диалог подтверждения при нажатии кнопки "Отмена".
     private fun showCancelConfirmation() {
         AlertDialog.Builder(this)
             .setTitle("Отмена")
-            .setMessage("Вы точно хотите уйти? Изменения не будут сохранены.")
-            .setPositiveButton("Да") { _, _ -> finish() }
+            .setMessage("Вы точно хотите уйти? Изменения не будут сохранены, и вы перейдете на главное окно.")
+            .setPositiveButton("Да") { _, _ ->
+                super.onBackPressed()
+            }
             .setNegativeButton("Нет", null)
             .show()
     }
