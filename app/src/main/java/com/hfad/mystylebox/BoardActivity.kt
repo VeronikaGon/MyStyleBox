@@ -18,7 +18,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
 import androidx.core.view.updateLayoutParams
+import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
 
 data class ImageState(
@@ -26,6 +28,21 @@ data class ImageState(
     var rotation: Float = 0f,
     var scale: Float = 1f
 )
+
+class BoardViewModel : androidx.lifecycle.ViewModel() {
+    private val _imageStates = androidx.lifecycle.MutableLiveData<MutableMap<String, ImageState>>(mutableMapOf())
+    val imageStates: androidx.lifecycle.LiveData<MutableMap<String, ImageState>> = _imageStates
+
+    fun updateImageState(imageId: String, newState: ImageState) {
+        val currentStates = _imageStates.value ?: mutableMapOf()
+        currentStates[imageId] = newState
+        _imageStates.value = currentStates
+    }
+
+    fun getImageState(imageId: String): ImageState {
+        return _imageStates.value?.get(imageId) ?: ImageState()
+    }
+}
 
 class BoardActivity : AppCompatActivity() {
 
@@ -46,12 +63,9 @@ class BoardActivity : AppCompatActivity() {
 
     private val boardItems = mutableListOf<ImageView>()
     private val thumbnailMapping = mutableMapOf<ImageView, ImageView>()
-    private val imageStates = mutableMapOf<ImageView, ImageState>()
     private var selectedView: ImageView? = null
 
-    private var currentRotation: Float = 0f
-    private var currentAlpha: Float = 1f
-    private var currentScale: Float = 1f
+    private lateinit var viewModel: BoardViewModel
 
     private var adjustmentType: String? = null
     private var currentAdjustmentButton: ImageButton? = null
@@ -60,6 +74,7 @@ class BoardActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_board)
 
+        // Инициализация View
         boardContainer = findViewById(R.id.boardContainer)
         llDialogAdjustment = findViewById(R.id.lldialog_adjustment)
         llButtons = findViewById(R.id.ll)
@@ -75,14 +90,18 @@ class BoardActivity : AppCompatActivity() {
         btnDelete = findViewById(R.id.btnDelete)
         addClothesButton = findViewById(R.id.addclothes)
 
+        // Скрываем контейнер настроек при старте
         setAdjustmentContainerVisibility(View.GONE)
 
+        // Инициализируем ViewModel сразу
+        viewModel = ViewModelProvider(this).get(BoardViewModel::class.java)
+
+        // Загружаем изображения (используется список путей)
         val selectedPaths = intent.getStringArrayListExtra("selected_items") ?: arrayListOf()
         selectedPaths.forEach { path ->
             addBoardItem(path)
         }
 
-        // Обработчики для кнопок нижней панели
         btnForeground.setOnClickListener {
             if (ensureItemSelected()) {
                 bringToFront()
@@ -98,7 +117,6 @@ class BoardActivity : AppCompatActivity() {
                 deleteItem()
             }
         }
-
         addClothesButton.setOnClickListener {
             llClothes.removeView(addClothesButton)
             llClothes.addView(addClothesButton)
@@ -107,12 +125,12 @@ class BoardActivity : AppCompatActivity() {
 
         btnBlur.setOnClickListener {
             if (ensureItemSelected()) {
-                toggleAdjustment("blur", btnBlur)
+                toggleAdjustment("alpha", btnBlur)
             }
         }
         btnTurn.setOnClickListener {
             if (ensureItemSelected()) {
-                toggleAdjustment("turn", btnTurn)
+                toggleAdjustment("rotation", btnTurn)
             }
         }
         btnScaling.setOnClickListener {
@@ -123,14 +141,22 @@ class BoardActivity : AppCompatActivity() {
 
         seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                textViewAdjustment.text = getAdjustmentText(progress)
-                applyAdjustment(progress)
+                selectedView?.let { view ->
+                    val imageId = view.tag.toString()
+                    val currentState = viewModel.getImageState(imageId)
+                    val newState = currentState.copy().apply {
+                        when (adjustmentType) {
+                            "alpha" -> alpha = 0.2f + progress / 100f
+                            "rotation" -> rotation = progress.toFloat()
+                            "scale" -> scale = 0.5f + (progress / 100f) * 4.5f
+                        }
+                    }
+                    viewModel.updateImageState(imageId, newState)
+                    applyNewState(newState)
+                }
             }
-
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                adjustmentType?.let { updateAdjustmentUI(it) }
-            }
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
 
         boardContainer.setOnClickListener {
@@ -154,7 +180,7 @@ class BoardActivity : AppCompatActivity() {
             .show()
     }
 
-    // Метод, проверяющий, выбран ли объект. Если нет - уведомляем пользователя.
+    // Проверка, выбран ли объект
     private fun ensureItemSelected(): Boolean {
         return if (selectedView == null) {
             Toast.makeText(this, "Выберите вещь для выполнения операции", Toast.LENGTH_SHORT).show()
@@ -164,7 +190,7 @@ class BoardActivity : AppCompatActivity() {
         }
     }
 
-    // Метод для добавления нового объекта на доску
+    // Добавление изображения на доску
     private fun addBoardItem(path: String) {
         val imageView = ImageView(this)
         Glide.with(this)
@@ -174,22 +200,19 @@ class BoardActivity : AppCompatActivity() {
         imageView.layoutParams = layoutParams
         imageView.setBackgroundResource(0)
         imageView.setOnTouchListener(MultiTouchListener(this))
-        imageView.setOnClickListener { view ->
-            selectBoardItem(view as ImageView)
-        }
+        imageView.setOnClickListener { view -> selectBoardItem(view as ImageView) }
         boardContainer.addView(imageView)
         boardItems.add(imageView)
         addThumbnail(imageView, path)
-        imageStates[imageView] = ImageState()
-
-        // Устанавливаем начальные параметры изображения
+        imageView.tag = path
+        viewModel.updateImageState(path, ImageState())
         imageView.rotation = 0f
         imageView.alpha = 1f
         imageView.scaleX = 1f
         imageView.scaleY = 1f
     }
 
-    // Добавление миниатюры в нижний LinearLayout (llclothes)
+    // Добавление миниатюры для изображения
     private fun addThumbnail(boardItem: ImageView, path: String) {
         val thumbnail = ImageView(this)
         val thumbParams = LinearLayout.LayoutParams(100, 100)
@@ -205,14 +228,15 @@ class BoardActivity : AppCompatActivity() {
         thumbnailMapping[boardItem] = thumbnail
     }
 
-    // Выбор объекта: снимаем выделение с предыдущего и устанавливаем обводку для выбранного
+    // Выбор изображения с доски
     private fun selectBoardItem(view: ImageView) {
         deselectAll()
         selectedView = view
         view.setBackgroundResource(R.drawable.black_border)
         thumbnailMapping[view]?.setBackgroundResource(R.drawable.black_border)
-        val state = imageStates.getOrPut(view) { ImageState() }
-        updateAdjustmentUI(adjustmentType ?: "blur")
+        val imageId = view.tag.toString()
+        val state = viewModel.getImageState(imageId)
+        updateAdjustmentUI(state)
     }
 
     // Снятие выделения
@@ -228,7 +252,7 @@ class BoardActivity : AppCompatActivity() {
         setAdjustmentContainerVisibility(View.GONE)
     }
 
-    // Установка видимости контейнера настроек и изменение отступа нижней панели
+    // Управление видимостью контейнера настроек
     private fun setAdjustmentContainerVisibility(visibility: Int) {
         llDialogAdjustment.visibility = visibility
         val marginTop = if (visibility == View.VISIBLE) 0 else dpToPx(16)
@@ -244,7 +268,7 @@ class BoardActivity : AppCompatActivity() {
         ).toInt()
     }
 
-    // Переключение режима настройки
+    // Переключение режима настройки: обновление типа и UI
     private fun toggleAdjustment(type: String, button: ImageButton) {
         if (adjustmentType == type) {
             adjustmentType = null
@@ -254,85 +278,55 @@ class BoardActivity : AppCompatActivity() {
         } else {
             adjustmentType = type
             currentAdjustmentButton?.setColorFilter(null)
-            button.setColorFilter(resources.getColor(android.R.color.white))
+            button.setColorFilter(ContextCompat.getColor(this, android.R.color.white))
             currentAdjustmentButton = button
             setAdjustmentContainerVisibility(View.VISIBLE)
-            updateAdjustmentUI(type)
-        }
-    }
-
-    // Обновление UI контейнера настроек в зависимости от режима и текущего состояния выбранного объекта
-    private fun updateAdjustmentUI(type: String) {
-        selectedView?.let { view ->
-            val state = imageStates[view] ?: ImageState()
-
-            when (type) {
-                "blur" -> {
-                    textViewAdjustment.text = "Прозрачность"
-                    seekBar.max = 100
-                    // Переводим alpha в диапазон progress (учтите, что минимальное значение – 0.2f)
-                    val progress = ((state.alpha - 0.2f) * 100).toInt().coerceAtLeast(0)
-                    seekBar.progress = progress
-                    seekBar.thumb = resources.getDrawable(R.drawable.ic_blur, theme)
-                }
-                "turn" -> {
-                    textViewAdjustment.text = "Поворот"
-                    seekBar.max = 360
-                    // Нормализуем угол в диапазон 0-360
-                    val normalizedRotation = ((state.rotation % 360) + 360) % 360
-                    seekBar.progress = normalizedRotation.toInt()
-                    seekBar.thumb = resources.getDrawable(R.drawable.ic_turn, theme)
-                }
-                "scale" -> {
-                    textViewAdjustment.text = "Масштабирование"
-                    seekBar.max = 100
-                    // Преобразование текущего масштаба в progress
-                    val progress = (((state.scale - 0.5f) / 4.5f) * 100).toInt()
-                    seekBar.progress = progress.coerceIn(0, 100)
-                    seekBar.thumb = resources.getDrawable(R.drawable.ic_scaling, theme)
-                }
+            selectedView?.let {
+                val imageId = it.tag.toString()
+                val state = viewModel.getImageState(imageId)
+                updateAdjustmentUI(state)
             }
         }
     }
 
-    // Формирование строки с текущим значением настройки
-    private fun getAdjustmentText(progress: Int): String {
-        return when (adjustmentType) {
-            "blur" -> "Прозрачность"
-            "turn" -> "Поворот"
-            "scale" -> "Масштабирование"
-            else -> ""
-        }
-    }
-
-    // Применение выбранного эффекта к выбранному объекту без сброса других настроек
-    private fun applyAdjustment(progress: Int) {
-        selectedView?.let { view ->
-            val state = imageStates.getOrPut(view) { ImageState() }
-            when (adjustmentType) {
-                "blur" -> {
-                    val newAlpha = 0.2f + progress / 100f
-                    view.alpha = newAlpha
-                    state.alpha = newAlpha
-                }
-                "turn" -> {
-                    val newRotation = progress.toFloat()
-                    view.rotation = newRotation
-                    state.rotation = newRotation
-                }
-                "scale" -> {
-                    val newScale = 0.5f + (progress / 100f) * 4.5f
-                    view.scaleX = newScale
-                    view.scaleY = newScale
-                    state.scale = newScale
-                }
+    // Обновление UI контейнера настроек в зависимости от выбранного типа
+    private fun updateAdjustmentUI(state: ImageState) {
+        when (adjustmentType ?: "alpha") {
+            "alpha" -> {
+                textViewAdjustment.text = "Прозрачность"
+                seekBar.max = 100
+                val progress = ((state.alpha - 0.2f) * 100).toInt().coerceAtLeast(0)
+                seekBar.progress = progress
+                seekBar.thumb = ContextCompat.getDrawable(this, R.drawable.ic_blur)
             }
-            // Обновляем состояние в мапе
-            imageStates[view] = state
+            "rotation" -> {
+                textViewAdjustment.text = "Поворот"
+                seekBar.max = 360
+                val normalizedRotation = ((state.rotation % 360) + 360) % 360
+                seekBar.progress = normalizedRotation.toInt()
+                seekBar.thumb = ContextCompat.getDrawable(this, R.drawable.ic_turn)
+            }
+            "scale" -> {
+                textViewAdjustment.text = "Масштабирование"
+                seekBar.max = 100
+                val progress = (((state.scale - 0.5f) / 4.5f) * 100).toInt()
+                seekBar.progress = progress.coerceIn(0, 100)
+                seekBar.thumb = ContextCompat.getDrawable(this, R.drawable.ic_scaling)
+            }
         }
     }
 
-    // Перемещение выбранного объекта на передний план и обновление порядка миниатюр
+    // Применение нового состояния к выбранному ImageView
+    private fun applyNewState(state: ImageState) {
+        selectedView?.apply {
+            alpha = state.alpha
+            rotation = state.rotation
+            scaleX = state.scale
+            scaleY = state.scale
+        }
+    }
+
+    // Перемещение изображения на передний план
     private fun bringToFront() {
         selectedView?.let { view ->
             val currentIndex = boardContainer.indexOfChild(view)
@@ -345,7 +339,7 @@ class BoardActivity : AppCompatActivity() {
         }
     }
 
-    // Отправка выбранного объекта на задний план и обновление порядка миниатюр
+    // Отправка изображения на задний план
     private fun sendToBack() {
         selectedView?.let { view ->
             val currentIndex = boardContainer.indexOfChild(view)
@@ -357,7 +351,7 @@ class BoardActivity : AppCompatActivity() {
         }
     }
 
-    // Метод обновления порядка миниатюр в llclothes согласно порядку объектов на доске.
+    // Обновление порядка миниатюр
     private fun updateThumbnailOrder() {
         val currentThumbs = mutableListOf<View>()
         for (i in 0 until llClothes.childCount) {
@@ -379,7 +373,7 @@ class BoardActivity : AppCompatActivity() {
         llClothes.addView(addClothesButton)
     }
 
-    // Удаление выбранного объекта с доски (при этом миниатюра остаётся)
+    // Удаление изображения с доски
     private fun deleteItem() {
         selectedView?.let { view ->
             boardContainer.removeView(view)
@@ -392,12 +386,12 @@ class BoardActivity : AppCompatActivity() {
         }
     }
 
-    // Класс для обработки жестов масштабирования, поворота и перемещения
+    // Класс для обработки жестов (масштаб, поворот, перемещение)
     inner class MultiTouchListener(context: Context) : View.OnTouchListener {
         private val scaleGestureDetector: ScaleGestureDetector
         private val rotationGestureDetector: RotationGestureDetector
         private var lastPoint = PointF()
-        private var baseScale = currentScale
+        private var baseScale = 1f
         private var isScaling = false
 
         init {
@@ -405,41 +399,39 @@ class BoardActivity : AppCompatActivity() {
                 context,
                 object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
                     override fun onScaleBegin(detector: ScaleGestureDetector): Boolean {
-                        baseScale = currentScale
+                        baseScale = selectedView?.scaleX ?: 1f
                         isScaling = true
                         return true
                     }
-
                     override fun onScale(detector: ScaleGestureDetector): Boolean {
                         selectedView?.let { view ->
                             val newScale = baseScale * detector.scaleFactor
                             val clampedScale = newScale.coerceIn(0.2f, 5f)
                             view.scaleX = clampedScale
                             view.scaleY = clampedScale
-                            currentScale = clampedScale
-                            imageStates[view]?.scale = clampedScale // Сохранение состояния
+                            val imageId = view.tag.toString()
+                            val currentState = viewModel.getImageState(imageId)
+                            currentState.scale = clampedScale
+                            viewModel.updateImageState(imageId, currentState)
                         }
                         return true
                     }
-
                     override fun onScaleEnd(detector: ScaleGestureDetector) {
                         isScaling = false
                     }
                 })
-
-            rotationGestureDetector =
-                RotationGestureDetector(object : RotationGestureDetector.OnRotationGestureListener {
-                    override fun onRotation(angle: Float) {
-                        // Если идет масштабирование, то игнорируем поворот
-                        if (isScaling) return
-
-                        selectedView?.let { view ->
-                            view.rotation += angle
-                            currentRotation = view.rotation
-                            imageStates[view]?.rotation = view.rotation // Сохранение состояния
-                        }
+            rotationGestureDetector = RotationGestureDetector(object : RotationGestureDetector.OnRotationGestureListener {
+                override fun onRotation(angle: Float) {
+                    if (isScaling) return
+                    selectedView?.let { view ->
+                        view.rotation += angle
+                        val imageId = view.tag.toString()
+                        val currentState = viewModel.getImageState(imageId)
+                        currentState.rotation = view.rotation
+                        viewModel.updateImageState(imageId, currentState)
                     }
-                })
+                }
+            })
         }
 
         override fun onTouch(view: View, event: MotionEvent): Boolean {
@@ -451,7 +443,6 @@ class BoardActivity : AppCompatActivity() {
             }
             scaleGestureDetector.onTouchEvent(event)
             rotationGestureDetector.onTouchEvent(event)
-
             when (event.actionMasked) {
                 MotionEvent.ACTION_MOVE -> {
                     val dx = event.rawX - lastPoint.x
@@ -465,12 +456,11 @@ class BoardActivity : AppCompatActivity() {
         }
     }
 
-    // Класс для распознавания жеста поворота с использованием двух пальцев
+    // Класс для распознавания жеста поворота
     class RotationGestureDetector(private val mListener: OnRotationGestureListener) {
         interface OnRotationGestureListener {
             fun onRotation(angle: Float)
         }
-
         private var fX = 0f
         private var fY = 0f
         private var sX = 0f
@@ -486,7 +476,6 @@ class BoardActivity : AppCompatActivity() {
                         sY = event.getY(1)
                     }
                 }
-
                 MotionEvent.ACTION_MOVE -> {
                     if (event.pointerCount >= 2) {
                         val nfX = event.getX(0)
@@ -508,5 +497,3 @@ class BoardActivity : AppCompatActivity() {
         }
     }
 }
-// Дополнительное расширение для форматирования чисел (опционально)
-fun Float.format(digits: Int) = "%.${digits}f".format(this)
