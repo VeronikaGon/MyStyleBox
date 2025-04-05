@@ -1,5 +1,6 @@
 package com.hfad.mystylebox.adapter
 
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,7 +16,8 @@ class ClothingSelectionAdapter(
     private var items: List<ClothingItemFull>,
     private val layoutResId: Int,
     private val selectionListener: OnItemSelectionListener,
-    private val globalSelected: MutableSet<ClothingItemFull>
+    private val globalSelected: MutableSet<ClothingItemFull>,
+    private val lockedPaths: Set<String>
 ) : RecyclerView.Adapter<ClothingSelectionAdapter.ClothingViewHolder>() {
 
     interface OnItemSelectionListener {
@@ -35,14 +37,18 @@ class ClothingSelectionAdapter(
 
             itemName.text = item.clothingItem.name
 
-            if (globalSelected.contains(item)) {
-                container.setBackgroundResource(R.drawable.item_background_active)
+            if (lockedPaths.contains(item.clothingItem.imagePath)) {
+                container.setBackgroundColor(Color.parseColor("#FCD5CE"))
+                itemView.setOnClickListener(null)
             } else {
-                container.setBackgroundResource(R.drawable.item_background)
-            }
-
-            itemView.setOnClickListener {
-                toggleSelection(item)
+                if (globalSelected.contains(item)) {
+                    container.setBackgroundResource(R.drawable.item_background_active)
+                } else {
+                    container.setBackgroundResource(R.drawable.item_background)
+                }
+                itemView.setOnClickListener {
+                    toggleSelection(item)
+                }
             }
         }
 
@@ -70,7 +76,7 @@ class ClothingSelectionAdapter(
 
     override fun getItemCount(): Int = items.size
 
-    // При обновлении данных обновляем список и вызываем notifyDataSetChanged()
+    // Метод для обновления данных адаптера
     fun updateData(newItems: List<ClothingItemFull>) {
         items = newItems
         notifyDataSetChanged()

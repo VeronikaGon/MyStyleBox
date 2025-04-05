@@ -2,12 +2,17 @@ package com.hfad.mystylebox
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.PointF
+import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.util.Log
 import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
+import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -22,6 +27,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
+import com.google.android.material.slider.Slider
+import java.io.File
+import java.io.FileOutputStream
 
 data class ImageState(
     var alpha: Float = 1f,
@@ -51,7 +59,7 @@ class BoardActivity : AppCompatActivity() {
     private lateinit var llButtons: LinearLayout
     private lateinit var llClothes: LinearLayout
     private lateinit var textViewAdjustment: TextView
-    private lateinit var seekBar: androidx.appcompat.widget.AppCompatSeekBar
+    private lateinit var slider: Slider
 
     private lateinit var btnForeground: ImageButton
     private lateinit var btnBackground: ImageButton
@@ -70,6 +78,10 @@ class BoardActivity : AppCompatActivity() {
     private var adjustmentType: String? = null
     private var currentAdjustmentButton: ImageButton? = null
 
+    companion object {
+        private const val REQUEST_CODE_ADD_ITEMS = 1001
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_board)
@@ -80,7 +92,7 @@ class BoardActivity : AppCompatActivity() {
         llButtons = findViewById(R.id.ll)
         llClothes = findViewById(R.id.llclothes)
         textViewAdjustment = findViewById(R.id.textViewAdjustment)
-        seekBar = findViewById(R.id.seekBarAdjustment)
+        slider = findViewById(R.id.sliderAdjustment)
 
         btnForeground = findViewById(R.id.btnforeground)
         btnBackground = findViewById(R.id.btnbackground)
@@ -89,6 +101,17 @@ class BoardActivity : AppCompatActivity() {
         btnScaling = findViewById(R.id.btnscaling)
         btnDelete = findViewById(R.id.btnDelete)
         addClothesButton = findViewById(R.id.addclothes)
+        val saveButton = findViewById<Button>(R.id.saveButton)
+        saveButton.setOnClickListener {
+            AlertDialog.Builder(this)
+                .setTitle("Подтверждение сохранения")
+                .setMessage("Вы уверены, что хотите сохранить этот комплект?")
+                .setPositiveButton("Да") { dialog, which ->
+                    saveBoardImage()
+                }
+                .setNegativeButton("Нет", null)
+                .show()
+        }
 
         // Скрываем контейнер настроек при старте
         setAdjustmentContainerVisibility(View.GONE)
@@ -120,7 +143,11 @@ class BoardActivity : AppCompatActivity() {
         addClothesButton.setOnClickListener {
             llClothes.removeView(addClothesButton)
             llClothes.addView(addClothesButton)
-            startActivity(Intent(this, ClothingSelectionActivity::class.java))
+            val lockedPaths = boardItems.map { it.tag.toString() }
+            val intent = Intent(this, ClothingSelectionActivity::class.java)
+            intent.putExtra("fromBoard", true)
+            intent.putStringArrayListExtra("locked_items", ArrayList(lockedPaths))
+            startActivityForResult(intent, REQUEST_CODE_ADD_ITEMS)
         }
 
         btnBlur.setOnClickListener {
@@ -139,31 +166,55 @@ class BoardActivity : AppCompatActivity() {
             }
         }
 
-        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+        slider.addOnChangeListener { slider, value, fromUser ->
+            if (fromUser) {
                 selectedView?.let { view ->
                     val imageId = view.tag.toString()
                     val currentState = viewModel.getImageState(imageId)
                     val newState = currentState.copy().apply {
                         when (adjustmentType) {
-                            "alpha" -> alpha = 0.2f + progress / 100f
-                            "rotation" -> rotation = progress.toFloat()
-                            "scale" -> scale = 0.5f + (progress / 100f) * 4.5f
+                            "alpha" -> alpha = 0.2f + value / slider.valueTo
+                            "rotation" -> rotation = value
+                            "scale" -> scale = 0.5f + (value / slider.valueTo) * 4.5f
                         }
                     }
                     viewModel.updateImageState(imageId, newState)
                     applyNewState(newState)
                 }
             }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
+        }
 
         boardContainer.setOnClickListener {
             deselectAll()
         }
     }
+    private fun saveBoardImage() {
+        val boardView = findViewById<View>(R.id.boardContainer)
+        var originalBackground: Drawable? = null
+        selectedView?.let { view ->
+            originalBackground = view.background
+            view.setBackgroundResource(R.drawable.no_border)
+        }
 
+        val bitmap = Bitmap.createBitmap(boardView.width, boardView.height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        boardView.draw(canvas)
+
+        val file = File(externalCacheDir, "boardImage.png")
+        try {
+            FileOutputStream(file).use { fos ->
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)
+            }
+            selectedView?.background = originalBackground
+
+            val intent = Intent(this, OutfitActivity::class.java)
+            intent.putExtra("imagePath", file.absolutePath)
+            startActivity(intent)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(this, "Ошибка сохранения изображения", Toast.LENGTH_SHORT).show()
+        }
+    }
     @Suppress("MissingSuperCall")
     override fun onBackPressed() {
         AlertDialog.Builder(this)
@@ -212,6 +263,18 @@ class BoardActivity : AppCompatActivity() {
         imageView.scaleY = 1f
     }
 
+    // Обработка результата из ClothingSelectionActivity
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_CODE_ADD_ITEMS && resultCode == RESULT_OK) {
+            val newItems = data?.getStringArrayListExtra("selected_items")
+            newItems?.forEach { path ->
+                if (boardItems.none { it.tag == path }) {
+                    addBoardItem(path)
+                }
+            }
+        }
+    }
     // Добавление миниатюры для изображения
     private fun addThumbnail(boardItem: ImageView, path: String) {
         val thumbnail = ImageView(this)
@@ -294,24 +357,25 @@ class BoardActivity : AppCompatActivity() {
         when (adjustmentType ?: "alpha") {
             "alpha" -> {
                 textViewAdjustment.text = "Прозрачность"
-                seekBar.max = 100
+                // Для Slider задаём диапазон значений от 0 до 100
+                slider.valueFrom = 0f
+                slider.valueTo = 100f
                 val progress = ((state.alpha - 0.2f) * 100).toInt().coerceAtLeast(0)
-                seekBar.progress = progress
-                seekBar.thumb = ContextCompat.getDrawable(this, R.drawable.ic_blur)
+                slider.value = progress.toFloat()
             }
             "rotation" -> {
                 textViewAdjustment.text = "Поворот"
-                seekBar.max = 360
-                val normalizedRotation = ((state.rotation % 360) + 360) % 360
-                seekBar.progress = normalizedRotation.toInt()
-                seekBar.thumb = ContextCompat.getDrawable(this, R.drawable.ic_turn)
+                slider.valueFrom = 0f
+                slider.valueTo = 360f
+                val normalizedRotation = (((state.rotation % 360) + 360) % 360).toFloat()
+                slider.value = normalizedRotation
             }
             "scale" -> {
                 textViewAdjustment.text = "Масштабирование"
-                seekBar.max = 100
-                val progress = (((state.scale - 0.5f) / 4.5f) * 100).toInt()
-                seekBar.progress = progress.coerceIn(0, 100)
-                seekBar.thumb = ContextCompat.getDrawable(this, R.drawable.ic_scaling)
+                slider.valueFrom = 0f
+                slider.valueTo = 100f
+                val progress = (((state.scale - 0.5f) / 4.5f) * 100).toInt().coerceIn(0, 100)
+                slider.value = progress.toFloat()
             }
         }
     }
@@ -376,120 +440,89 @@ class BoardActivity : AppCompatActivity() {
     // Удаление изображения с доски
     private fun deleteItem() {
         selectedView?.let { view ->
-            boardContainer.removeView(view)
-            boardItems.remove(view)
-            thumbnailMapping[view]?.let { thumb ->
-                llClothes.removeView(thumb)
-            }
-            thumbnailMapping.remove(view)
-            selectedView = null
+            AlertDialog.Builder(this)
+                .setTitle("Удаление")
+                .setMessage("Вы уверены, что хотите удалить выбранную вещь?")
+                .setPositiveButton("Да") { dialog, _ ->
+                    boardContainer.removeView(view)
+                    boardItems.remove(view)
+                    thumbnailMapping[view]?.let { thumb ->
+                        llClothes.removeView(thumb)
+                    }
+                    thumbnailMapping.remove(view)
+                    selectedView = null
+                    setAdjustmentContainerVisibility(View.GONE)
+                    Toast.makeText(this, "Вещь удалена", Toast.LENGTH_SHORT).show()
+                }
+                .setNegativeButton("Отмена", null)
+                .show()
         }
     }
 
-    // Класс для обработки жестов (масштаб, поворот, перемещение)
     inner class MultiTouchListener(context: Context) : View.OnTouchListener {
-        private val scaleGestureDetector: ScaleGestureDetector
-        private val rotationGestureDetector: RotationGestureDetector
-        private var lastPoint = PointF()
-        private var baseScale = 1f
-        private var isScaling = false
+        private val scaleGestureDetector: ScaleGestureDetector = ScaleGestureDetector(context,
+            object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+                // Фиксируем масштаб в начале каждого жеста
+                private var initialScale = 1f
 
-        init {
-            scaleGestureDetector = ScaleGestureDetector(
-                context,
-                object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
-                    override fun onScaleBegin(detector: ScaleGestureDetector): Boolean {
-                        baseScale = selectedView?.scaleX ?: 1f
-                        isScaling = true
-                        return true
+                override fun onScaleBegin(detector: ScaleGestureDetector): Boolean {
+                    isScaling = true
+                    currentView?.let { view ->
+                        initialScale = view.scaleX
+                        // Устанавливаем pivot в центр для естественного масштабирования
+                        view.pivotX = view.width / 2f
+                        view.pivotY = view.height / 2f
                     }
-                    override fun onScale(detector: ScaleGestureDetector): Boolean {
-                        selectedView?.let { view ->
-                            val newScale = baseScale * detector.scaleFactor
-                            val clampedScale = newScale.coerceIn(0.2f, 5f)
-                            view.scaleX = clampedScale
-                            view.scaleY = clampedScale
-                            val imageId = view.tag.toString()
-                            val currentState = viewModel.getImageState(imageId)
-                            currentState.scale = clampedScale
-                            viewModel.updateImageState(imageId, currentState)
-                        }
-                        return true
-                    }
-                    override fun onScaleEnd(detector: ScaleGestureDetector) {
-                        isScaling = false
-                    }
-                })
-            rotationGestureDetector = RotationGestureDetector(object : RotationGestureDetector.OnRotationGestureListener {
-                override fun onRotation(angle: Float) {
-                    if (isScaling) return
-                    selectedView?.let { view ->
-                        view.rotation += angle
+                    // Скрываем контейнер с seekbar при начале масштабирования
+                    setAdjustmentContainerVisibility(View.GONE)
+                    return true
+                }
+
+                override fun onScale(detector: ScaleGestureDetector): Boolean {
+                    currentView?.let { view ->
+                        // Вычисляем новый масштаб как произведение начального масштаба и текущего коэффициента жеста
+                        val newScale = (initialScale * detector.scaleFactor).coerceIn(0.2f, 5f)
+                        view.scaleX = newScale
+                        view.scaleY = newScale
+                        // Обновляем состояние во ViewModel
                         val imageId = view.tag.toString()
                         val currentState = viewModel.getImageState(imageId)
-                        currentState.rotation = view.rotation
+                        currentState.scale = newScale
                         viewModel.updateImageState(imageId, currentState)
                     }
+                    return true
+                }
+
+                override fun onScaleEnd(detector: ScaleGestureDetector) {
+                    isScaling = false
                 }
             })
-        }
+
+        private var lastPoint = PointF()
+        private var isScaling = false
+        // Храним ссылку на текущую view, над которой происходит жест
+        private var currentView: View? = null
 
         override fun onTouch(view: View, event: MotionEvent): Boolean {
-            if (event.actionMasked == MotionEvent.ACTION_DOWN) {
-                lastPoint.set(event.rawX, event.rawY)
-                if (view is ImageView && selectedView != view) {
-                    selectBoardItem(view)
-                }
-            }
+            currentView = view
             scaleGestureDetector.onTouchEvent(event)
-            rotationGestureDetector.onTouchEvent(event)
+            // Если два пальца, то только масштабируем – не перемещаем
+            if (event.pointerCount > 1) return true
+
             when (event.actionMasked) {
-                MotionEvent.ACTION_MOVE -> {
-                    val dx = event.rawX - lastPoint.x
-                    val dy = event.rawY - lastPoint.y
-                    view.x += dx
-                    view.y += dy
+                MotionEvent.ACTION_DOWN -> {
                     lastPoint.set(event.rawX, event.rawY)
-                }
-            }
-            return true
-        }
-    }
-
-    // Класс для распознавания жеста поворота
-    class RotationGestureDetector(private val mListener: OnRotationGestureListener) {
-        interface OnRotationGestureListener {
-            fun onRotation(angle: Float)
-        }
-        private var fX = 0f
-        private var fY = 0f
-        private var sX = 0f
-        private var sY = 0f
-
-        fun onTouchEvent(event: MotionEvent): Boolean {
-            when (event.actionMasked) {
-                MotionEvent.ACTION_POINTER_DOWN -> {
-                    if (event.pointerCount >= 2) {
-                        fX = event.getX(0)
-                        fY = event.getY(0)
-                        sX = event.getX(1)
-                        sY = event.getY(1)
+                    if (view is ImageView && selectedView != view) {
+                        selectBoardItem(view)
                     }
                 }
                 MotionEvent.ACTION_MOVE -> {
-                    if (event.pointerCount >= 2) {
-                        val nfX = event.getX(0)
-                        val nfY = event.getY(0)
-                        val nsX = event.getX(1)
-                        val nsY = event.getY(1)
-                        val angle1 = Math.atan2((sY - fY).toDouble(), (sX - fX).toDouble())
-                        val angle2 = Math.atan2((nsY - nfY).toDouble(), (nsX - nfX).toDouble())
-                        val angle = Math.toDegrees(angle2 - angle1).toFloat()
-                        mListener.onRotation(angle)
-                        fX = nfX
-                        fY = nfY
-                        sX = nsX
-                        sY = nsY
+                    if (!isScaling) {
+                        val dx = event.rawX - lastPoint.x
+                        val dy = event.rawY - lastPoint.y
+                        view.x += dx
+                        view.y += dy
+                        lastPoint.set(event.rawX, event.rawY)
                     }
                 }
             }

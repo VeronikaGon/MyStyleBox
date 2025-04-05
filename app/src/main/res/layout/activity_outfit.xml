@@ -177,16 +177,123 @@
             android:text="@string/weather"
             android:textColor="#000000"
             android:textSize="22sp" />
-
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/edittext_background"
+                android:padding="5dp"
+                android:paddingStart="10dp"
+                app:flexWrap="wrap"
+                android:textColor="#000000"
+                android:textSize="18sp" >
+                <CheckBox
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Указать погоду для комплекта"
+                    android:checked="true"
+                    />
+            </LinearLayout>
+            <TextView
+                android:id="@+id/tvTemp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_marginTop="8dp"
+                android:text="-18 ... 26°C"
+                android:textColor="@color/black"
+                android:textSize="18sp" />
             <com.google.android.material.slider.RangeSlider
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:valueFrom="-50"
-            android:valueTo="50"
-            app:trackColor="@color/backgroundpink"
-            app:tickColorActive="@android:color/transparent"
-            android:stepSize="1"
-            app:values="@array/initial_slider_values"  />
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:labelBehavior="floating"
+                android:stepSize="1"
+                android:valueFrom="-50"
+                android:valueTo="50"
+                app:tickColorActive="@android:color/transparent"
+                app:tickColorInactive="@android:color/transparent"
+                app:trackColor="@color/lightpink"
+                app:thumbColor="@color/black"
+                app:values="@array/initial_slider_values" />
+            <com.google.android.flexbox.FlexboxLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/edittext_background"
+                android:padding="5dp"
+                android:layout_marginTop="8dp"
+                android:paddingStart="10dp"
+                app:flexWrap="wrap"
+                android:textColor="#000000"
+                android:textSize="18sp" >
+
+                <CheckBox
+                    android:id="@+id/cbHeat"
+                    android:layout_width="80dp"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/checkbox_background"
+                    android:gravity="center"
+                    android:padding="8dp"
+                    android:textAlignment="center"
+                    android:text="Жара 35°C < "
+                    android:button="@null"
+                    android:layout_margin="3dp"/>
+
+                <CheckBox
+                    android:id="@+id/cbHot"
+                    android:layout_width="90dp"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/checkbox_background"
+                    android:gravity="center"
+                    android:padding="8dp"
+                    android:textAlignment="center"
+                    android:text="Жарко 27 ... 34°C"
+                    android:button="@null"
+                    android:layout_margin="3dp"/>
+                <CheckBox
+                    android:id="@+id/cbWarm"
+                    android:layout_width="90dp"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/checkbox_background"
+                    android:gravity="center"
+                    android:padding="8dp"
+                    android:textAlignment="center"
+                    android:text="Тепло 20 ... 26°C"
+                    android:button="@null"
+                    android:layout_margin="3dp"/>
+                <CheckBox
+                    android:id="@+id/cbCool"
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/checkbox_background"
+                    android:gravity="center"
+                    android:padding="8dp"
+                    android:textAlignment="center"
+                    android:text="Прохладно 10 ... 19°C"
+                    android:button="@null"
+                    android:layout_margin="3dp"/>
+                <CheckBox
+                    android:id="@+id/cbCold"
+                    android:layout_width="80dp"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/checkbox_background"
+                    android:gravity="center"
+                    android:padding="8dp"
+                    android:textAlignment="center"
+                    android:text="Холодно -5 ... 9°C"
+                    android:button="@null"
+                    android:layout_margin="3dp"/>
+                <CheckBox
+                    android:id="@+id/cbFrost"
+                    android:layout_width="70dp"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/checkbox_background"
+                    android:gravity="center"
+                    android:padding="8dp"
+                    android:textAlignment="center"
+                    android:text="Мороз < -6°C"
+                    android:button="@null"
+                    android:layout_margin="3dp"/>
+            </com.google.android.flexbox.FlexboxLayout>
     </LinearLayout>
 
         <LinearLayout

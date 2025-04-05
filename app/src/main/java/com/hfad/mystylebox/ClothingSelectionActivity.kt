@@ -52,19 +52,23 @@ class ClothingSelectionActivity : AppCompatActivity() {
 
         clayout.visibility = View.GONE
 
-        imageBack.setOnClickListener {
-            finish()
-        }
+        imageBack.setOnClickListener { finish() }
 
+        val fromBoard = intent.getBooleanExtra("fromBoard", false)
         selectclothingButton.setOnClickListener {
-            val intent = Intent(this, BoardActivity::class.java)
             val selectedPaths = ArrayList(selectedItems.map { it.clothingItem.imagePath })
-            intent.putStringArrayListExtra("selected_items", selectedPaths)
-            startActivity(intent)
+            if (fromBoard) {
+                val resultIntent = Intent()
+                resultIntent.putStringArrayListExtra("selected_items", selectedPaths)
+                setResult(RESULT_OK, resultIntent)
+                finish()
+            } else {
+                val intent = Intent(this, BoardActivity::class.java)
+                intent.putStringArrayListExtra("selected_items", selectedPaths)
+                startActivity(intent)
+            }
         }
-
         imageFilter.setOnClickListener { startFilterActivity() }
-
 
         recyclerView.layoutManager = GridLayoutManager(this, 2)
         recyclerView.adapter = ClothingSelectionAdapter(
@@ -72,9 +76,7 @@ class ClothingSelectionActivity : AppCompatActivity() {
             R.layout.item_clothing_selection,
             object : ClothingSelectionAdapter.OnItemSelectionListener {
                 override fun onItemSelectionChanged(item: ClothingItemFull, isSelected: Boolean) {
-                    if (lockedPaths.contains(item.clothingItem.imagePath)) {
-                       return
-                    }
+                    if (lockedPaths.contains(item.clothingItem.imagePath)) return
                     if (isSelected) {
                         selectedItems.add(item)
                     } else {
@@ -83,7 +85,8 @@ class ClothingSelectionActivity : AppCompatActivity() {
                     updateSelectionCount()
                 }
             },
-            selectedItems
+            selectedItems,
+            lockedPaths.toSet()
         )
         loadAllClothingItems()
     }
