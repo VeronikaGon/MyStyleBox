@@ -29,6 +29,10 @@ class MainActivity : AppCompatActivity() {
         val navController = navHostFragment.navController
         val bottomNavView = findViewById<BottomNavigationView>(R.id.bottom_nav)
         NavigationUI.setupWithNavController(bottomNavView, navController)
+        val openFragment = intent.getStringExtra("openFragment")
+        if (openFragment == "outfits") {
+            navController.navigate(R.id.outfitsFragment)
+        }
     }
 
     private fun populateInitialData() {

@@ -62,7 +62,7 @@
             android:padding="4dp"
             android:background="@drawable/rounded_button"
             android:backgroundTint="@color/lightpink"
-            app:srcCompat="@drawable/save" />
+            app:srcCompat="@drawable/ic_save" />
     </LinearLayout>
 
     <Button

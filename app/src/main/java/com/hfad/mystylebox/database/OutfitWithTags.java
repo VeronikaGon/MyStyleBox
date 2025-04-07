@@ -8,7 +8,7 @@ import java.util.List;
 
 public class OutfitWithTags {
     @Embedded
-    public ClothingItem clothingItem;
+    public Outfit outfit;
 
     @Relation(
             parentColumn = "id",

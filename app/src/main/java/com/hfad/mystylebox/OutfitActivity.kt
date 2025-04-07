@@ -1,23 +1,409 @@
 package com.hfad.mystylebox
 
+import android.app.Activity
+import android.content.Intent
+import android.content.res.ColorStateList
 import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
+import android.util.Log
+import android.view.View
+import android.widget.Button
+import android.widget.CheckBox
+import android.widget.CompoundButton
+import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import androidx.room.Room
+import com.google.android.flexbox.FlexboxLayout
+import com.google.android.material.slider.RangeSlider
+import com.hfad.mystylebox.database.AppDatabase
+import com.hfad.mystylebox.database.ClothingItem
+import com.hfad.mystylebox.database.Outfit
+import com.hfad.mystylebox.database.OutfitClothingItem
+import com.hfad.mystylebox.database.OutfitDao
+import com.hfad.mystylebox.database.OutfitTag
+import com.hfad.mystylebox.database.OutfitTagDao
+import com.hfad.mystylebox.database.Tag
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class OutfitActivity : AppCompatActivity() {
+    private lateinit var db: AppDatabase
+    private lateinit var outfitDao: OutfitDao
+    private lateinit var outfitTagDao: OutfitTagDao
+
+    private lateinit var outfitNameEditText: EditText
+    private lateinit var outfitDescriptionEditText: EditText
+    private lateinit var outfitImageView: ImageView
+    private lateinit var btnSave: Button
+
+    private var ImagePath: String? = null
+    private var isInEditMode: Boolean = false
+    private var currentOutfit: Outfit? = null
+
+    private lateinit var cbWeather: CheckBox
+    private lateinit var cbHeat: CheckBox
+    private lateinit var cbHot: CheckBox
+    private lateinit var cbWarm: CheckBox
+    private lateinit var cbCool: CheckBox
+    private lateinit var cbCold: CheckBox
+    private lateinit var cbFrost: CheckBox
+    private lateinit var cbSummer: CheckBox
+    private lateinit var cbSpring: CheckBox
+    private lateinit var cbWinter: CheckBox
+    private lateinit var cbAutumn: CheckBox
+    private lateinit var tvTemp: TextView
+    private lateinit var rsWeather: RangeSlider
+    private lateinit var fbWeatherChecks:FlexboxLayout
+    private lateinit var saveButton: Button
+    private lateinit var flexboxTags: FlexboxLayout
+    private var selectedTagIds: MutableSet<Int> = mutableSetOf()
+    private lateinit var tagEditingLauncher: ActivityResultLauncher<Intent>
+    private var selectedTags: List<Tag> = listOf()
+    private var selectedClothingItemIds: List<Int> = listOf()
+    private lateinit var LL:LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_outfit)
 
-        val clothingImageView = findViewById<ImageView>(R.id.clothingImageView)
-        val imagePath = intent.getStringExtra("imagePath")
-        if (!imagePath.isNullOrEmpty()) {
-            val bitmap = BitmapFactory.decodeFile(imagePath)
+        val clothingImageView = findViewById<ImageView>(R.id.outfitImageView)
+        ImagePath = intent.getStringExtra("imagePath")
+        Log.d("OutfitActivity", "Получен путь к фото: $ImagePath")
+        if (!ImagePath.isNullOrEmpty()) {
+            val bitmap = BitmapFactory.decodeFile(ImagePath)
             clothingImageView.setImageBitmap(bitmap)
         } else {
-            // Обработка случая, когда путь не передан или ошибка при загрузке изображения
+            Log.e("OutfitActivity", "Путь к фото пустой")
         }
+        flexboxTags = findViewById(R.id.Tags)
+        selectedClothingItemIds = intent.getIntegerArrayListExtra("selected_clothing_ids") ?: listOf()
+        outfitNameEditText = findViewById(R.id.enterName)
+        outfitDescriptionEditText = findViewById(R.id.enterNotes)
+        outfitImageView = findViewById(R.id.outfitImageView)
+        tvTemp = findViewById(R.id.tvTemp)
+        rsWeather = findViewById(R.id.rsweather)
+        btnSave = findViewById(R.id.ButtonSAVE)
+        cbSummer = findViewById(R.id.cbSummer)
+        cbSpring = findViewById(R.id.cbSpring)
+        cbWinter = findViewById(R.id.cbWinter)
+        cbAutumn = findViewById(R.id.cbAutumn)
+        cbWeather = findViewById(R.id.cbweather)
+        cbHeat = findViewById(R.id.cbHeat)
+        cbHot = findViewById(R.id.cbHot)
+        cbWarm = findViewById(R.id.cbWarm)
+        cbCool = findViewById(R.id.cbCool)
+        cbCold = findViewById(R.id.cbCold)
+        cbFrost = findViewById(R.id.cbFrost)
+        tvTemp = findViewById(R.id.tvTemp)
+        rsWeather = findViewById(R.id.rsweather)
+        fbWeatherChecks = findViewById(R.id.fbWeatherChecks)
+        cbSummer = findViewById(R.id.cbSummer)
+        cbSpring = findViewById(R.id.cbSpring)
+        cbWinter = findViewById(R.id.cbWinter)
+        cbAutumn = findViewById(R.id.cbAutumn)
+        saveButton = findViewById(R.id.ButtonSAVE)
+        LL = findViewById(R.id.ll)
+        val llTegi = findViewById<LinearLayout>(R.id.llTegi)
+        llTegi.setOnClickListener {
+            val intent = Intent(this, TagEditingActivity::class.java)
+            tagEditingLauncher.launch(intent)
+        }
+        val tagEditButton = findViewById<ImageButton>(R.id.imageButton)
+        tagEditButton.setOnClickListener {
+            val intent = Intent(this, TagEditingActivity::class.java)
+            tagEditingLauncher.launch(intent)
+        }
+        tagEditingLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val returnedTags = result.data?.getParcelableArrayListExtra<Tag>("selected_tags")
+                if (returnedTags != null) {
+                    selectedTagIds.clear()
+                    selectedTags = returnedTags
+                    returnedTags.forEach { tag ->
+                        selectedTagIds.add(tag.id)
+                    }
+                    displayTagsAsCheckboxes(returnedTags, selectedTagIds)
+                }
+            }
+        }
+        db = Room.databaseBuilder(
+            applicationContext,
+            AppDatabase::class.java,
+            "wardrobe_db"
+        ).allowMainThreadQueries().build()
+        outfitDao = db.outfitDao()
+
+        currentOutfit = intent.getParcelableExtra("outfit")
+        if (currentOutfit != null) {
+            isInEditMode = true
+            populateFields(currentOutfit!!)
+            btnSave.text = "Обновить"
+        } else {
+            btnSave.text = "Сохранить"
+        }
+
+        btnSave.setOnClickListener {
+            if (outfitNameEditText.text.toString().trim().isEmpty()) {
+                Toast.makeText(this, "Введите название комплекта", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            saveOrUpdateOutfit()
+        }
+
+        val btnPlus = findViewById<ImageButton>(R.id.btnplus)
+        val btnMinus = findViewById<ImageButton>(R.id.btnminus)
+
+        btnPlus.setOnClickListener {
+            val lower = rsWeather.values[0]
+            val upper = rsWeather.values[1]
+            if (lower < upper) {
+                val newLower = lower + 1
+                rsWeather.setValues(newLower, upper)
+                tvTemp.text = "${upper.toInt()} ... ${newLower.toInt()}°C"
+                updateWeatherCheckboxes(newLower.toInt(), upper.toInt())
+            }
+        }
+
+        btnMinus.setOnClickListener {
+            val lower = rsWeather.values[0]
+            val upper = rsWeather.values[1]
+            if (lower > rsWeather.valueFrom) {
+                val newLower = lower - 1
+                rsWeather.setValues(newLower, upper)
+                tvTemp.text = "${upper.toInt()} ... ${newLower.toInt()}°C"
+                updateWeatherCheckboxes(newLower.toInt(), upper.toInt())
+            }
+        }
+        tvTemp.text = "${rsWeather.values.first().toInt()} ... ${rsWeather.values.last().toInt()}°C"
+
+        rsWeather.addOnChangeListener { slider, value, fromUser ->
+            val sliderValues = slider.values.map { it.toInt() }
+            tvTemp.text = "${sliderValues.first()} ... ${sliderValues.last()}°C"
+            updateWeatherCheckboxes(sliderValues.first(), sliderValues.last())
+        }
+
+        cbWeather.buttonTintList = ColorStateList.valueOf(Color.parseColor("#FFB5A7"))
+        setWeatherVisibility(cbWeather.isChecked)
+        cbWeather.setOnCheckedChangeListener { _, isChecked ->
+            setWeatherVisibility(isChecked)
+        }
+
+        val checkBoxListener = CompoundButton.OnCheckedChangeListener { button, _ ->
+            if (!button.isChecked && countSelectedRanges() <= 0) {
+                Toast.makeText(this, "Должен быть выбран хотя бы один диапазон погоды", Toast.LENGTH_SHORT).show()
+                button.isChecked = true
+            } else {
+                adjustSliderRange()
+            }
+        }
+        cbHeat.setOnCheckedChangeListener(checkBoxListener)
+        cbHot.setOnCheckedChangeListener(checkBoxListener)
+        cbWarm.setOnCheckedChangeListener(checkBoxListener)
+        cbCool.setOnCheckedChangeListener(checkBoxListener)
+        cbCold.setOnCheckedChangeListener(checkBoxListener)
+        cbFrost .setOnCheckedChangeListener(checkBoxListener)
+        updateWeatherCheckboxes(rsWeather.values.first().toInt(), rsWeather.values.last().toInt())
+        loadTagsFromDatabase()
+    }
+    // Загрузка тегов из БД и отображение их в виде CheckBox
+    private fun loadTagsFromDatabase() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val allTags = db.tagDao().getAllTags()
+            val preselectedIds = intent.getParcelableExtra<ClothingItem>("clothingItem")?.let { editingItem ->
+                outfitTagDao.getTagsForOutfit(editingItem.id).map { it.tagId }.toSet()
+            } ?: emptySet()
+            selectedTagIds.clear()
+            selectedTagIds.addAll(preselectedIds)
+            withContext(Dispatchers.Main) { displayTagsAsCheckboxes(allTags, selectedTagIds) }
+        }
+    }
+    // Отображение тегов в виде CheckBox с возможностью выбора/снятия выбора
+    private fun displayTagsAsCheckboxes(allTags: List<Tag>, preselectedTagIds: Set<Int> = emptySet()) {
+        flexboxTags.removeAllViews()
+        allTags.forEach { tag ->
+            val checkBox = CheckBox(this).apply {
+                text = tag.name
+                id = tag.id
+                setBackgroundResource(R.drawable.checkbox_background)
+                setButtonDrawable(null)
+                setPadding(16, 5, 16, 5)
+                isChecked = tag.id in preselectedTagIds
+            }
+            checkBox.setOnClickListener {
+                if (checkBox.isChecked) {
+                    selectedTagIds.add(tag.id)
+                } else {
+                    selectedTagIds.remove(tag.id)
+                }
+            }
+            val params = FlexboxLayout.LayoutParams(
+                FlexboxLayout.LayoutParams.WRAP_CONTENT,
+                FlexboxLayout.LayoutParams.WRAP_CONTENT
+            ).apply { setMargins(5, 5, 5, 5) }
+            flexboxTags.addView(checkBox, params)
+        }
+    }
+    private fun populateFields(outfit: Outfit) {
+        outfitNameEditText.setText(outfit.name)
+        outfitDescriptionEditText.setText(outfit.description)
+        tvTemp.text = "${outfit.maxTemp} ... ${outfit.minTemp}°C"
+        rsWeather.setValues(outfit.minTemp.toFloat(), outfit.maxTemp.toFloat())
+        outfit.seasons?.let { seasons ->
+            cbSummer.isChecked = seasons.contains("Лето")
+            cbSpring.isChecked = seasons.contains("Весна")
+            cbWinter.isChecked = seasons.contains("Зима")
+            cbAutumn.isChecked = seasons.contains("Осень")
+        }
+    }
+    // Метод для сохранения или обновления комплекта
+    private fun saveOrUpdateOutfit() {
+        val name = outfitNameEditText.text.toString().trim()
+        val description = outfitDescriptionEditText.text.toString().trim()
+        val seasons = mutableListOf<String>()
+        if (cbSummer.isChecked) seasons.add("Лето")
+        if (cbSpring.isChecked) seasons.add("Весна")
+        if (cbWinter.isChecked) seasons.add("Зима")
+        if (cbAutumn.isChecked) seasons.add("Осень")
+        val minTemp = if (cbWeather.isChecked) rsWeather.values.first().toInt() else -99
+        val maxTemp = if (cbWeather.isChecked) rsWeather.values.last().toInt() else -99
+
+        val outfit = if (isInEditMode && currentOutfit != null) {
+            currentOutfit!!.apply {
+                this.name = name
+                this.description = description
+                this.seasons = seasons
+                this.minTemp = minTemp
+                this.maxTemp = maxTemp
+                this.imagePath = ImagePath
+            }
+        } else {
+            Outfit().apply {
+                this.name = name
+                this.description = description
+                this.seasons = seasons
+                this.minTemp = minTemp
+                this.maxTemp = maxTemp
+                this.imagePath = ImagePath
+            }
+        }
+
+        if (isInEditMode) {
+            outfitDao.update(outfit)
+            Toast.makeText(this, "Комплект обновлён", Toast.LENGTH_SHORT).show()
+        } else {
+            val id = outfitDao.insertOutfit(outfit)
+            Toast.makeText(this, "Комплект сохранён", Toast.LENGTH_SHORT).show()
+            try {
+                selectedClothingItemIds.forEach { clothingItemId ->
+                    db.outfitClothingItemDao().insert(OutfitClothingItem(clothingItemId, id.toInt()))
+                }
+            } catch (e: Exception) {
+                Log.e("OutfitActivity", "Ошибка при вставке outfitClothingItem: ${e.message}")
+                Toast.makeText(this, "Ошибка сохранения связей комплекта", Toast.LENGTH_SHORT).show()
+            }
+            try {
+                selectedTagIds.forEach { tagId ->
+                    db.outfitTagDao().insert(OutfitTag(id.toInt(), tagId))
+                }
+            } catch (e: Exception) {
+                Log.e("OutfitActivity", "Ошибка при вставке outfitTag: ${e.message}")
+                Toast.makeText(this, "Ошибка сохранения тегов комплекта", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra("openFragment", "outfits")
+        }
+        startActivity(intent)
+        finish()
+    }
+
+    private fun countSelectedRanges(): Int {
+        var count = 0
+        if (cbFrost.isChecked) count++
+        if (cbCold.isChecked) count++
+        if (cbCool.isChecked) count++
+        if (cbWarm.isChecked) count++
+        if (cbHot.isChecked) count++
+        if (cbHeat.isChecked) count++
+        return count
+    }
+
+    private fun updateWeatherCheckboxes(sliderMin: Int, sliderMax: Int) {
+        if (sliderMin >= -6 && sliderMax == 50) {
+            cbFrost.isChecked = true
+            cbCold.isChecked = true
+            cbCool.isChecked = true
+            cbWarm.isChecked = true
+            cbHot.isChecked = true
+            cbHeat.isChecked = true
+            return
+        }
+
+        cbFrost.isChecked = (sliderMin <= -7 && sliderMax >= -6)
+        cbCold.isChecked  = (sliderMin <= -5 && sliderMax >= 9)
+        cbCool.isChecked  = (sliderMin <= 10 && sliderMax >= 19)
+        cbWarm.isChecked  = (sliderMin <= 20 && sliderMax >= 26)
+        cbHot.isChecked   = (sliderMin <= 27 && sliderMax >= 34)
+        cbHeat.isChecked  = (sliderMin <= 35 && sliderMax >= 50)
+    }
+
+    private fun setWeatherVisibility(visible: Boolean) {
+        val visibility = if (visible) View.VISIBLE else View.GONE
+        tvTemp.visibility = visibility
+        rsWeather.visibility = visibility
+        fbWeatherChecks.visibility = visibility
+        LL.visibility = visibility
+    }
+
+    private fun adjustSliderRange() {
+        val selectedRanges = mutableListOf<Pair<Int, Int>>()
+        if (cbFrost.isChecked) selectedRanges.add(Pair(-50, -6))
+        if (cbCold.isChecked)  selectedRanges.add(Pair(-5, 9))
+        if (cbCool.isChecked)  selectedRanges.add(Pair(10, 19))
+        if (cbWarm.isChecked)  selectedRanges.add(Pair(20, 26))
+        if (cbHot.isChecked)   selectedRanges.add(Pair(27, 34))
+        if (cbHeat.isChecked)  selectedRanges.add(Pair(35, 50))
+
+        if (selectedRanges.isEmpty()) {
+            Toast.makeText(this, "Должен быть выбран хотя бы один диапазон погоды", Toast.LENGTH_SHORT).show()
+            cbFrost.isChecked = true
+            selectedRanges.add(Pair(-50, -6))
+        }
+
+        val unionMin = selectedRanges.minOf { it.first }
+        val unionMax = selectedRanges.maxOf { it.second }
+
+        rsWeather.setValues(unionMin.toFloat(), unionMax.toFloat())
+
+        tvTemp.text = "$unionMax ... $unionMin°C"
+    }
+    @Suppress("MissingSuperCall")
+    override fun onBackPressed() {
+        AlertDialog.Builder(this)
+            .setTitle("Внимание")
+            .setMessage("Вы уверены, что хотите выйти? Все несохранённые изменения будут потеряны.")
+            .setPositiveButton("Да") { dialog, which ->
+                val intent = Intent(this, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    putExtra("openFragment", "outfits")
+                }
+                startActivity(intent)
+            }
+            .setNegativeButton("Нет", null)
+            .show()
     }
 }

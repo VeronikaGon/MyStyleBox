@@ -133,7 +133,6 @@ class CategorySelectionActivity : AppCompatActivity() {
             putExtra("image_path", imageUri?.toString() ?: "")
             putExtra("is_reselection", isReselection)
         }
-        Log.d("CategorySelection", "Запускаем ClothesActivity через onSubcategorySelectedStart")
         startActivity(targetIntent)
         finish()
     }
@@ -146,7 +145,6 @@ class CategorySelectionActivity : AppCompatActivity() {
             putExtra("image_path", imageUri?.toString() ?: "")
             putExtra("is_reselection", isReselection)
         }
-        Log.d("CategorySelection", "Возвращаем результат через onSubcategorySelected")
         setResult(Activity.RESULT_OK, resultIntent)
         finish()
     }

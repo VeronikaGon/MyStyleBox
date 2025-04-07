@@ -13,4 +13,7 @@ public interface OutfitTagDao {
 
     @Query("SELECT * FROM outfit_tag WHERE outfitId = :outfitId")
     List<OutfitTag> getTagsForOutfit(int outfitId);
+
+    @Query("DELETE FROM outfit_tag WHERE outfitId = :outfitId")
+    void deleteTagsForOutfit(int outfitId);
 }

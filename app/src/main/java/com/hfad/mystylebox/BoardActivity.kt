@@ -7,7 +7,6 @@ import android.graphics.Canvas
 import android.graphics.PointF
 import android.graphics.drawable.Drawable
 import android.os.Bundle
-import android.util.Log
 import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
@@ -17,7 +16,6 @@ import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -77,6 +75,7 @@ class BoardActivity : AppCompatActivity() {
 
     private var adjustmentType: String? = null
     private var currentAdjustmentButton: ImageButton? = null
+    private var selectedIds: List<Int> = listOf()
 
     companion object {
         private const val REQUEST_CODE_ADD_ITEMS = 1001
@@ -118,10 +117,9 @@ class BoardActivity : AppCompatActivity() {
 
         // Инициализируем ViewModel сразу
         viewModel = ViewModelProvider(this).get(BoardViewModel::class.java)
-
-        // Загружаем изображения (используется список путей)
-        val selectedPaths = intent.getStringArrayListExtra("selected_items") ?: arrayListOf()
-        selectedPaths.forEach { path ->
+        selectedIds = intent?.getIntegerArrayListExtra("selected_item_ids") ?: arrayListOf<Int>()
+        val selectedImagePaths = intent.getStringArrayListExtra("selected_image_paths") ?: arrayListOf()
+        selectedImagePaths.forEach { path ->
             addBoardItem(path)
         }
 
@@ -208,7 +206,8 @@ class BoardActivity : AppCompatActivity() {
             selectedView?.background = originalBackground
 
             val intent = Intent(this, OutfitActivity::class.java)
-            intent.putExtra("imagePath", file.absolutePath)
+            intent.putExtra("imagePath", file.path)
+            intent.putIntegerArrayListExtra("selected_clothing_ids", ArrayList(selectedIds))
             startActivity(intent)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -223,6 +222,7 @@ class BoardActivity : AppCompatActivity() {
             .setPositiveButton("Да") { dialog, which ->
                 val intent = Intent(this, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    putExtra("openFragment", "outfits")
                 }
                 startActivity(intent)
                 finish()

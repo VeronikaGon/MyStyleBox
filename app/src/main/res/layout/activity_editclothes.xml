@@ -133,7 +133,7 @@
                         android:background="@drawable/checkbox_background"
                         android:button="@null"
                         android:enabled="false"
-                        android:drawableLeft="@drawable/winter"
+                        android:drawableLeft="@drawable/ic_winter"
                         android:gravity="center_vertical"
                         android:minHeight="32dp"
                         android:padding="8dp" />
@@ -146,7 +146,7 @@
                         android:enabled="false"
                         android:background="@drawable/checkbox_background"
                         android:button="@null"
-                        android:drawableLeft="@drawable/autumn"
+                        android:drawableLeft="@drawable/ic_autumn"
                         android:gravity="center_vertical"
                         android:minHeight="32dp"
                         android:padding="8dp" />

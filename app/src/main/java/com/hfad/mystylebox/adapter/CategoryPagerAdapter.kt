@@ -16,7 +16,6 @@ class CategoryPagerAdapter(
     override fun getItemCount(): Int = categories.size
 
     override fun createFragment(position: Int): Fragment {
-        // Передаём id категории во фрагмент для загрузки подкатегорий
         return SubcategoryFragment.newInstance(categories[position].id, imageUri)
     }
 }

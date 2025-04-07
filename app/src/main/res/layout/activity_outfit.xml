@@ -30,7 +30,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
-        android:id="@+id/clothingImageView"
+        android:id="@+id/outfitImageView"
         android:layout_width="250dp"
         android:layout_height="250dp"
         android:layout_marginTop="8dp"
@@ -51,7 +51,7 @@
         android:padding="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/clothingImageView">
+        app:layout_constraintTop_toBottomOf="@+id/outfitImageView">
 
         <TextView
             android:id="@+id/textView3"
@@ -135,7 +135,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Зима"
-                    android:drawableLeft="@drawable/winter"
+                    android:drawableLeft="@drawable/ic_winter"
                     android:background="@drawable/checkbox_background"
                     android:padding="8dp"
                     android:button="@null"
@@ -147,7 +147,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Осень"
-                    android:drawableLeft="@drawable/autumn"
+                    android:drawableLeft="@drawable/ic_autumn"
                     android:background="@drawable/checkbox_background"
                     android:padding="8dp"
                     android:button="@null"
@@ -187,10 +187,10 @@
                 android:textColor="#000000"
                 android:textSize="18sp" >
                 <CheckBox
+                    android:id="@+id/cbweather"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Указать погоду для комплекта"
-                    android:checked="true"
                     />
             </LinearLayout>
             <TextView
@@ -199,23 +199,44 @@
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:layout_marginTop="8dp"
-                android:text="-18 ... 26°C"
+                android:text=""
                 android:textColor="@color/black"
                 android:textSize="18sp" />
-            <com.google.android.material.slider.RangeSlider
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:id="@+id/ll"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                app:labelBehavior="floating"
-                android:stepSize="1"
-                android:valueFrom="-50"
-                android:valueTo="50"
-                app:tickColorActive="@android:color/transparent"
-                app:tickColorInactive="@android:color/transparent"
-                app:trackColor="@color/lightpink"
-                app:thumbColor="@color/black"
-                app:values="@array/initial_slider_values" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <ImageButton
+                    android:id="@+id/btnminus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_minus"
+                    android:background="@android:color/transparent"/>
+                <com.google.android.material.slider.RangeSlider
+                    android:id="@+id/rsweather"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:labelBehavior="floating"
+                    android:stepSize="1"
+                    android:valueFrom="-50"
+                    android:valueTo="50"
+                    app:tickColorActive="@android:color/transparent"
+                    app:tickColorInactive="@android:color/transparent"
+                    app:trackColor="@color/lightpink"
+                    app:thumbColor="@color/black"
+                    app:values="@array/initial_slider_values" />
+                <ImageButton
+                    android:id="@+id/btnplus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_plus"
+                    android:background="@android:color/transparent"/>
+            </LinearLayout>
             <com.google.android.flexbox.FlexboxLayout
+                android:id="@+id/fbWeatherChecks"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/edittext_background"
@@ -234,7 +255,7 @@
                     android:gravity="center"
                     android:padding="8dp"
                     android:textAlignment="center"
-                    android:text="Жара 35°C < "
+                    android:text="Жара 35°C "
                     android:button="@null"
                     android:layout_margin="3dp"/>
 
@@ -290,7 +311,7 @@
                     android:gravity="center"
                     android:padding="8dp"
                     android:textAlignment="center"
-                    android:text="Мороз < -6°C"
+                    android:text="Мороз  -6°C"
                     android:button="@null"
                     android:layout_margin="3dp"/>
             </com.google.android.flexbox.FlexboxLayout>
@@ -371,7 +392,7 @@
                 android:id="@+id/textView14"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/notes"
+                android:text="@string/description"
                 android:textColor="#000000"
                 android:textSize="22sp" />
 
@@ -393,7 +414,7 @@
         android:id="@+id/ButtonSAVE"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:drawableRight="@drawable/save"
+        android:drawableRight="@drawable/ic_save"
         android:text="@string/add"
         android:backgroundTint="#E8A598"
         android:textColor="@color/black"

@@ -12,7 +12,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 import java.util.concurrent.Executors;
 import androidx.room.migration.Migration;
 
-        @Database(entities = {Category.class, Subcategory.class, ClothingItem.class, ClothingItemTag.class, Tag.class, Outfit.class, OutfitClothingItem.class,}, version = 4, exportSchema = true)
+        @Database(entities = {Category.class, Subcategory.class, ClothingItem.class, ClothingItemTag.class, Tag.class, Outfit.class, OutfitClothingItem.class,OutfitTag.class}, version = 5, exportSchema = true)
         @TypeConverters(Converters.class)
         public abstract class AppDatabase extends RoomDatabase {
             public abstract CategoryDao categoryDao();
@@ -21,6 +21,8 @@ import androidx.room.migration.Migration;
             public abstract TagDao tagDao();
             public abstract OutfitDao outfitDao();
             public abstract ClothingItemTagDao clothingItemTagDao();
+            public abstract OutfitTagDao outfitTagDao();
+            public abstract OutfitClothingItemDao outfitClothingItemDao();
             private static volatile AppDatabase INSTANCE;
             private static Context appContext;
 
@@ -39,6 +41,7 @@ import androidx.room.migration.Migration;
                             INSTANCE = Room.databaseBuilder(appContext, AppDatabase.class, "wardrobe_db")
                                     .addMigrations(MIGRATION_2_3)
                                     .allowMainThreadQueries()
+                                    .fallbackToDestructiveMigration()
                                     .addCallback(prepopulateCallback)
                                     .build();
                         }

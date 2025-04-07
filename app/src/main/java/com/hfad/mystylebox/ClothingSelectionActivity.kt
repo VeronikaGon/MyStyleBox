@@ -56,15 +56,20 @@ class ClothingSelectionActivity : AppCompatActivity() {
 
         val fromBoard = intent.getBooleanExtra("fromBoard", false)
         selectclothingButton.setOnClickListener {
-            val selectedPaths = ArrayList(selectedItems.map { it.clothingItem.imagePath })
+            val selectedIds = ArrayList(selectedItems.map { it.clothingItem.id })
+            val selectedImagePaths = ArrayList(selectedItems.map { it.clothingItem.imagePath })
             if (fromBoard) {
-                val resultIntent = Intent()
-                resultIntent.putStringArrayListExtra("selected_items", selectedPaths)
+                val resultIntent = Intent().apply {
+                    putIntegerArrayListExtra("selected_item_ids", selectedIds)
+                    putStringArrayListExtra("selected_image_paths", selectedImagePaths)
+                }
                 setResult(RESULT_OK, resultIntent)
                 finish()
             } else {
-                val intent = Intent(this, BoardActivity::class.java)
-                intent.putStringArrayListExtra("selected_items", selectedPaths)
+                val intent = Intent(this, BoardActivity::class.java).apply {
+                    putIntegerArrayListExtra("selected_item_ids", selectedIds)
+                    putStringArrayListExtra("selected_image_paths", selectedImagePaths)
+                }
                 startActivity(intent)
             }
         }

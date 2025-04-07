@@ -18,6 +18,7 @@
     <string name="colors"> Цвета </string>
     <string name="notes"> Заметки </string>
     <string name="note"> Заметка </string>
+    <string name="description"> Описание </string>
     <string name="hint"> Введите текст </string>
     <string name="gender"> Пол </string>
     <string name="add"> Добавить </string>

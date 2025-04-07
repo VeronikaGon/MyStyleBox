@@ -1,16 +1,39 @@
 package com.hfad.mystylebox.database;
 
 import androidx.room.Dao;
+import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.Transaction;
+import androidx.room.Update;
 
 import java.util.List;
 @Dao
 public interface OutfitDao {
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    long insert(Outfit outfit);
+    @Insert
+    long insertOutfit(Outfit outfit);
 
+    // Вставляем связь комплекта с предметом одежды
+    @Insert
+    void insertOutfitClothingItem(OutfitClothingItem outfitClothingItem);
+
+    @Update
+    void update(Outfit outfit);
+
+    // Вставка комплекта вместе со списком связанных предметов
+    @Transaction
+    default void insertOutfitWithItems(Outfit outfit, List<OutfitClothingItem> items) {
+        long outfitId = insertOutfit(outfit);
+        // Обновляем поле outfitId в каждой связи
+        for (OutfitClothingItem item : items) {
+            item.outfitId = (int) outfitId;
+            insertOutfitClothingItem(item);
+        }
+    }
     @Query("SELECT * FROM outfits")
     List<Outfit> getAllOutfits();
+
+    @Delete
+    void delete(Outfit outfit);
 }

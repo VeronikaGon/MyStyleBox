@@ -70,18 +70,6 @@ class ClothingAdapter(
             .into(holder.imageView)
     }
 
-    fun filterByCategory(targetCategory: String) {
-        items.clear()
-        if (targetCategory.equals("Все", ignoreCase = true)) {
-            items.addAll(allItems)
-        } else {
-            items.addAll(
-                allItems.filter { it.categoryName.equals(targetCategory, ignoreCase = true) }
-            )
-        }
-        notifyDataSetChanged()
-    }
-
     fun updateData(newItems: List<ClothingItemFull>) {
         items.clear()
         items.addAll(newItems)
