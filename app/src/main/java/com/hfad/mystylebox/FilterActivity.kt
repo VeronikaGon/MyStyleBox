@@ -38,10 +38,19 @@ class FilterActivity : AppCompatActivity() {
             .allowMainThreadQueries()
             .build()
 
+        val selectedGender = intent.getStringArrayListExtra("selectedGender") ?: emptyList()
         val selectedSeasons = intent.getStringArrayListExtra("selectedSeasons") ?: emptyList()
         val selectedSizes = intent.getStringArrayListExtra("selectedSizes") ?: emptyList()
         val selectedStatuses = intent.getStringArrayListExtra("selectedStatuses") ?: emptyList()
         val selectedTags = intent.getStringArrayListExtra("selectedTags") ?: emptyList()
+
+        selectedGender.forEach {
+            when (it) {
+                "Женский" -> binding.cbWoman.isChecked = true
+                "Мужской" -> binding.cbMan.isChecked = true
+                "Универсально" -> binding.cbUniversal.isChecked = true
+            }
+        }
 
         selectedSeasons.forEach {
             when (it) {
@@ -49,6 +58,7 @@ class FilterActivity : AppCompatActivity() {
                 "Осень" -> binding.cbAutumn.isChecked = true
                 "Зима" -> binding.cbWinter.isChecked = true
                 "Весна" -> binding.cbSpring.isChecked = true
+                "Без сезона" -> binding.cbNotSeasons.isChecked = true
             }
         }
 
@@ -77,6 +87,7 @@ class FilterActivity : AppCompatActivity() {
                 "45" -> binding.cb45.isChecked = true
                 "46" -> binding.cb46.isChecked = true
                 "47" -> binding.cb47.isChecked = true
+                "Без размера" -> binding.cbNotSize.isChecked = true
             }
         }
 
@@ -101,6 +112,7 @@ class FilterActivity : AppCompatActivity() {
         binding.btnReset.setOnClickListener {
             resetAllSelections()
             setResult(Activity.RESULT_OK, Intent().apply {
+                putStringArrayListExtra("selectedGender", arrayListOf())
                 putStringArrayListExtra("selectedSeasons", arrayListOf())
                 putStringArrayListExtra("selectedSizes", arrayListOf())
                 putStringArrayListExtra("selectedStatuses", arrayListOf())
@@ -113,16 +125,27 @@ class FilterActivity : AppCompatActivity() {
         binding.blockSize.setOnClickListener { toggleVisibility(binding.sizeContainer, binding.ivSizeArrow) }
         binding.blockStatus.setOnClickListener { toggleVisibility(binding.statusContainer, binding.ivStatusArrow) }
         binding.blockTags.setOnClickListener { toggleVisibility(binding.tagsContainer, binding.ivTagsArrow)}
+        binding.blockGender.setOnClickListener { toggleVisibility(binding.genderContainer, binding.ivGenderArrow) }
 
         addCheckBoxListeners()
-        addCheckBoxListeners()
 
-        // Кнопка «Применить» всегда видна
+        binding.genderContainer.visibility = View.GONE
+        binding.ivGenderArrow.setImageResource(R.drawable.ic_arrow_drop_down)
+        binding.seasonContainer.visibility = View.GONE
+        binding.ivSeasonArrow.setImageResource(R.drawable.ic_arrow_drop_down)
+        binding.sizeContainer.visibility = View.GONE
+        binding.ivSizeArrow.setImageResource(R.drawable.ic_arrow_drop_down)
+        binding.statusContainer.visibility = View.GONE
+        binding.ivStatusArrow.setImageResource(R.drawable.ic_arrow_drop_down)
+        binding.tagsContainer.visibility = View.GONE
+        binding.ivTagsArrow.setImageResource(R.drawable.ic_arrow_drop_down)
+
         binding.btnApply.visibility = View.VISIBLE
         binding.btnApply.setOnClickListener {
             applyFilters()
         }
     }
+    // Метод загрузки тегов из БД и добавления чекбокса "Без тегов"
     private fun loadTags() {
         val tags = db.tagDao().getAllTags()
         binding.tagsContainer.removeAllViews()
@@ -151,19 +174,41 @@ class FilterActivity : AppCompatActivity() {
             checkBox.setOnCheckedChangeListener { _, _ -> updateApplyButtonState() }
             binding.tagsContainer.addView(checkBox)
         }
+        val noTagCheckBox = CheckBox(this).apply {
+            text = "Без тегов"
+            setBackgroundResource(R.drawable.checkbox_background)
+            setButtonDrawable(null)
+            setPadding(16, 16, 16, 16)
+            gravity = Gravity.CENTER
+            setOnCheckedChangeListener { _, _ -> updateApplyButtonState() }
+        }
+        val noTagLayoutParams = ViewGroup.MarginLayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            topMargin = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, 8f, resources.displayMetrics
+            ).toInt()
+            marginEnd = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, 8f, resources.displayMetrics
+            ).toInt()
+        }
+        noTagCheckBox.layoutParams = noTagLayoutParams
+        binding.tagsContainer.addView(noTagCheckBox)
     }
     // Добавляем слушателей для всех чекбоксов в контейнерах сезонов, размеров и статусов
     private fun addCheckBoxListeners() {
-        val seasonBoxes = listOf(binding.cbSummer, binding.cbAutumn, binding.cbWinter, binding.cbSpring)
+        val genderBoxes = listOf(binding.cbWoman, binding.cbMan, binding.cbUniversal)
+        val seasonBoxes = listOf(binding.cbSummer, binding.cbAutumn, binding.cbWinter, binding.cbSpring,binding.cbNotSeasons )
         val sizeBoxes = listOf(
             binding.cbxxs, binding.cbxs, binding.cbs, binding.cbm, binding.cbl,
             binding.cbxl, binding.cbxxl, binding.cbxxxl, binding.cb33, binding.cb34,
             binding.cb35, binding.cb36, binding.cb37, binding.cb38, binding.cb39,
             binding.cb40, binding.cb41, binding.cb42, binding.cb43, binding.cb44,
-            binding.cb45, binding.cb46, binding.cb47
+            binding.cb45, binding.cb46, binding.cb47,binding.cbNotSize
         )
         val statusBoxes = listOf(binding.cbactiveuse, binding.cbneedremont, binding.cbwaiting, binding.cbsale)
-        val allBoxes = seasonBoxes + sizeBoxes + statusBoxes
+        val allBoxes = genderBoxes + seasonBoxes + sizeBoxes + statusBoxes
         allBoxes.forEach { checkBox ->
             checkBox.setOnCheckedChangeListener { _, _ -> updateApplyButtonState() }
         }
@@ -174,6 +219,7 @@ class FilterActivity : AppCompatActivity() {
             if (binding.cbAutumn.isChecked) add("Осень")
             if (binding.cbWinter.isChecked) add("Зима")
             if (binding.cbSpring.isChecked) add("Весна")
+            if (binding.cbNotSeasons.isChecked) add("Без сезона")
         }
         val sizes = mutableListOf<String>().apply {
             if (binding.cbxxs.isChecked) add("XXS")
@@ -199,6 +245,7 @@ class FilterActivity : AppCompatActivity() {
             if (binding.cb45.isChecked) add("45")
             if (binding.cb46.isChecked) add("46")
             if (binding.cb47.isChecked) add("47")
+            if (binding.cbNotSize.isChecked) add("Без размера")
         }
         val statuses = mutableListOf<String>().apply {
             if (binding.cbactiveuse.isChecked) add("Активное использование")
@@ -212,25 +259,37 @@ class FilterActivity : AppCompatActivity() {
                 if (view is CheckBox && view.isChecked) add(view.text.toString())
             }
         }
+        val genders = mutableListOf<String>().apply {
+            if (binding.cbWoman.isChecked) add("Женский")
+            if (binding.cbMan.isChecked) add("Мужской")
+            if (binding.cbUniversal.isChecked) add("Универсально")
+        }
+        val genderMatchFunc: (ClothingItemWithTags) -> Boolean = { itemWithTags ->
+            val item = itemWithTags.clothingItem
+            if (genders.isEmpty()) {
+                true
+            } else {
+                genders.any { gender -> gender.equals(item.gender, ignoreCase = true) }
+            }
+        }
         CoroutineScope(Dispatchers.IO).launch {
             val allItems: List<ClothingItemWithTags> = db.clothingItemDao().getClothingItemsWithTags()
             val filteredItems = allItems.filter { itemWithTags: ClothingItemWithTags ->
                 val item = itemWithTags.clothingItem
-                val sizeMatch = sizes.isEmpty() || sizes.any { size -> size.equals(item.size, ignoreCase = true) }
+                val sizeMatch = if (sizes.isEmpty()) { true } else { sizes.any { size -> if (size == "Без размера") { item.size.isNullOrBlank() } else { size.equals(item.size, ignoreCase = true) } } }
                 val statusMatch = statuses.isEmpty() || statuses.any { stat -> stat.equals(item.status, ignoreCase = true) }
                 val seasonList = item.seasons?.map { it.trim().lowercase() } ?: emptyList()
-                val seasonMatch = seasons.isEmpty() || seasons.map { it.trim().lowercase() }
-                    .any { season -> seasonList.contains(season) }
+                val seasonMatch = if (seasons.isEmpty()) { true } else { seasons.any { season -> if (season == "Без сезона") { seasonList.isEmpty() } else { seasonList.contains(season.trim().lowercase()) } }  }
                 val itemTagNames = itemWithTags.tags?.map { tag -> tag.name.trim().lowercase() } ?: emptyList()
-                val tagMatch = tags.isEmpty() || tags.map { it.trim().lowercase() }
-                    .any { tag -> itemTagNames.contains(tag) }
-                sizeMatch && statusMatch && seasonMatch && tagMatch
+                val tagMatch = if (tags.contains("Без тегов")) { itemTagNames.isEmpty() } else { tags.isEmpty() || tags.map { it.trim().lowercase() }.any { tag -> itemTagNames.contains(tag) } }
+                sizeMatch && statusMatch && seasonMatch && tagMatch && genderMatchFunc(itemWithTags)
             }
             withContext(Dispatchers.Main) {
                 if (filteredItems.isEmpty()) {
                     Toast.makeText(this@FilterActivity, "Ничего не найдено", Toast.LENGTH_SHORT).show()
                 } else {
                     val resultIntent = Intent().apply {
+                        putStringArrayListExtra("selectedGender", ArrayList(genders))
                         putStringArrayListExtra("selectedSeasons", ArrayList(seasons))
                         putStringArrayListExtra("selectedSizes", ArrayList(sizes))
                         putStringArrayListExtra("selectedStatuses", ArrayList(statuses))
@@ -246,6 +305,7 @@ class FilterActivity : AppCompatActivity() {
     }
     // Сброс всех выбранных фильтров
     private fun resetAllSelections() {
+        resetCheckBoxes(binding.genderContainer)
         resetCheckBoxes(binding.seasonContainer)
         resetCheckBoxes(binding.sizeContainer)
         resetCheckBoxes(binding.statusContainer)

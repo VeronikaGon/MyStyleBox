@@ -1,5 +1,6 @@
 package com.hfad.mystylebox.adapter
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -40,6 +41,10 @@ class OutfitAdapter(
             onItemLongClick?.invoke(outfit)
             true
         }
+    }
+
+    private fun dpToPx(context: Context, dp: Int): Int {
+        return (dp * context.resources.displayMetrics.density).toInt()
     }
 
     override fun getItemCount() = outfits.size

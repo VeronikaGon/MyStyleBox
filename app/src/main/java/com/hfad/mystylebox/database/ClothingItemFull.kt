@@ -7,8 +7,8 @@ import androidx.room.Relation
 
 data class ClothingItemFull(
     @Embedded val clothingItem: ClothingItem,
-    @ColumnInfo(name = "category_name") val categoryName: String,
-    @ColumnInfo(name = "subcategory_name") val subcategoryName: String,
+    @ColumnInfo(name = "category_name") val categoryName: String = "",
+    @ColumnInfo(name = "subcategory_name") val subcategoryName: String = "",
     @Relation(
         parentColumn = "id",
         entity = Tag::class,
@@ -19,5 +19,5 @@ data class ClothingItemFull(
             entityColumn = "tagId"
         )
     )
-    val tags: List<Tag>
+    val tags: List<Tag> = emptyList()
 )

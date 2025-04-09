@@ -222,11 +222,12 @@ class OutfitActivity : AppCompatActivity() {
         lifecycleScope.launch(Dispatchers.IO) {
             val allTags = db.tagDao().getAllTags()
             val preselectedIds = intent.getParcelableExtra<ClothingItem>("clothingItem")?.let { editingItem ->
-                outfitTagDao.getTagsForOutfit(editingItem.id).map { it.tagId }.toSet()
+                outfitTagDao.getTagsForOutfit(editingItem.id).map { it.id }.toSet()
             } ?: emptySet()
             selectedTagIds.clear()
             selectedTagIds.addAll(preselectedIds)
-            withContext(Dispatchers.Main) { displayTagsAsCheckboxes(allTags, selectedTagIds) }
+            withContext(Dispatchers.Main) { displayTagsAsCheckboxes(allTags, selectedTagIds)
+            }
         }
     }
     // Отображение тегов в виде CheckBox с возможностью выбора/снятия выбора
@@ -306,7 +307,8 @@ class OutfitActivity : AppCompatActivity() {
             val id = outfitDao.insertOutfit(outfit)
             Toast.makeText(this, "Комплект сохранён", Toast.LENGTH_SHORT).show()
             try {
-                selectedClothingItemIds.forEach { clothingItemId ->
+                val uniqueClothingIds = selectedClothingItemIds.distinct()
+                uniqueClothingIds.forEach { clothingItemId ->
                     db.outfitClothingItemDao().insert(OutfitClothingItem(clothingItemId, id.toInt()))
                 }
             } catch (e: Exception) {

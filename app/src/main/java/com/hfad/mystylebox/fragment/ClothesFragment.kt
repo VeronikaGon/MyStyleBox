@@ -54,36 +54,39 @@ class ClothesFragment : Fragment() {
     private lateinit var imageFilter: ImageButton
     private var photoUri: Uri? = null
 
-    // Запуск FilterActivity для получения фильтров
     private val filterActivityLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             val data = result.data ?: return@registerForActivityResult
+            val selectedGender = data.getStringArrayListExtra("selectedGender") ?: arrayListOf()
             val selectedSeasons = data.getStringArrayListExtra("selectedSeasons") ?: arrayListOf()
             val selectedSizes = data.getStringArrayListExtra("selectedSizes") ?: arrayListOf()
             val selectedStatuses = data.getStringArrayListExtra("selectedStatuses") ?: arrayListOf()
             val selectedTags = data.getStringArrayListExtra("selectedTags") ?: arrayListOf()
 
             currentFilters = Bundle().apply {
+                putStringArrayList("genders", selectedGender)
                 putStringArrayList("seasons", selectedSeasons)
                 putStringArrayList("sizes", selectedSizes)
                 putStringArrayList("statuses", selectedStatuses)
                 putStringArrayList("tags", selectedTags)
             }
 
-            val hasFilters = listOf(selectedSeasons, selectedSizes, selectedStatuses, selectedTags)
+            val hasFilters = listOf(selectedGender, selectedSeasons, selectedSizes, selectedStatuses, selectedTags)
                 .any { it.isNotEmpty() }
             imageFilter.setColorFilter(
                 if (hasFilters) Color.parseColor("#FFB5A7")
                 else Color.parseColor("#000000")
             )
-            updateFilteredItems(selectedSeasons, selectedSizes, selectedStatuses, selectedTags)
+            isFilterActive = true
+            updateFilteredItems(selectedGender, selectedSeasons, selectedSizes, selectedStatuses, selectedTags)
         }
     }
 
     // Фильтрация по размерам, статусу, сезонам и тегам.
     private fun updateFilteredItems(
+        selectedGender: List<String>,
         selectedSeasons: List<String>,
         selectedSizes: List<String>,
         selectedStatuses: List<String>,
@@ -97,17 +100,18 @@ class ClothesFragment : Fragment() {
             val allItems: List<ClothingItemFull> = db.clothingItemDao().getAllItemsFull()
             val filteredItems = allItems.filter { itemFull: ClothingItemFull ->
                 val item = itemFull.clothingItem
-                val sizeMatch = selectedSizes.isEmpty() ||
-                        selectedSizes.any { size -> size.equals(item.size, ignoreCase = true) }
-                val statusMatch = selectedStatuses.isEmpty() ||
-                        selectedStatuses.any { stat -> stat.equals(item.status, ignoreCase = true) }
+                val sizeMatch = if (selectedSizes.isEmpty()) { true } else { selectedSizes.any { size ->
+                        if (size.equals("Без размера", ignoreCase = true)) {
+                            item.size.isNullOrBlank() } else { size.equals(item.size, ignoreCase = true) } }
+                }
+                val statusMatch = selectedStatuses.isEmpty() || selectedStatuses.any { stat -> stat.equals(item.status, ignoreCase = true) }
                 val seasonList = item.seasons?.map { it.trim().lowercase() } ?: emptyList()
-                val seasonMatch = selectedSeasons.isEmpty() ||
-                        selectedSeasons.any { sel -> seasonList.contains(sel.trim().lowercase()) }
+                val seasonMatch = if (selectedSeasons.isEmpty()) { true } else { selectedSeasons.any { season -> if (season.equals("Без сезона", ignoreCase = true)) { seasonList.isEmpty() } else { seasonList.contains(season.trim().lowercase()) } } }
                 val itemTagNames = itemFull.tags.map { it.name.trim().lowercase() }
-                val tagMatch = selectedTags.isEmpty() ||
-                        selectedTags.any { sel -> itemTagNames.contains(sel.trim().lowercase()) }
-                sizeMatch && statusMatch && seasonMatch && tagMatch
+                val tagMatch = if (selectedTags.isEmpty()) { true } else { if (selectedTags.any { it.equals("Без тегов", ignoreCase = true) }) { itemTagNames.isEmpty() } else { selectedTags.any { tag -> itemTagNames.contains(tag.trim().lowercase()) } } }
+                val genderMatch = if (selectedGender.isEmpty()) { true } else { selectedGender.any { gender -> gender.equals(item.gender, ignoreCase = true) } }
+
+                sizeMatch && statusMatch && seasonMatch && tagMatch && genderMatch
             }
             withContext(Dispatchers.Main) {
                 currentItems = filteredItems
@@ -134,7 +138,7 @@ class ClothesFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        if (!isFilterActive) {
+        if (currentFilters == null || currentFilters?.isEmpty == true) {
             loadClothingItems()
         }
     }
@@ -328,6 +332,7 @@ class ClothesFragment : Fragment() {
     private fun startFilterActivity() {
         val intent = Intent(requireContext(), FilterActivity::class.java).apply {
             currentFilters?.let {
+                putStringArrayListExtra("selectedGender", it.getStringArrayList("genders"))
                 putStringArrayListExtra("selectedSeasons", it.getStringArrayList("seasons"))
                 putStringArrayListExtra("selectedSizes", it.getStringArrayList("sizes"))
                 putStringArrayListExtra("selectedStatuses", it.getStringArrayList("statuses"))

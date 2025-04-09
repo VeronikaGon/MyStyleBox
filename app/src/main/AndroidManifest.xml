@@ -28,6 +28,9 @@
             android:name=".EraserActivity"
             android:screenOrientation="portrait" />
         <activity
+            android:name=".EditoutfitActivity"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".SearchClothingActivity"
             android:screenOrientation="portrait"
             android:exported="true"

@@ -55,7 +55,6 @@ class EditclothesActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Инициализация базы данных и DAO
         val db = Room.databaseBuilder(
             applicationContext,
             AppDatabase::class.java, "wardrobe_db"
@@ -66,7 +65,6 @@ class EditclothesActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_editclothes)
         flexboxTags = findViewById(R.id.Tags)
-        // Выбор разрешения в зависимости от версии Android
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES)
                 != PackageManager.PERMISSION_GRANTED) {

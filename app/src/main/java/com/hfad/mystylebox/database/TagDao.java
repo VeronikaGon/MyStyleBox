@@ -22,4 +22,3 @@ public interface TagDao {
     @Query("SELECT * FROM tag WHERE name = :name LIMIT 1")
     Tag getTagByName(String name);
 }
-

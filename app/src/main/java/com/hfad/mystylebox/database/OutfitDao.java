@@ -34,6 +34,10 @@ public interface OutfitDao {
     @Query("SELECT * FROM outfits")
     List<Outfit> getAllOutfits();
 
+    @Query("SELECT c.* FROM clothing_item c " +
+            "INNER JOIN outfit_clothing_item oci ON c.id = oci.clothingItemId " +
+            "WHERE oci.outfitId = :outfitId")
+    List<ClothingItem> getClothingItemsForOutfit(int outfitId);
     @Delete
     void delete(Outfit outfit);
 }

@@ -10,7 +10,7 @@ import com.bumptech.glide.Glide
 import com.hfad.mystylebox.R
 import com.hfad.mystylebox.database.ClothingItemFull
 
-class ClothingAdapter(
+    class ClothingAdapter(
     initialItems: List<ClothingItemFull>,
     private val layoutResId: Int
 ) : RecyclerView.Adapter<ClothingAdapter.ClothingViewHolder>() {

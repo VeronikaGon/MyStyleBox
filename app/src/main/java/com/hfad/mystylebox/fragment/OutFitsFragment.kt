@@ -1,17 +1,25 @@
 package com.hfad.mystylebox.fragment
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity.RESULT_OK
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
+import com.bumptech.glide.Glide
 import com.hfad.mystylebox.ClothingSelectionActivity
+import com.hfad.mystylebox.EditclothesActivity
+import com.hfad.mystylebox.EditoutfitActivity
 import com.hfad.mystylebox.OutfitActionsBottomSheet
 import com.hfad.mystylebox.R
 import com.hfad.mystylebox.adapter.OutfitAdapter
@@ -48,16 +56,17 @@ class OutFitsFragment : Fragment() {
         recyclerView.adapter = outfitAdapter
 
         outfitAdapter.onItemClick = { outfit ->
-            // Например, открыть подробное окно или экран редактирования комплекта
-            Toast.makeText(requireContext(), "Выбран комплект: ${outfit.name}", Toast.LENGTH_SHORT).show()
-        }
+            val intent = Intent(requireContext(), EditoutfitActivity::class.java).apply {
+                putExtra("outfit", outfit)
+                putExtra("image_uri", outfit.imagePath)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(intent) }
 
         outfitAdapter.onItemLongClick = { outfit ->
-            // Показываем BottomSheet для дополнительных действий с комплектом
             val bottomSheet = OutfitActionsBottomSheet.newInstance(outfit.name, outfit.imagePath)
             bottomSheet.show(childFragmentManager, bottomSheet.tag)
             bottomSheet.onDeleteClicked = {
-                // Реализуйте удаление комплекта из базы
                 deleteOutfit(outfit)
             }
         }
@@ -66,7 +75,6 @@ class OutFitsFragment : Fragment() {
     }
 
     private fun startOutfitActivity() {
-        // Здесь можно запустить активность для создания нового комплекта
         val intent = Intent(requireContext(), ClothingSelectionActivity::class.java)
         startActivity(intent)
     }
@@ -76,21 +84,53 @@ class OutFitsFragment : Fragment() {
             val db = Room.databaseBuilder(
                 requireContext(), AppDatabase::class.java, "wardrobe_db"
             ).build()
-            // Предполагается, что в outfitDao есть метод для получения всех комплектов
             val outfits = db.outfitDao().getAllOutfits()
             withContext(Dispatchers.Main) {
                 outfitAdapter.updateData(outfits)
             }
         }
     }
-
+    // Метод для вывода диалога с подтверждением удаления
+    private fun showDeleteConfirmation(outfit: Outfit) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Подтверждение удаления")
+            .setMessage("Вы уверены, что хотите удалить комплект \"${outfit.name}\"?")
+            .setPositiveButton("Удалить") { dialog, _ ->
+                deleteOutfit(outfit)
+                dialog.dismiss()
+            }
+            .setNegativeButton("Отмена") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+    private val editLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val editedImageUriString = result.data?.getStringExtra("result_image_uri")
+            if (!editedImageUriString.isNullOrEmpty()) {
+                val editedImageUri = Uri.parse(editedImageUriString)
+                val imageView = requireView().findViewById<ImageView>(R.id.image)
+                Glide.with(this).load(editedImageUri).into(imageView)
+            }
+        }
+    }
+    private fun startEditActivity(imageUri: Uri?) {
+        if (imageUri == null) return
+        val intent = Intent(requireContext(), EditoutfitActivity::class.java)
+        intent.putExtra("imageUri", imageUri.toString())
+        editLauncher.launch(intent)
+    }
     private fun deleteOutfit(outfit: Outfit) {
         CoroutineScope(Dispatchers.IO).launch {
             val db = Room.databaseBuilder(
                 requireContext(), AppDatabase::class.java, "wardrobe_db"
             ).build()
+            db.outfitClothingItemDao().deleteForOutfit(outfit.id)
+
+            db.outfitTagDao().deleteTagsForOutfit(outfit.id)
+
             db.outfitDao().delete(outfit)
-            // Если есть связи в outfit_clothing_item, возможно, их тоже надо удалить
+
             withContext(Dispatchers.Main) {
                 Toast.makeText(requireContext(), "Комплект удалён", Toast.LENGTH_SHORT).show()
                 loadOutfits()

@@ -1,15 +1,12 @@
 package com.hfad.mystylebox
 
-import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.PointF
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.MotionEvent
-import android.view.ScaleGestureDetector
 import android.view.View
 import android.widget.Button
 import android.widget.FrameLayout
@@ -75,7 +72,8 @@ class BoardActivity : AppCompatActivity() {
 
     private var adjustmentType: String? = null
     private var currentAdjustmentButton: ImageButton? = null
-    private var selectedIds: List<Int> = listOf()
+    private val selectedIds = mutableListOf<Int>()
+    private val itemIdMapping = mutableMapOf<ImageView, Int>()
 
     companion object {
         private const val REQUEST_CODE_ADD_ITEMS = 1001
@@ -112,15 +110,15 @@ class BoardActivity : AppCompatActivity() {
                 .show()
         }
 
-        // Скрываем контейнер настроек при старте
         setAdjustmentContainerVisibility(View.GONE)
 
-        // Инициализируем ViewModel сразу
         viewModel = ViewModelProvider(this).get(BoardViewModel::class.java)
-        selectedIds = intent?.getIntegerArrayListExtra("selected_item_ids") ?: arrayListOf<Int>()
-        val selectedImagePaths = intent.getStringArrayListExtra("selected_image_paths") ?: arrayListOf()
-        selectedImagePaths.forEach { path ->
-            addBoardItem(path)
+        val passedImagePaths =
+            intent.getStringArrayListExtra("selected_image_paths") ?: arrayListOf()
+        val passedIds = intent.getIntegerArrayListExtra("selected_item_ids") ?: arrayListOf()
+        selectedIds.addAll(passedIds)
+        for (i in passedImagePaths.indices) {
+            addBoardItem(passedImagePaths[i], passedIds[i])
         }
 
         btnForeground.setOnClickListener {
@@ -186,6 +184,7 @@ class BoardActivity : AppCompatActivity() {
             deselectAll()
         }
     }
+
     private fun saveBoardImage() {
         val boardView = findViewById<View>(R.id.boardContainer)
         var originalBackground: Drawable? = null
@@ -198,7 +197,8 @@ class BoardActivity : AppCompatActivity() {
         val canvas = Canvas(bitmap)
         boardView.draw(canvas)
 
-        val file = File(externalCacheDir, "boardImage.png")
+        val uniqueFileName = "boardImage_${System.currentTimeMillis()}.png"
+        val file = File(externalCacheDir, uniqueFileName)
         try {
             FileOutputStream(file).use { fos ->
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)
@@ -207,13 +207,17 @@ class BoardActivity : AppCompatActivity() {
 
             val intent = Intent(this, OutfitActivity::class.java)
             intent.putExtra("imagePath", file.path)
-            intent.putIntegerArrayListExtra("selected_clothing_ids", ArrayList(selectedIds))
+            intent.putIntegerArrayListExtra(
+                "selected_clothing_ids",
+                ArrayList(itemIdMapping.values.distinct())
+            )
             startActivity(intent)
         } catch (e: Exception) {
             e.printStackTrace()
             Toast.makeText(this, "Ошибка сохранения изображения", Toast.LENGTH_SHORT).show()
         }
     }
+
     @Suppress("MissingSuperCall")
     override fun onBackPressed() {
         AlertDialog.Builder(this)
@@ -242,16 +246,14 @@ class BoardActivity : AppCompatActivity() {
     }
 
     // Добавление изображения на доску
-    private fun addBoardItem(path: String) {
+    private fun addBoardItem(path: String, clothingItemId: Int) {
         val imageView = ImageView(this)
-        Glide.with(this)
-            .load(path)
-            .into(imageView)
+        Glide.with(this).load(path).into(imageView)
         val layoutParams = FrameLayout.LayoutParams(300, 300)
         imageView.layoutParams = layoutParams
         imageView.setBackgroundResource(0)
-        imageView.setOnTouchListener(MultiTouchListener(this))
         imageView.setOnClickListener { view -> selectBoardItem(view as ImageView) }
+        imageView.setOnTouchListener(MultiTouchListener())
         boardContainer.addView(imageView)
         boardItems.add(imageView)
         addThumbnail(imageView, path)
@@ -261,20 +263,32 @@ class BoardActivity : AppCompatActivity() {
         imageView.alpha = 1f
         imageView.scaleX = 1f
         imageView.scaleY = 1f
+        val offset = boardItems.size * 20
+        imageView.x = offset.toFloat()
+        imageView.y = offset.toFloat()
+        selectedIds.add(clothingItemId)
+        itemIdMapping[imageView] = clothingItemId
+        selectBoardItem(imageView)
     }
 
     // Обработка результата из ClothingSelectionActivity
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CODE_ADD_ITEMS && resultCode == RESULT_OK) {
-            val newItems = data?.getStringArrayListExtra("selected_items")
-            newItems?.forEach { path ->
-                if (boardItems.none { it.tag == path }) {
-                    addBoardItem(path)
+            val newPaths = data?.getStringArrayListExtra("selected_image_paths")
+            val newIds = data?.getIntegerArrayListExtra("selected_item_ids")
+            if (newPaths != null && newIds != null && newPaths.size == newIds.size) {
+                for (i in newPaths.indices) {
+                    if (boardItems.none { it.tag == newPaths[i] }) {
+                        addBoardItem(newPaths[i], newIds[i])
+                    }
                 }
+            } else {
+                Toast.makeText(this, "Данные о новых вещах не получены", Toast.LENGTH_SHORT).show()
             }
         }
     }
+
     // Добавление миниатюры для изображения
     private fun addThumbnail(boardItem: ImageView, path: String) {
         val thumbnail = ImageView(this)
@@ -363,6 +377,7 @@ class BoardActivity : AppCompatActivity() {
                 val progress = ((state.alpha - 0.2f) * 100).toInt().coerceAtLeast(0)
                 slider.value = progress.toFloat()
             }
+
             "rotation" -> {
                 textViewAdjustment.text = "Поворот"
                 slider.valueFrom = 0f
@@ -370,6 +385,7 @@ class BoardActivity : AppCompatActivity() {
                 val normalizedRotation = (((state.rotation % 360) + 360) % 360).toFloat()
                 slider.value = normalizedRotation
             }
+
             "scale" -> {
                 textViewAdjustment.text = "Масштабирование"
                 slider.valueFrom = 0f
@@ -443,13 +459,17 @@ class BoardActivity : AppCompatActivity() {
             AlertDialog.Builder(this)
                 .setTitle("Удаление")
                 .setMessage("Вы уверены, что хотите удалить выбранную вещь?")
-                .setPositiveButton("Да") { dialog, _ ->
+                .setPositiveButton("Да") { _, _ ->
                     boardContainer.removeView(view)
                     boardItems.remove(view)
                     thumbnailMapping[view]?.let { thumb ->
                         llClothes.removeView(thumb)
                     }
                     thumbnailMapping.remove(view)
+                    itemIdMapping[view]?.let { realId ->
+                        selectedIds.remove(realId)
+                        itemIdMapping.remove(view)
+                    }
                     selectedView = null
                     setAdjustmentContainerVisibility(View.GONE)
                     Toast.makeText(this, "Вещь удалена", Toast.LENGTH_SHORT).show()
@@ -458,75 +478,38 @@ class BoardActivity : AppCompatActivity() {
                 .show()
         }
     }
+}
+// Класс MultiTouchListener для перетаскивания изображения на доске.
+class MultiTouchListener : View.OnTouchListener {
+    private var lastX = 0f
+    private var lastY = 0f
+    private var isDragging = false
 
-    inner class MultiTouchListener(context: Context) : View.OnTouchListener {
-        private val scaleGestureDetector: ScaleGestureDetector = ScaleGestureDetector(context,
-            object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
-                // Фиксируем масштаб в начале каждого жеста
-                private var initialScale = 1f
-
-                override fun onScaleBegin(detector: ScaleGestureDetector): Boolean {
-                    isScaling = true
-                    currentView?.let { view ->
-                        initialScale = view.scaleX
-                        // Устанавливаем pivot в центр для естественного масштабирования
-                        view.pivotX = view.width / 2f
-                        view.pivotY = view.height / 2f
-                    }
-                    // Скрываем контейнер с seekbar при начале масштабирования
-                    setAdjustmentContainerVisibility(View.GONE)
-                    return true
-                }
-
-                override fun onScale(detector: ScaleGestureDetector): Boolean {
-                    currentView?.let { view ->
-                        // Вычисляем новый масштаб как произведение начального масштаба и текущего коэффициента жеста
-                        val newScale = (initialScale * detector.scaleFactor).coerceIn(0.2f, 5f)
-                        view.scaleX = newScale
-                        view.scaleY = newScale
-                        // Обновляем состояние во ViewModel
-                        val imageId = view.tag.toString()
-                        val currentState = viewModel.getImageState(imageId)
-                        currentState.scale = newScale
-                        viewModel.updateImageState(imageId, currentState)
-                    }
-                    return true
-                }
-
-                override fun onScaleEnd(detector: ScaleGestureDetector) {
-                    isScaling = false
-                }
-            })
-
-        private var lastPoint = PointF()
-        private var isScaling = false
-        // Храним ссылку на текущую view, над которой происходит жест
-        private var currentView: View? = null
-
-        override fun onTouch(view: View, event: MotionEvent): Boolean {
-            currentView = view
-            scaleGestureDetector.onTouchEvent(event)
-            // Если два пальца, то только масштабируем – не перемещаем
-            if (event.pointerCount > 1) return true
-
-            when (event.actionMasked) {
-                MotionEvent.ACTION_DOWN -> {
-                    lastPoint.set(event.rawX, event.rawY)
-                    if (view is ImageView && selectedView != view) {
-                        selectBoardItem(view)
-                    }
-                }
-                MotionEvent.ACTION_MOVE -> {
-                    if (!isScaling) {
-                        val dx = event.rawX - lastPoint.x
-                        val dy = event.rawY - lastPoint.y
-                        view.x += dx
-                        view.y += dy
-                        lastPoint.set(event.rawX, event.rawY)
-                    }
+    override fun onTouch(view: View, event: MotionEvent): Boolean {
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                lastX = event.rawX
+                lastY = event.rawY
+                isDragging = false
+                view.performClick()
+            }
+            MotionEvent.ACTION_MOVE -> {
+                val dx = event.rawX - lastX
+                val dy = event.rawY - lastY
+                if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+                    view.x += dx
+                    view.y += dy
+                    lastX = event.rawX
+                    lastY = event.rawY
+                    isDragging = true
                 }
             }
-            return true
+            MotionEvent.ACTION_UP -> {
+                if (!isDragging) {
+                    view.performClick()
+                }
+            }
         }
+        return true
     }
 }
