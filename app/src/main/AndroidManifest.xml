@@ -56,6 +56,9 @@
         <activity
             android:name=".BoardActivity"
             android:screenOrientation="portrait" />
+        <activity
+            android:name=".SearchOutfitActivity"
+            android:screenOrientation="portrait" />
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

@@ -5,6 +5,11 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.BaseAdapter
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
@@ -19,8 +24,10 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
+import com.bumptech.glide.Glide
 import com.google.android.flexbox.FlexboxLayout
 import com.hfad.mystylebox.database.AppDatabase
 import com.hfad.mystylebox.database.ClothingItem
@@ -32,8 +39,12 @@ import com.hfad.mystylebox.database.Tag
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
-class ClothesActivity : AppCompatActivity() {
+class ClothesActivity : AppCompatActivity(), ImageOptionsBottomSheet.ImageOptionsListener {
 
     private lateinit var db: AppDatabase
     private lateinit var clothingItemDao: ClothingItemDao
@@ -61,10 +72,12 @@ class ClothesActivity : AppCompatActivity() {
     private var selectedSubcategoryId: Int = -1
     private var isReselection: Boolean = false
     private var isInEditMode: Boolean = false
+    private var photoUri: Uri? = null
 
     private lateinit var categoryResultLauncher: ActivityResultLauncher<Intent>
     private lateinit var tagEditingLauncher: ActivityResultLauncher<Intent>
     private var selectedTags: List<Tag> = listOf()
+    private lateinit var editImageActivityLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -123,8 +136,25 @@ class ClothesActivity : AppCompatActivity() {
                 }
             }
         }
+        editImageActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                val editedImageUriString = result.data?.getStringExtra("image_uri")
+                if (!editedImageUriString.isNullOrEmpty()) {
+                    val editedImageUri = Uri.parse(editedImageUriString)
+                    Glide.with(this).load(editedImageUri).into(clothingImageView)
+                    imagePath = editedImageUri.toString()
+                } else {
+                    Toast.makeText(this, "Ошибка получения результата редактирования", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
 
-        // При клике на поле выбора категории открываем CategorySelectionActivity с передачей данных
+        val editImageButton = findViewById<ImageButton>(R.id.editimage)
+        editImageButton.setOnClickListener {
+            val bottomSheet = ImageOptionsBottomSheet()
+            bottomSheet.show(supportFragmentManager, "ImageOptionsBottomSheet")
+        }
+
         categoryField.setOnClickListener {
             val intent = Intent(this, CategorySelectionActivity::class.java).apply {
                 putExtra("image_uri", imagePath.toString())
@@ -205,6 +235,104 @@ class ClothesActivity : AppCompatActivity() {
         loadTagsFromDatabase()
     }
 
+    override fun onEditOptionSelected() {
+        startEditActivityForChangePhoto()
+    }
+    override fun onChangePhotoOptionSelected() {
+        showImagePickerDialog()
+    }
+    // Реализация интерфейса ImageOptionsListener
+    private fun startEditActivityForChangePhoto() {
+        val intent = Intent(this, EditImageActivity::class.java).apply {
+            putExtra("imageUri", imagePath)
+            putExtra("origin", "clothes")
+        }
+        editImageActivityLauncher.launch(intent)
+    }
+    private fun startEditActivity(imageUri: Uri?) {
+        if (imageUri == null) return
+        val intent = Intent(this, EditImageActivity::class.java).apply {
+            putExtra("imageUri", imageUri.toString())
+            putExtra("origin", "clothes")
+        }
+        editImageActivityLauncher.launch(intent)
+    }
+
+    // Метод для выбора изображения (галерея, камера, файлы)
+    private fun showImagePickerDialog() {
+        val options = arrayOf("Выбрать из галереи", "Сфотографировать", "Выбрать из файлов")
+        val icons = arrayOf(R.drawable.gallery, R.drawable.ic_camera, R.drawable.file)
+        val adapterDialog = object : BaseAdapter() {
+            override fun getCount() = options.size
+            override fun getItem(position: Int) = options[position]
+            override fun getItemId(position: Int) = position.toLong()
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+                val view = convertView ?: LayoutInflater.from(this@ClothesActivity)
+                    .inflate(R.layout.dialog_item, parent, false)
+                val iconView = view.findViewById<ImageView>(R.id.icon)
+                val textView = view.findViewById<TextView>(R.id.text)
+                iconView.setImageResource(icons[position])
+                textView.text = options[position]
+                return view
+            }
+        }
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Выберите действие")
+            .setAdapter(adapterDialog) { _, which ->
+                when (which) {
+                    0 -> openGallery()
+                    1 -> openCamera()
+                    2 -> openFiles()
+                }
+            }
+            .show()
+    }
+
+    private fun openGallery() {
+        val intent = Intent(Intent.ACTION_PICK).apply {
+            setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*")
+            putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/jpeg", "image/png"))
+        }
+        galleryLauncher.launch(intent)
+    }
+
+    private fun openCamera() {
+        val photoFile = createImageFile()
+        photoUri = FileProvider.getUriForFile(
+            this, "${this.packageName}.fileprovider", photoFile
+        )
+        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
+            putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
+        }
+        cameraLauncher.launch(intent)
+    }
+    private fun openFiles() {
+        val intent = Intent(Intent.ACTION_GET_CONTENT).apply { type = "image/*" }
+        fileLauncher.launch(intent)
+    }
+    private fun createImageFile(): File {
+        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val storageDir = this.getExternalFilesDir(null)
+        return File.createTempFile("JPEG_${timestamp}_", ".jpg", storageDir)
+    }
+
+    private val galleryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val selectedImageUri: Uri? = result.data?.data
+            startEditActivity(selectedImageUri)
+        }
+    }
+    private val cameraLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            startEditActivity(photoUri)
+        }
+    }
+    private val fileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val selectedImageUri: Uri? = result.data?.data
+            startEditActivity(selectedImageUri)
+        }
+    }
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putString("name", clothingNameEditText.text.toString())
@@ -447,6 +575,10 @@ class ClothesActivity : AppCompatActivity() {
         if (cbSpring.isChecked) seasons.add(cbSpring.text.toString())
         if (cbWinter.isChecked) seasons.add(cbWinter.text.toString())
         if (cbAutumn.isChecked) seasons.add(cbAutumn.text.toString())
+        if (imagePath.isNullOrEmpty()) {
+            Toast.makeText(this, "Выберите фотографию", Toast.LENGTH_SHORT).show()
+            return
+        }
 
         val item = ClothingItem(name, selectedSubcategoryId, brend, gender, imagePath!!, seasons, cost, status, size, notes)
         val newItemId = clothingItemDao.insert(item)

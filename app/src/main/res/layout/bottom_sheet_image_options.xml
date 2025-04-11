@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="8dp"
+    android:layout_margin="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@color/white"
+        android:padding="16dp">
+
+        <Button
+            android:id="@+id/btnEdit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Редактировать"
+            android:textSize="16sp"
+            android:backgroundTint="@android:color/transparent"
+            android:textColor="@color/black"
+           />
+
+        <Button
+            android:id="@+id/btnChangePhoto"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Выбрать изображение"
+            android:textSize="16sp"
+            android:backgroundTint="@android:color/transparent"
+            android:textColor="@android:color/holo_red_dark"
+            android:layout_marginTop="8dp"/>
+
+        <Button
+            android:id="@+id/btnCancel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Отмена"
+            android:textSize="16sp"
+            android:backgroundTint="@android:color/transparent"
+            android:textColor="@color/black"
+            android:layout_marginTop="8dp"/>
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

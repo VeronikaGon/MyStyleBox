@@ -28,17 +28,36 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+        <LinearLayout
+            android:id="@+id/ClIm"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textviewtitle"
+            >
 
-        <ImageView
-        android:id="@+id/clothingImageView"
-        android:layout_width="250dp"
-        android:layout_height="250dp"
-        android:layout_marginTop="8dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textviewtitle"
-        tools:ignore="MissingConstraints" />
+            <ImageView
+                android:id="@+id/clothingImageView"
+                android:layout_gravity="center"
+                android:layout_width="250dp"
+                android:layout_height="250dp"
+                android:background="#FFFFFF"
+            android:scaleType="centerInside"
 
+            />
+        <ImageButton
+            android:id="@+id/editimage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_gravity="left"
+            android:layout_marginTop="-44dp"
+            android:background="@android:color/transparent"
+            app:srcCompat="@drawable/ic_editimage" />
+        </LinearLayout>
         <LinearLayout
         android:id="@+id/linearLayout"
         android:layout_width="match_parent"
@@ -51,7 +70,7 @@
         android:padding="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/clothingImageView">
+        app:layout_constraintTop_toBottomOf="@+id/ClIm">
 
         <TextView
             android:id="@+id/textView3"

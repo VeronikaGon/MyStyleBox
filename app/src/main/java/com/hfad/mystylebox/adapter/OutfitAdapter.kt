@@ -22,6 +22,7 @@ class OutfitAdapter(
     inner class OutfitViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvName: TextView = itemView.findViewById(R.id.itemName)
         val ivImage: ImageView = itemView.findViewById(R.id.itemImage)
+        val descriptionText: TextView? = itemView.findViewById(R.id.itemCategory)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): OutfitViewHolder {
@@ -35,7 +36,12 @@ class OutfitAdapter(
         Glide.with(holder.itemView.context)
             .load(outfit.imagePath)
             .into(holder.ivImage)
-
+        val maxChars = 53
+        holder.descriptionText?.text  = if (outfit.description.length > maxChars) {
+            outfit.description.take(maxChars) + "..."
+        } else {
+            outfit.description
+        }
         holder.itemView.setOnClickListener { onItemClick?.invoke(outfit) }
         holder.itemView.setOnLongClickListener {
             onItemLongClick?.invoke(outfit)

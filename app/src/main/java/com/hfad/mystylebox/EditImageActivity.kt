@@ -200,10 +200,18 @@ class EditImageActivity : AppCompatActivity() {
                 }
                 val resultUri = Uri.fromFile(file)
                 withContext(Dispatchers.Main) {
-                    val intent = Intent(this@EditImageActivity, CategorySelectionActivity::class.java)
-                    intent.putExtra("image_uri", resultUri.toString())
-                    startActivity(intent)
-                    finish()
+                    val origin = intent.getStringExtra("origin")
+                    if (origin == "clothes") {
+                        val resultIntent = Intent()
+                        resultIntent.putExtra("image_uri", resultUri.toString())
+                        setResult(RESULT_OK, resultIntent)
+                        finish()
+                    } else {
+                        val intent = Intent(this@EditImageActivity, CategorySelectionActivity::class.java)
+                        intent.putExtra("image_uri", resultUri.toString())
+                        startActivity(intent)
+                        finish()
+                    }
                 }
             }
         } catch (e: Exception) {

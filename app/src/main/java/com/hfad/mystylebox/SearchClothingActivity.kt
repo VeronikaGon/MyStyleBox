@@ -1,18 +1,15 @@
 package com.hfad.mystylebox
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.app.AppCompatActivity
 import android.graphics.Color
 import android.widget.EditText
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import com.hfad.mystylebox.adapter.ClothingAdapter
 import com.hfad.mystylebox.database.AppDatabase
 import com.hfad.mystylebox.database.ClothingItemFull
-import com.hfad.mystylebox.database.ClothingItemWithTags
 import com.hfad.mystylebox.databinding.ActivitySearchClothingBinding
 
 class SearchClothingActivity : AppCompatActivity() {
@@ -31,7 +28,6 @@ class SearchClothingActivity : AppCompatActivity() {
         searchView = binding.searchView
         searchView.isIconified = false
 
-        // Настройка внешнего вида SearchView
         val searchText = searchView.findViewById<EditText>(androidx.appcompat.R.id.search_src_text)
         searchText.setTextColor(Color.BLACK)
         searchText.setHintTextColor(Color.GRAY)
@@ -40,7 +36,6 @@ class SearchClothingActivity : AppCompatActivity() {
         recyclerView = binding.recyclerViewSearch
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        // Инициализация базы данных Room (для простоты работаем в основном потоке)
         db = Room.databaseBuilder(
             applicationContext,
             AppDatabase::class.java,
@@ -49,10 +44,8 @@ class SearchClothingActivity : AppCompatActivity() {
             .allowMainThreadQueries()
             .build()
 
-        // Загружаем все вещи с полной информацией (включая категорию, подкатегорию и теги)
         val itemsFull: List<ClothingItemFull> = db.clothingItemDao().getAllItemsFull()
 
-        // Инициализируем адаптер с типом ClothingItemFull
         adapter = ClothingAdapter(itemsFull, R.layout.item_clothing1)
         recyclerView.adapter = adapter
 
@@ -99,7 +92,6 @@ class SearchClothingActivity : AppCompatActivity() {
     private fun setupItemClick() {
         adapter.onItemClick = { itemFull ->
             val intent = android.content.Intent(this, EditclothesActivity::class.java).apply {
-                // Передаем базовый объект ClothingItem
                 putExtra("clothing_item", itemFull.clothingItem)
                 putExtra("image_uri", itemFull.clothingItem.imagePath)
                 addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
