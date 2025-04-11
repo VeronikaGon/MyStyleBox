@@ -231,7 +231,7 @@ class EditImageActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-        override fun onBackPressed() {
+    override fun onBackPressed() {
             showCancelConfirmation()
     }
     // Показывает диалог подтверждения при нажатии кнопки "Отмена".

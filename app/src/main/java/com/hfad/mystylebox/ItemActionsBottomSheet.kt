@@ -18,6 +18,7 @@ import java.io.File
 class ItemActionsBottomSheet : BottomSheetDialogFragment() {
     var onDeleteClicked: (() -> Unit)? = null
     var onEditClicked: (() -> Unit)? = null
+    var onCreateOutfitClicked: (() -> Unit)? = null
 
     companion object {
         private const val ARG_ITEM_NAME = "arg_item_name"
@@ -52,6 +53,7 @@ class ItemActionsBottomSheet : BottomSheetDialogFragment() {
             dismiss()
         }
         view.findViewById<Button>(R.id.btnCreateOutfit).setOnClickListener {
+            onCreateOutfitClicked?.invoke()
             dismiss()
         }
         view.findViewById<Button>(R.id.btnCancel).setOnClickListener {

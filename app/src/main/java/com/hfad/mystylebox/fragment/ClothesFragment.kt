@@ -29,6 +29,7 @@ import java.util.Date
 import java.util.Locale
 import com.hfad.mystylebox.database.ClothingItem
 import com.google.android.material.tabs.TabLayout
+import com.hfad.mystylebox.BoardActivity
 import com.hfad.mystylebox.EditImageActivity
 import com.hfad.mystylebox.EditclothesActivity
 import com.hfad.mystylebox.FilterActivity
@@ -188,6 +189,21 @@ class ClothesFragment : Fragment() {
                     itemFull.clothingItem.imagePath
                 )
                 bottomSheet.show(parentFragmentManager, bottomSheet.tag)
+                bottomSheet.onEditClicked = {
+                    val intent = Intent(requireContext(), EditclothesActivity::class.java).apply {
+                        putExtra("clothing_item", itemFull.clothingItem)
+                        putExtra("image_uri", itemFull.clothingItem.imagePath)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    startActivity(intent)
+                }
+                bottomSheet.onCreateOutfitClicked = {
+                    val intent = Intent(requireContext(), BoardActivity::class.java).apply {
+                        putIntegerArrayListExtra("selected_item_ids", arrayListOf(itemFull.clothingItem.id))
+                        putStringArrayListExtra("selected_image_paths", arrayListOf(itemFull.clothingItem.imagePath))
+                    }
+                    startActivity(intent)
+                }
                 bottomSheet.onDeleteClicked = {
                     AlertDialog.Builder(requireContext())
                         .setTitle("Удалить '${itemFull.clothingItem.name}'")

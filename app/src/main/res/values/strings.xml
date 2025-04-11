@@ -10,6 +10,7 @@
     <string name="weather"> Температура </string>
     <string name="temperature"> Температура </string>
     <string name="itemsincluded"> Вещи в комлекте</string>
+    <string name="outfitincluded"> 1 комплект с вещью</string>
     <string name="category"> Категория </string>
     <string name="count"> Стоимость </string>
     <string name="brend"> Бренд </string>

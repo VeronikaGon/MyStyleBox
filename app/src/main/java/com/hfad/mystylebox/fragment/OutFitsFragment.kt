@@ -18,7 +18,6 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import com.bumptech.glide.Glide
 import com.hfad.mystylebox.ClothingSelectionActivity
-import com.hfad.mystylebox.EditclothesActivity
 import com.hfad.mystylebox.EditoutfitActivity
 import com.hfad.mystylebox.OutfitActionsBottomSheet
 import com.hfad.mystylebox.R
@@ -66,6 +65,14 @@ class OutFitsFragment : Fragment() {
         outfitAdapter.onItemLongClick = { outfit ->
             val bottomSheet = OutfitActionsBottomSheet.newInstance(outfit.name, outfit.imagePath)
             bottomSheet.show(childFragmentManager, bottomSheet.tag)
+            bottomSheet.onEditClicked = {
+                val intent = Intent(requireContext(), EditoutfitActivity::class.java).apply {
+                    putExtra("outfit", outfit)
+                    putExtra("image_uri", outfit.imagePath)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                startActivity(intent)
+            }
             bottomSheet.onDeleteClicked = {
                 deleteOutfit(outfit)
             }

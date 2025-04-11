@@ -208,7 +208,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center">
                 <ImageButton
                     android:id="@+id/btnminus"
                     android:layout_width="wrap_content"
@@ -217,7 +217,7 @@
                     android:background="@android:color/transparent"/>
                 <com.google.android.material.slider.RangeSlider
                     android:id="@+id/rsweather"
-                    android:layout_width="wrap_content"
+                    android:layout_width="200dp"
                     android:layout_height="wrap_content"
                     app:labelBehavior="floating"
                     android:stepSize="1"

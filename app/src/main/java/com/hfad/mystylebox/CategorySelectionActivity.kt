@@ -50,7 +50,6 @@ class CategorySelectionActivity : AppCompatActivity() {
             imageUri = Uri.parse(uriString)
         }
         isReselection = intent.getBooleanExtra("is_reselection", false)
-        Log.d("CategorySelection", "isReselection = $isReselection")
         categories = db.categoryDao().getAllCategories()
         allSubcategories = db.subcategoryDao().getAllSubcategories()
 
@@ -90,9 +89,10 @@ class CategorySelectionActivity : AppCompatActivity() {
             TabLayoutMediator(tabLayout, viewPager) { tab, position ->
                 tab.text = categories[position].name
             }.attach()
+            selectedTabIndex = if(tabLayout.selectedTabPosition >= 0) tabLayout.selectedTabPosition else 0
             viewPager.setCurrentItem(selectedTabIndex, false)
         } else {
-            selectedTabIndex = tabLayout.selectedTabPosition
+            selectedTabIndex = if (tabLayout.selectedTabPosition >= 0) tabLayout.selectedTabPosition else 0
             val filteredSubcategories = allSubcategories.filter { subcategory ->
                 subcategory.name.contains(query, ignoreCase = true)
             }

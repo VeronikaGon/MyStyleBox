@@ -42,16 +42,21 @@ class SearchResultsFragment : Fragment() {
         val button = Button(requireContext())
         button.text = subcategory.name
         button.setBackgroundResource(R.drawable.checkbox_background)
-        button.setPadding(2, 2, 2, 2)
+        button.setPadding(15, 2, 15, 2)
         val layoutParams = FlexboxLayout.LayoutParams(
             FlexboxLayout.LayoutParams.WRAP_CONTENT,
             FlexboxLayout.LayoutParams.WRAP_CONTENT
         )
-        layoutParams.setMargins(16, 16, 16, 16)
+        layoutParams.setMargins(8, 8, 8, 8)
         button.layoutParams = layoutParams
         button.setOnClickListener {
-            (activity as? CategorySelectionActivity)?.onSubcategorySelected(    subcategory.name,
-                subcategory.id)
+            (activity as? CategorySelectionActivity)?.let { catSelectActivity ->
+                if (catSelectActivity.isReselection) {
+                    catSelectActivity.onSubcategorySelected(subcategory.name, subcategory.id)
+                } else {
+                    catSelectActivity.onSubcategorySelectedStart(subcategory.name, subcategory.id)
+                }
+            }
         }
         return button
     }

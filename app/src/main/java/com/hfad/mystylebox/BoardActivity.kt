@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.util.Log
 import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
@@ -116,6 +117,8 @@ class BoardActivity : AppCompatActivity() {
         val passedImagePaths =
             intent.getStringArrayListExtra("selected_image_paths") ?: arrayListOf()
         val passedIds = intent.getIntegerArrayListExtra("selected_item_ids") ?: arrayListOf()
+        Log.d("BoardActivity", "Полученные пути изображений: $passedImagePaths")
+        Log.d("BoardActivity", "Полученные идентификаторы: $passedIds")
         selectedIds.addAll(passedIds)
         for (i in passedImagePaths.indices) {
             addBoardItem(passedImagePaths[i], passedIds[i])

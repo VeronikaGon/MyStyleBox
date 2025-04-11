@@ -14,6 +14,7 @@ import java.io.File
 class OutfitActionsBottomSheet : BottomSheetDialogFragment() {
 
     var onDeleteClicked: (() -> Unit)? = null
+    var onEditClicked: (() -> Unit)? = null
 
     companion object {
         fun newInstance(outfitName: String, outfitImagePath: String?): OutfitActionsBottomSheet {
@@ -44,7 +45,10 @@ class OutfitActionsBottomSheet : BottomSheetDialogFragment() {
             onDeleteClicked?.invoke()
             dismiss()
         }
-
+        view.findViewById<Button>(R.id.btnEdit).setOnClickListener {
+            onEditClicked?.invoke()
+            dismiss()
+        }
         btnCancel.setOnClickListener {
             dismiss()
         }
