@@ -21,6 +21,10 @@ public interface OutfitDao {
     @Update
     void update(Outfit outfit);
 
+    @Transaction
+    @Query("SELECT * FROM outfits")
+    List<OutfitWithTags> getAllOutfitsWithTags();
+
     // Вставка комплекта вместе со списком связанных предметов
     @Transaction
     default void insertOutfitWithItems(Outfit outfit, List<OutfitClothingItem> items) {

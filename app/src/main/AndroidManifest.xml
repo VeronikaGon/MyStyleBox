@@ -59,6 +59,9 @@
         <activity
             android:name=".SearchOutfitActivity"
             android:screenOrientation="portrait" />
+        <activity
+            android:name=".FilterOutfitActivity"
+            android:screenOrientation="portrait" />
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

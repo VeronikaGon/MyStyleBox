@@ -15,7 +15,7 @@ public class OutfitWithTags {
             entity = Tag.class,
             entityColumn = "id",
             associateBy = @Junction(
-                    value = Outfit.class,
+                    value = OutfitTag.class,
                     parentColumn = "outfitId",
                     entityColumn = "tagId"
             )

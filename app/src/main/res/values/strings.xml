@@ -36,5 +36,6 @@
     <string name="hintsearch"> Поиск по названию вещи </string>
     <string name="edittags">  Редактирование тегов </string>
     <string name="filterclothing">  Фильтр вещей </string>
+    <string name="filteroutfit">  Фильтр комплектов </string>
     <string name="clothingtagscount">  Вещей с тегом: 0</string>
 </resources>

@@ -17,7 +17,7 @@ public class Outfit implements Parcelable {
 
     @NonNull
     public String name;
-    public List<String> seasons; // Для Room потребуется TypeConverter
+    public List<String> seasons;
     public String description;
     public int minTemp;
     public int maxTemp;
