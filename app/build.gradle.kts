@@ -58,6 +58,7 @@ android {
 }
 
 dependencies {
+    implementation ("com.jakewharton.threetenabp:threetenabp:1.4.0")
     implementation ("com.google.android.material:material:1.6.0")
     implementation ("androidx.core:core-splashscreen:1.0.1")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.0")

@@ -7,16 +7,16 @@ import com.hfad.mystylebox.fragment.FirstFragment
 import com.hfad.mystylebox.fragment.SecondFragment
 import com.hfad.mystylebox.fragment.ThirdFragment
 
-class ViewPagerAdapter(fragmentActivity: FragmentActivity) :
-    FragmentStateAdapter(fragmentActivity) {
+    class ViewPagerAdapter(fragmentActivity: FragmentActivity) :
+        FragmentStateAdapter(fragmentActivity) {
 
-    private val fragments = listOf(
-        FirstFragment(),
-        SecondFragment(),
-        ThirdFragment()
-    )
+        private val fragments = listOf(
+            FirstFragment(),
+            SecondFragment(),
+            ThirdFragment()
+        )
 
-    override fun getItemCount(): Int = fragments.size
+        override fun getItemCount(): Int = fragments.size
 
-    override fun createFragment(position: Int): Fragment = fragments[position]
-}
+        override fun createFragment(position: Int): Fragment = fragments[position]
+    }

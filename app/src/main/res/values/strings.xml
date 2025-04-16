@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">MyStyleBox</string>
     <string name="selectionclothes"> Выберите вещи</string>
+    <string name="selectionoutfit"> Выберите \n комплекты</string>
     <string name="clothesname"> Добавление вещи </string>
     <string name="outfitname"> Добавление комплекта </string>
     <string name="addtag"> Добавить новый тег </string>

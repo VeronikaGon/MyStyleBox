@@ -1,89 +1,104 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/clDateNavigation"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/white"
-    android:padding="8dp"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <androidx.constraintlayout.widget.ConstraintLayout xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/clDateNavigation"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/white"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <TextView
-        android:id="@+id/tvCurrentMonth"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Апрель"
-        android:textColor="@android:color/black"
-        android:textSize="18sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        tools:layout_editor_absoluteY="8dp" />
-
+        <TextView
+            android:id="@+id/tvCurrentMonth"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Апрель"
+            android:textColor="@android:color/black"
+            android:textSize="20sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
         android:id="@+id/linearLayout4"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@+id/tvCurrentMonth"
-        tools:layout_editor_absoluteX="8dp">
+        android:layout_marginTop="16dp"
+        android:gravity="center"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvCurrentMonth">
 
         <ImageButton
             android:id="@+id/btnPrevDay"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="3dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="К предыдущему дню"
             android:src="@drawable/ic_left_arrow"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
         <LinearLayout
-    android:id="@+id/llMonday"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:gravity="center">
-    <TextView
-        android:id="@+id/tvMonday"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Пн"
-        android:textColor="@android:color/black"
-        android:textSize="18sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        tools:layout_editor_absoluteY="8dp" />
-    <TextView
-        android:id="@+id/tvMondaynumber"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="7"
-        android:textColor="@android:color/black"
-        android:textSize="18sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        tools:layout_editor_absoluteY="8dp" />
-</LinearLayout>
+            android:id="@+id/llMonday"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp">
+
+            <TextView
+                android:id="@+id/tvMonday"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="Пн"
+                android:textColor="@android:color/black"
+                android:textSize="18sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                tools:layout_editor_absoluteY="8dp" />
+
+            <TextView
+                android:id="@+id/tvMondaynumber"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="7"
+                android:textColor="@android:color/black"
+                android:textSize="18sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                tools:layout_editor_absoluteY="8dp" />
+        </LinearLayout>
+
         <LinearLayout
             android:id="@+id/llTuesday"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:gravity="center"
             android:orientation="vertical"
-            android:gravity="center">
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp">
+
             <TextView
                 android:id="@+id/tvTuesday"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:text="Вт"
                 android:textColor="@android:color/black"
                 android:textSize="18sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 tools:layout_editor_absoluteY="8dp" />
+
             <TextView
                 android:id="@+id/tvTuesdaynumber"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:text="8"
                 android:textColor="@android:color/black"
                 android:textSize="18sp"
@@ -91,26 +106,32 @@
                 app:layout_constraintStart_toStartOf="parent"
                 tools:layout_editor_absoluteY="8dp" />
         </LinearLayout>
+
         <LinearLayout
             android:id="@+id/llWednesday"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:gravity="center"
             android:orientation="vertical"
-            android:gravity="center">
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp">
+
             <TextView
                 android:id="@+id/tvWednesday"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:text="Ср"
                 android:textColor="@android:color/black"
                 android:textSize="18sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 tools:layout_editor_absoluteY="8dp" />
+
             <TextView
                 android:id="@+id/tvWednesdaynumber"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:text="9"
                 android:textColor="@android:color/black"
                 android:textSize="18sp"
@@ -118,26 +139,32 @@
                 app:layout_constraintStart_toStartOf="parent"
                 tools:layout_editor_absoluteY="8dp" />
         </LinearLayout>
+
         <LinearLayout
             android:id="@+id/llThursday"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:gravity="center"
             android:orientation="vertical"
-            android:gravity="center">
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp">
+
             <TextView
                 android:id="@+id/tvThursday"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:text="Чт"
                 android:textColor="@android:color/black"
                 android:textSize="18sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 tools:layout_editor_absoluteY="8dp" />
+
             <TextView
                 android:id="@+id/tvThursdaynumber"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:text="10"
                 android:textColor="@android:color/black"
                 android:textSize="18sp"
@@ -145,26 +172,32 @@
                 app:layout_constraintStart_toStartOf="parent"
                 tools:layout_editor_absoluteY="8dp" />
         </LinearLayout>
+
         <LinearLayout
             android:id="@+id/llFriday"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:gravity="center"
             android:orientation="vertical"
-            android:gravity="center">
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp">
+
             <TextView
                 android:id="@+id/tvFriday"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:text="Пт"
                 android:textColor="@android:color/black"
                 android:textSize="18sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 tools:layout_editor_absoluteY="8dp" />
+
             <TextView
                 android:id="@+id/tvFridaynumber"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:text="11"
                 android:textColor="@android:color/black"
                 android:textSize="18sp"
@@ -172,12 +205,17 @@
                 app:layout_constraintStart_toStartOf="parent"
                 tools:layout_editor_absoluteY="8dp" />
         </LinearLayout>
+
         <LinearLayout
             android:id="@+id/llSaturday"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="8dp"
+            android:gravity="center"
             android:orientation="vertical"
-            android:gravity="center">
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp">
+
             <TextView
                 android:id="@+id/tvSaturday"
                 android:layout_width="wrap_content"
@@ -188,10 +226,11 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 tools:layout_editor_absoluteY="8dp" />
+
             <TextView
                 android:id="@+id/tvSaturdaynumber"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:text="12"
                 android:textColor="@android:color/black"
                 android:textSize="18sp"
@@ -199,26 +238,31 @@
                 app:layout_constraintStart_toStartOf="parent"
                 tools:layout_editor_absoluteY="8dp" />
         </LinearLayout>
+
         <LinearLayout
             android:id="@+id/llSunday"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:gravity="center"
             android:orientation="vertical"
-            android:gravity="center">
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp">
+
             <TextView
                 android:id="@+id/tvSunday"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:text="Вс"
                 android:textColor="@android:color/black"
                 android:textSize="18sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 tools:layout_editor_absoluteY="8dp" />
+
             <TextView
                 android:id="@+id/tvSundaynumber"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:text="13"
                 android:textColor="@android:color/black"
                 android:textSize="18sp"
@@ -226,10 +270,12 @@
                 app:layout_constraintStart_toStartOf="parent"
                 tools:layout_editor_absoluteY="8dp" />
         </LinearLayout>
+
         <ImageButton
             android:id="@+id/btnNextDay"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="3dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="К следующему дню"
             android:src="@drawable/right_arrow"
@@ -238,16 +284,105 @@
             app:layout_constraintTop_toTopOf="parent" />
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/tvCurrentDay"
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardViewItem"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Сегодня"
-        android:textColor="@android:color/black"
-        android:textSize="18sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout4"
-        tools:layout_editor_absoluteX="8dp" />
+        android:layout_marginTop="24dp"
+        android:background="@color/backgroundpink"
+        android:backgroundTint="@color/backgroundpink"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="4dp"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout4">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:orientation="horizontal">
+            <TextView
+                android:id="@+id/tvTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="Сегодня"
+                android:gravity="center"
+                android:textColor="@android:color/black"
+                android:textSize="24sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                tools:layout_editor_absoluteY="8dp" />
+            <ImageButton
+                android:id="@+id/btnCalendarMonth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginStart="32dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:padding="8dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/ic_month" />
+        </LinearLayout>
+            <LinearLayout
+                android:id="@+id/lladd"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/white"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="16dp"
+                android:orientation="vertical">
+                <ImageButton
+                    android:id="@+id/btnCalendarAddOutfit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:padding="8dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:srcCompat="@drawable/ic_calendaradd" />
+                <TextView
+                    android:id="@+id/tvdesription"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="8dp"
+                    android:text="Вы ещё не запланировали комплекты на эту неделю. Спланируйте свой день, чтобы повысить свою продуктивность!"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/black"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+
+            <HorizontalScrollView
+                android:id="@+id/hsoutfit"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:paddingTop="16dp">
 
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            </HorizontalScrollView>
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerViewOutfits"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:orientation="horizontal"
+                android:padding="8dp" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+</androidx.constraintlayout.widget.ConstraintLayout>
