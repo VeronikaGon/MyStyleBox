@@ -45,6 +45,7 @@
             android:id="@+id/llMonday"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:minHeight="@dimen/day_cell_height"
             android:layout_marginEnd="8dp"
             android:gravity="center"
             android:orientation="vertical"
@@ -66,7 +67,7 @@
                 android:id="@+id/tvMondaynumber"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:text="7"
+                android:text=""
                 android:textColor="@android:color/black"
                 android:textSize="18sp"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -76,6 +77,7 @@
 
         <LinearLayout
             android:id="@+id/llTuesday"
+            android:minHeight="@dimen/day_cell_height"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
@@ -85,21 +87,21 @@
             android:paddingEnd="5dp">
 
             <TextView
-                android:id="@+id/tvTuesday"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:text="Вт"
-                android:textColor="@android:color/black"
-                android:textSize="18sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                tools:layout_editor_absoluteY="8dp" />
+            android:id="@+id/tvTuesday"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="Вт"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:layout_editor_absoluteY="8dp" />
 
             <TextView
                 android:id="@+id/tvTuesdaynumber"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:text="8"
+                android:text=""
                 android:textColor="@android:color/black"
                 android:textSize="18sp"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -109,6 +111,7 @@
 
         <LinearLayout
             android:id="@+id/llWednesday"
+            android:minHeight="@dimen/day_cell_height"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
@@ -132,7 +135,7 @@
                 android:id="@+id/tvWednesdaynumber"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:text="9"
+                android:text=""
                 android:textColor="@android:color/black"
                 android:textSize="18sp"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -142,6 +145,7 @@
 
         <LinearLayout
             android:id="@+id/llThursday"
+            android:minHeight="@dimen/day_cell_height"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
@@ -165,7 +169,7 @@
                 android:id="@+id/tvThursdaynumber"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:text="10"
+                android:text=""
                 android:textColor="@android:color/black"
                 android:textSize="18sp"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -177,6 +181,7 @@
             android:id="@+id/llFriday"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:minHeight="@dimen/day_cell_height"
             android:layout_marginEnd="8dp"
             android:gravity="center"
             android:orientation="vertical"
@@ -198,7 +203,7 @@
                 android:id="@+id/tvFridaynumber"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:text="11"
+                android:text=""
                 android:textColor="@android:color/black"
                 android:textSize="18sp"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -208,8 +213,9 @@
 
         <LinearLayout
             android:id="@+id/llSaturday"
+            android:minHeight="@dimen/day_cell_height"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
             android:gravity="center"
             android:orientation="vertical"
@@ -231,7 +237,7 @@
                 android:id="@+id/tvSaturdaynumber"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:text="12"
+                android:text=""
                 android:textColor="@android:color/black"
                 android:textSize="18sp"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -241,6 +247,7 @@
 
         <LinearLayout
             android:id="@+id/llSunday"
+            android:minHeight="@dimen/day_cell_height"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
@@ -251,7 +258,7 @@
             <TextView
                 android:id="@+id/tvSunday"
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:text="Вс"
                 android:textColor="@android:color/black"
                 android:textSize="18sp"
@@ -263,7 +270,7 @@
                 android:id="@+id/tvSundaynumber"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:text="13"
+                android:text=""
                 android:textColor="@android:color/black"
                 android:textSize="18sp"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -305,10 +312,10 @@
             android:orientation="vertical">
 
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:gravity="center"
+                android:gravity="center_horizontal"
                 android:orientation="horizontal">
 
                 <TextView
@@ -353,6 +360,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:padding="8dp"
                     app:layout_constraintBottom_toBottomOf="parent"
@@ -365,9 +374,12 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
+                    android:layout_marginStart="5dp"
                     android:layout_marginTop="4dp"
+                    android:layout_marginEnd="5dp"
+                    android:layout_marginBottom="8dp"
                     android:paddingStart="8dp"
-                    android:text="Вы ещё не запланировали комплекты на эту неделю. Спланируйте свой день, чтобы повысить свою продуктивность!"
+                    android:text="@string/empty_plan_description"
                     android:textColor="@android:color/black"
                     android:textSize="16sp" />
             </LinearLayout>

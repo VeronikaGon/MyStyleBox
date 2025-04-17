@@ -66,6 +66,9 @@
         <activity
             android:name=".OutfitSelectionActivity"
             android:screenOrientation="portrait" />
+        <activity
+            android:name=".CalendarActivity"
+            android:screenOrientation="portrait" />
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

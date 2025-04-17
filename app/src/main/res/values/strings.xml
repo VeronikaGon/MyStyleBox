@@ -34,6 +34,10 @@
     <string name="search"> Поиск </string>
     <string name="searchsubcategory"> Поиск по категориям </string>
     <string name="outfits"> Комплекты </string>
+    <string name="empty_plan_description">
+    У вас нет запланированных комплектов на сегодня.
+    Запланируйте свой день, чтобы повысить продуктивность!
+    </string>
     <string name="hintsearch"> Поиск по названию вещи </string>
     <string name="edittags">  Редактирование тегов </string>
     <string name="filterclothing">  Фильтр вещей </string>
