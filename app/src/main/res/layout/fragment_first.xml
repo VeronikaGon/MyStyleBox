@@ -286,15 +286,15 @@
 
     <androidx.cardview.widget.CardView
         android:id="@+id/cardViewItem"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
         android:layout_marginTop="24dp"
+        android:layout_marginEnd="24dp"
         android:background="@color/backgroundpink"
         android:backgroundTint="@color/backgroundpink"
         app:cardCornerRadius="8dp"
         app:cardElevation="4dp"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/linearLayout4">
@@ -303,48 +303,51 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:gravity="center"
-            android:layout_gravity="center"
-            android:orientation="horizontal">
-            <TextView
-                android:id="@+id/tvTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:text="Сегодня"
-                android:gravity="center"
-                android:textColor="@android:color/black"
-                android:textSize="24sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                tools:layout_editor_absoluteY="8dp" />
-            <ImageButton
-                android:id="@+id/btnCalendarMonth"
+
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_marginStart="32dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:padding="8dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@drawable/ic_month" />
-        </LinearLayout>
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:text="Сегодня"
+                    android:textColor="@android:color/black"
+                    android:textSize="24sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    tools:layout_editor_absoluteY="8dp" />
+
+                <ImageButton
+                    android:id="@+id/btnCalendarMonth"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="32dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:padding="8dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:srcCompat="@drawable/ic_month" />
+            </LinearLayout>
+
             <LinearLayout
                 android:id="@+id/lladd"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/white"
                 android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
                 android:layout_marginTop="5dp"
+                android:layout_marginEnd="16dp"
                 android:layout_marginBottom="16dp"
+                android:background="@color/white"
                 android:orientation="vertical">
+
                 <ImageButton
                     android:id="@+id/btnCalendarAddOutfit"
                     android:layout_width="wrap_content"
@@ -356,33 +359,26 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:srcCompat="@drawable/ic_calendaradd" />
+
                 <TextView
                     android:id="@+id/tvdesription"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="4dp"
                     android:paddingStart="8dp"
                     android:text="Вы ещё не запланировали комплекты на эту неделю. Спланируйте свой день, чтобы повысить свою продуктивность!"
-                    android:textSize="16sp"
                     android:textColor="@android:color/black"
-                    android:layout_gravity="center"
-                    android:layout_marginTop="4dp" />
+                    android:textSize="16sp" />
             </LinearLayout>
 
-            <HorizontalScrollView
-                android:id="@+id/hsoutfit"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:paddingTop="16dp">
-
-
-            </HorizontalScrollView>
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerViewOutfits"
+                android:layout_gravity="center"
                 android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:orientation="horizontal"
-                android:padding="8dp" />
+                android:layout_height="wrap_content"
+                android:paddingStart="16dp"
+                android:orientation="horizontal" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 </androidx.constraintlayout.widget.ConstraintLayout>

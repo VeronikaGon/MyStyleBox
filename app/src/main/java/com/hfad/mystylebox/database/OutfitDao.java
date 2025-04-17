@@ -53,4 +53,6 @@ public interface OutfitDao {
     @Query("SELECT * FROM outfits WHERE description LIKE :query")
     List<Outfit> searchByDescription(String query);
 
+    @Query("SELECT * FROM outfits WHERE id IN (:outfitIds)")
+    List<Outfit> getOutfitsByIds(List<Integer> outfitIds);
    }
