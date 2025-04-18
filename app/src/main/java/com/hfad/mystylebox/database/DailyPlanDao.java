@@ -25,6 +25,9 @@ public interface DailyPlanDao {
     @Query("SELECT * FROM daily_plan WHERE plan_date = :date")
     List<DailyPlan> getDailyPlansForDate(String date);
 
-    @Query("SELECT * FROM daily_plan ORDER BY plan_date ASC")
-    List<DailyPlan> getAllDailyPlansSorted();
+    @Query("SELECT o.*   FROM outfits o INNER JOIN daily_plan dp ON dp.outfitId = o.id  WHERE dp.plan_date = :date")
+    List<Outfit> getOutfitsByDate(String date);
+
+    @Query(" SELECT dp.plan_date AS plan_date, o.imagePath   AS imagePath FROM daily_plan dp INNER JOIN outfits o ON dp.outfitId = o.id ")
+    List<PlanImage> getAllPlanImages();
 }

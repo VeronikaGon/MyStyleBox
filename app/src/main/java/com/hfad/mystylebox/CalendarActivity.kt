@@ -9,10 +9,14 @@ import android.widget.GridLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.hfad.mystylebox.adapter.MonthsAdapter
 import com.hfad.mystylebox.database.AppDatabase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.threeten.bp.LocalDate
 import org.threeten.bp.YearMonth
 import org.threeten.bp.format.TextStyle
@@ -20,19 +24,10 @@ import java.util.*
 
 class CalendarActivity : AppCompatActivity() {
 
-    companion object {
-        private val MONTH_NAMES = arrayOf(
-            "Январь", "Февраль", "Март", "Апрель",
-            "Май", "Июнь", "Июль", "Август",
-            "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
-        )
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_calendar)
 
-        // Находим Toolbar и назначаем его ActionBar
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         supportActionBar?.apply {
@@ -42,8 +37,30 @@ class CalendarActivity : AppCompatActivity() {
 
         val recycler = findViewById<RecyclerView>(R.id.rvCalendarMonths)
         recycler.layoutManager = LinearLayoutManager(this)
-        recycler.adapter = MonthsAdapter(generateMonths(), LocalDate.now())
 
+        val months = generateMonths()
+        val currentIndex = months.indexOf(YearMonth.now()).coerceAtLeast(0)
+        recycler.scrollToPosition(currentIndex)
+
+        val dao = AppDatabase.getInstance(this).dailyPlanDao()
+        lifecycleScope.launch(Dispatchers.IO) {
+            // строим карту date -> List<String> путей, как раньше
+            val planImages = dao.getAllPlanImages()
+            val dateImageMap = planImages
+                .groupBy { it.date }
+                .mapValues { it.value.map { pi -> pi.path } }
+
+            withContext(Dispatchers.Main) {
+                recycler.adapter = MonthsAdapter(
+                    months,
+                    LocalDate.now(),
+                    dateImageMap
+                ) { date ->
+                    DayDetailsBottomSheet.newInstance(date)
+                        .show(supportFragmentManager, "day_details")
+                }
+            }
+        }
     }
 
     /**

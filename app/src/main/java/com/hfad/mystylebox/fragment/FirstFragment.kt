@@ -101,7 +101,6 @@ class FirstFragment : Fragment() {
 
         // Обновляем название месяца по выбранной дате (полное название месяца)
         tvCurrentMonth.text = getMonthName(selectedDate!!.month.value)
-        // Устанавливаем заголовок по выбранной дате
         updateTitle()
 
         listOf(

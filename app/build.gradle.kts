@@ -58,6 +58,7 @@ android {
 }
 
 dependencies {
+    implementation ("com.github.bumptech.glide:glide:4.11.0")
     implementation ("com.jakewharton.threetenabp:threetenabp:1.4.0")
     implementation ("com.google.android.material:material:1.6.0")
     implementation ("androidx.core:core-splashscreen:1.0.1")
@@ -79,6 +80,7 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    kapt ("com.github.bumptech.glide:compiler:4.11.0")
     kapt("androidx.room:room-compiler:2.6.1")
     implementation("com.google.android.flexbox:flexbox:3.0.0")
     implementation("com.github.bumptech.glide:glide:4.16.0")
