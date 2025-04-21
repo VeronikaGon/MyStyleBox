@@ -1,4 +1,4 @@
-package com.hfad.mystylebox
+package com.hfad.mystylebox.ui.activity
 
 import android.content.Intent
 import android.os.Bundle
@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.hfad.mystylebox.R
 import com.hfad.mystylebox.adapter.TagAdapter
 import com.hfad.mystylebox.database.AppDatabase
 import com.hfad.mystylebox.database.ClothingItemTagDao

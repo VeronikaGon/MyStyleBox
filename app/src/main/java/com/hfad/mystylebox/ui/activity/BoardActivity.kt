@@ -1,4 +1,4 @@
-package com.hfad.mystylebox
+package com.hfad.mystylebox.ui.activity
 
 import android.content.Intent
 import android.graphics.Bitmap
@@ -24,6 +24,8 @@ import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
 import com.google.android.material.slider.Slider
+import com.hfad.mystylebox.MainActivity
+import com.hfad.mystylebox.R
 import java.io.File
 import java.io.FileOutputStream
 

@@ -8,7 +8,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import androidx.fragment.app.Fragment
 import com.google.android.flexbox.FlexboxLayout
-import com.hfad.mystylebox.CategorySelectionActivity
+import com.hfad.mystylebox.ui.activity.CategorySelectionActivity
 import com.hfad.mystylebox.R
 import com.hfad.mystylebox.database.AppDatabase
 

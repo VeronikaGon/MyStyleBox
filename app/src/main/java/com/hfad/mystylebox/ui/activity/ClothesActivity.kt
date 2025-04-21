@@ -1,4 +1,4 @@
-package com.hfad.mystylebox
+package com.hfad.mystylebox.ui.activity
 
 import android.app.Activity
 import android.content.DialogInterface
@@ -29,6 +29,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
 import com.bumptech.glide.Glide
 import com.google.android.flexbox.FlexboxLayout
+import com.hfad.mystylebox.R
 import com.hfad.mystylebox.database.AppDatabase
 import com.hfad.mystylebox.database.ClothingItem
 import com.hfad.mystylebox.database.ClothingItemDao
@@ -36,6 +37,7 @@ import com.hfad.mystylebox.database.ClothingItemTag
 import com.hfad.mystylebox.database.ClothingItemTagDao
 import com.hfad.mystylebox.database.SubcategoryDao
 import com.hfad.mystylebox.database.Tag
+import com.hfad.mystylebox.ui.bottomsheet.ImageOptionsBottomSheet
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext

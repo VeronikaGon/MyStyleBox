@@ -1,4 +1,4 @@
-package com.hfad.mystylebox
+package com.hfad.mystylebox.ui.activity
 
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -18,7 +18,6 @@ import androidx.core.view.WindowInsetsCompat
 import com.hfad.mystylebox.database.ClothingItem
 import android.Manifest
 import android.content.Intent
-import android.util.Log
 import android.widget.Button
 import android.widget.ImageButton
 import androidx.activity.result.contract.ActivityResultContracts
@@ -29,6 +28,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import com.bumptech.glide.Glide
 import com.google.android.flexbox.FlexboxLayout
+import com.hfad.mystylebox.R
 import com.hfad.mystylebox.adapter.OutfitAdapter
 import com.hfad.mystylebox.database.AppDatabase
 import com.hfad.mystylebox.database.ClothingItemDao

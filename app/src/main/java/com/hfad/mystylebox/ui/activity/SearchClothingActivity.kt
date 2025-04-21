@@ -1,4 +1,4 @@
-package com.hfad.mystylebox
+package com.hfad.mystylebox.ui.activity
 
 import android.os.Bundle
 import androidx.appcompat.widget.SearchView
@@ -7,6 +7,7 @@ import android.graphics.Color
 import android.widget.EditText
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.room.Room
+import com.hfad.mystylebox.R
 import com.hfad.mystylebox.adapter.ClothingAdapter
 import com.hfad.mystylebox.database.AppDatabase
 import com.hfad.mystylebox.database.ClothingItemFull

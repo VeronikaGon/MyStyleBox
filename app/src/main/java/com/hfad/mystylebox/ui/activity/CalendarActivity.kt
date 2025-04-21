@@ -1,28 +1,25 @@
-package com.hfad.mystylebox
+package com.hfad.mystylebox.ui.activity
 
-import android.graphics.Color
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.GridLayout
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.hfad.mystylebox.R
 import com.hfad.mystylebox.adapter.MonthsAdapter
 import com.hfad.mystylebox.database.AppDatabase
+import com.hfad.mystylebox.database.DailyPlanDao
+import com.hfad.mystylebox.ui.bottomsheet.DayDetailsBottomSheet
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.threeten.bp.LocalDate
 import org.threeten.bp.YearMonth
-import org.threeten.bp.format.TextStyle
-import java.util.*
 
 class CalendarActivity : AppCompatActivity() {
+
+    private lateinit var recycler: RecyclerView
+    private lateinit var dao: DailyPlanDao
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,20 +32,27 @@ class CalendarActivity : AppCompatActivity() {
             setDisplayHomeAsUpEnabled(true)
         }
 
-        val recycler = findViewById<RecyclerView>(R.id.rvCalendarMonths)
-        recycler.layoutManager = LinearLayoutManager(this)
+        recycler = findViewById(R.id.rvCalendarMonths)
+        dao = AppDatabase.getInstance(this).dailyPlanDao()
 
-        val months = generateMonths()
-        val currentIndex = months.indexOf(YearMonth.now()).coerceAtLeast(0)
-        recycler.scrollToPosition(currentIndex)
+        loadCalendar()
 
-        val dao = AppDatabase.getInstance(this).dailyPlanDao()
+        supportFragmentManager.setFragmentResultListener(
+            DayDetailsBottomSheet.RESULT_KEY,
+            this
+        ) { _, _ ->
+            refreshCalendar()
+        }
+    }
+    private fun loadCalendar() {
         lifecycleScope.launch(Dispatchers.IO) {
-            // строим карту date -> List<String> путей, как раньше
             val planImages = dao.getAllPlanImages()
             val dateImageMap = planImages
                 .groupBy { it.date }
-                .mapValues { it.value.map { pi -> pi.path } }
+                .mapValues { entry -> entry.value.map { it.path } }
+
+            val months = generateMonths()
+            val currentIndex = months.indexOf(YearMonth.now()).coerceAtLeast(0)
 
             withContext(Dispatchers.Main) {
                 recycler.adapter = MonthsAdapter(
@@ -59,10 +63,13 @@ class CalendarActivity : AppCompatActivity() {
                     DayDetailsBottomSheet.newInstance(date)
                         .show(supportFragmentManager, "day_details")
                 }
+                recycler.scrollToPosition(currentIndex)
             }
         }
     }
-
+    private fun refreshCalendar() {
+        loadCalendar()
+    }
     /**
      * Генерируем список YearMonth для всех годов, в которых есть записи в daily_plan.
      * Для каждого года берём все 12 месяцев.

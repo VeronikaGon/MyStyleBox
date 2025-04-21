@@ -1,11 +1,10 @@
-package com.hfad.mystylebox
+package com.hfad.mystylebox.ui.activity
 
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayout
@@ -13,6 +12,7 @@ import com.google.android.material.tabs.TabLayoutMediator
 import com.hfad.mystylebox.database.AppDatabase
 import com.hfad.mystylebox.database.Category
 import androidx.appcompat.widget.SearchView
+import com.hfad.mystylebox.R
 import com.hfad.mystylebox.adapter.CategoryPagerAdapter
 import com.hfad.mystylebox.adapter.SearchSubcategoryPagerAdapter
 import com.hfad.mystylebox.database.Subcategory

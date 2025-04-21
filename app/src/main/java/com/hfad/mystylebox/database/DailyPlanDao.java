@@ -30,4 +30,7 @@ public interface DailyPlanDao {
 
     @Query(" SELECT dp.plan_date AS plan_date, o.imagePath   AS imagePath FROM daily_plan dp INNER JOIN outfits o ON dp.outfitId = o.id ")
     List<PlanImage> getAllPlanImages();
+
+    @Query("DELETE FROM daily_plan WHERE plan_date = :date AND outfitId = :outfitId")
+    void deleteByDateAndOutfitId(String date, Long outfitId);
 }

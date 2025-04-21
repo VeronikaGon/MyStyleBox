@@ -8,6 +8,7 @@
 
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
 
     <application
         android:name=".MyApplication"
@@ -20,54 +21,69 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyStyleBox"
         tools:targetApi="31">
-        <activity android:name=".EditImageActivity" />
+            <receiver
+                android:name=".ui.widget.MyWidget"
+                android:exported="true"
+                android:roundIcon="@drawable/ic_planning_today"
+                android:icon="@drawable/ic_planning_today"
+                android:label="@string/widget_label">
+                <intent-filter>
+                    <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                    <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                    <action android:name="android.intent.action.BOOT_COMPLETED" />
+                </intent-filter>
+                <meta-data
+                    android:name="android.appwidget.provider"
+                    android:resource="@xml/my_widget_info" />
+        </receiver>
+        <activity android:name=".ui.activity.EditImageActivity" />
         <activity
             android:name="com.yalantis.ucrop.UCropActivity"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <activity
-            android:name=".EraserActivity"
+            android:name=".ui.activity.EraserActivity"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".EditoutfitActivity"
+            android:name=".ui.activity.EditoutfitActivity"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".SearchClothingActivity"
+            android:name=".ui.activity.SearchClothingActivity"
             android:screenOrientation="portrait"
             android:exported="true"
             android:theme="@style/Theme.MyStyleBox">
         </activity>
-        <activity android:name=".OutfitActivity"
+        <activity android:name=".ui.activity.OutfitActivity"
             android:screenOrientation="portrait"
         android:exported="false"/>
         <activity
-            android:name=".TagEditingActivity"
+            android:name=".ui.activity.TagEditingActivity"
             android:screenOrientation="portrait"
             android:exported="false" />
         <activity
-            android:name=".FilterActivity"
+            android:name=".ui.activity.FilterActivity"
             android:screenOrientation="portrait"
             android:exported="false" />
         <activity
-            android:name=".EditclothesActivity"
+            android:name=".ui.activity.EditclothesActivity"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".ClothingSelectionActivity"
+            android:name=".ui.activity.ClothingSelectionActivity"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".BoardActivity"
+            android:name=".ui.activity.BoardActivity"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".SearchOutfitActivity"
+            android:name=".ui.activity.SearchOutfitActivity"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".FilterOutfitActivity"
+            android:name=".ui.activity.FilterOutfitActivity"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".OutfitSelectionActivity"
+            android:name=".ui.activity.OutfitSelectionActivity"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".CalendarActivity"
+            android:name=".ui.activity.CalendarActivity"
             android:screenOrientation="portrait" />
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -80,10 +96,10 @@
         </provider>
 
         <activity
-            android:name=".ClothesActivity"
+            android:name=".ui.activity.ClothesActivity"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".CategorySelectionActivity"
+            android:name=".ui.activity.CategorySelectionActivity"
             android:screenOrientation="portrait" />
         <activity
             android:name=".MainActivity"

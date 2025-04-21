@@ -1,4 +1,4 @@
-package com.hfad.mystylebox
+package com.hfad.mystylebox.ui.activity
 
 import android.app.Activity
 import android.content.Intent
@@ -25,6 +25,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
 import com.google.android.flexbox.FlexboxLayout
 import com.google.android.material.slider.RangeSlider
+import com.hfad.mystylebox.MainActivity
+import com.hfad.mystylebox.R
 import com.hfad.mystylebox.database.AppDatabase
 import com.hfad.mystylebox.database.Outfit
 import com.hfad.mystylebox.database.OutfitClothingItem

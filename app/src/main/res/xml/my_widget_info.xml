@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:initialLayout="@layout/widget_layout"
+    android:updatePeriodMillis="0"
+    android:minWidth="220dp"
+    android:minHeight="220dp"
+    android:widgetCategory="home_screen"
+    android:resizeMode="horizontal|vertical"
+    android:label="@string/widget_label"
+    android:previewImage="@drawable/ic_planning_today"
+    />

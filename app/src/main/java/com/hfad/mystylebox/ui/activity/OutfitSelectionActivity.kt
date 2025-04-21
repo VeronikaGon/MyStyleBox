@@ -1,16 +1,20 @@
-package com.hfad.mystylebox
+package com.hfad.mystylebox.ui.activity
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
+import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import com.hfad.mystylebox.adapter.OutfitSelectionAdapter
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.hfad.mystylebox.R
 import com.hfad.mystylebox.database.AppDatabase
 import com.hfad.mystylebox.database.Outfit
 import com.hfad.mystylebox.database.OutfitItemFull
+import com.hfad.mystylebox.ui.widget.DataProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -18,35 +22,34 @@ import kotlinx.coroutines.withContext
 
 class OutfitSelectionActivity : AppCompatActivity() {
 
-    // RecyclerView для отображения комплектов
     private lateinit var recyclerView: RecyclerView
-    // Кнопка для подтверждения выбора
     private lateinit var btnConfirm: ImageButton
-    // Кнопка возврата
     private lateinit var btnBack: ImageButton
-    // TextView для отображения количества выбранных комплектов
     private lateinit var tvSelectedCount: TextView
+    private lateinit var clayout: ViewGroup
 
-    // Список всех комплектов из базы данных
     private var fullOutfitItems: List<OutfitItemFull> = emptyList()
-    // Хранит выбранные пользователем элементы
     private val selectedOutfits = mutableSetOf<OutfitItemFull>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_outfit_selection)
 
-        // Ищем View по id – убедись, что в activity_outfit_selection.xml заданы соответствующие id
         recyclerView = findViewById(R.id.recyclerView)
         btnConfirm = findViewById(R.id.selectoutfitButton)
         btnBack = findViewById(R.id.imageBack)
         tvSelectedCount = findViewById(R.id.SelectedCount)
+        clayout = findViewById(R.id.clayout)
+        clayout.visibility = View.GONE
+        val preselected = intent
+            .getStringArrayListExtra("EXTRA_SELECTED_IDS")
+            ?.mapNotNull { it.toLongOrNull() }
+            ?.toSet()
+            ?: emptySet()
 
-        // Настраиваем RecyclerView с двумя колонками
-        recyclerView.layoutManager = GridLayoutManager(this, 2)
         recyclerView.adapter = OutfitSelectionAdapter(
-            items = fullOutfitItems,
-            layoutResId = R.layout.item_clothing_selection,  // Если у тебя отдельный layout для комплекта, используй его
+            items           = fullOutfitItems,
+            layoutResId     = R.layout.item_clothing_selection,
             selectionListener = object : OutfitSelectionAdapter.OnItemSelectionListener {
                 override fun onItemSelectionChanged(item: OutfitItemFull, isSelected: Boolean) {
                     if (isSelected) {
@@ -57,27 +60,28 @@ class OutfitSelectionActivity : AppCompatActivity() {
                     updateSelectedCount()
                 }
             },
-            globalSelected = selectedOutfits
+            globalSelected  = selectedOutfits,
+            preselectedIds = preselected
         )
 
-        // Обработчик кнопки подтверждения выбора
+        recyclerView.layoutManager = GridLayoutManager(this, 2)
+
         btnConfirm.setOnClickListener {
-            // Подготавливаем результат: список id выбранных комплектов
-            val selectedIds = selectedOutfits.map { it.outfit.id }
+            val selectedIds = selectedOutfits.map { it.outfit.id.toString() }
             val resultIntent = Intent().apply {
-                putIntegerArrayListExtra("selected_outfit_ids", ArrayList(selectedIds))
+                putStringArrayListExtra("EXTRA_SELECTED_IDS", ArrayList(selectedIds))
             }
             setResult(RESULT_OK, resultIntent)
+            DataProvider.notifyWidgetDataChanged(this)
             finish()
         }
 
-        // Кнопка возврата просто закрывает активность
         btnBack.setOnClickListener {
             finish()
         }
 
-        // Загружаем данные из базы данных
         loadAllOutfits()
+        updateSelectedCount()
     }
 
     /**
@@ -85,6 +89,7 @@ class OutfitSelectionActivity : AppCompatActivity() {
      */
     private fun updateSelectedCount() {
         tvSelectedCount.text = "${selectedOutfits.size}"
+        clayout.visibility = if (selectedOutfits.isEmpty()) View.GONE else View.VISIBLE
     }
 
     /**

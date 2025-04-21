@@ -1,6 +1,7 @@
 package com.hfad.mystylebox.fragment
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.Gravity
@@ -17,10 +18,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.hfad.mystylebox.CalendarActivity
-import com.hfad.mystylebox.OutfitSelectionActivity
+import com.hfad.mystylebox.ui.activity.CalendarActivity
+import com.hfad.mystylebox.ui.widget.DataProvider
+import com.hfad.mystylebox.ui.activity.OutfitSelectionActivity
 import com.hfad.mystylebox.R
 import com.hfad.mystylebox.adapter.OutfitAdapter
+import com.hfad.mystylebox.adapter.PlannedOutfitAdapter
 import com.hfad.mystylebox.database.AppDatabase
 import com.hfad.mystylebox.database.DailyPlan
 import kotlinx.coroutines.CoroutineScope
@@ -30,7 +33,6 @@ import kotlinx.coroutines.withContext
 import org.threeten.bp.LocalDate
 
 class FirstFragment : Fragment() {
-
     // даты
     private lateinit var currentDate: LocalDate
     private var selectedDate: LocalDate? = null
@@ -56,12 +58,18 @@ class FirstFragment : Fragment() {
     private lateinit var recyclerViewOutfits: RecyclerView
     private lateinit var outfitAdapter: OutfitAdapter
 
-    // Регистрируем ActivityResultLauncher для получения результата из OutfitSelectionActivity
     private val outfitSelectionLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
-                val ids = result.data?.getIntegerArrayListExtra("selected_outfit_ids")
+                val ids = result.data?.getIntegerArrayListExtra("EXTRA_SELECTED_IDS")
                 if (ids != null && selectedDate != null) saveDailyPlans(selectedDate!!, ids)
+            }
+        }
+
+    private val calendarLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                updateWeekView()
             }
         }
 
@@ -92,7 +100,7 @@ class FirstFragment : Fragment() {
         llAdd = view.findViewById(R.id.lladd)
         recyclerViewOutfits = view.findViewById(R.id.recyclerViewOutfits)
         recyclerViewOutfits.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
-        outfitAdapter = OutfitAdapter(emptyList(), R.layout.item_clothing)
+        outfitAdapter = OutfitAdapter(emptyList(), R.layout.item_outfit)
         recyclerViewOutfits.adapter = outfitAdapter
 
         // Находим кнопки для переключения недель (например, btnPrevDay и btnNextDay)
@@ -128,7 +136,7 @@ class FirstFragment : Fragment() {
         }
         btnCalendarMonth.setOnClickListener {
             val intent = Intent(requireContext(), CalendarActivity::class.java)
-            startActivity(intent)
+            calendarLauncher.launch(intent)
         }
         updateWeekView()
         return view
@@ -304,11 +312,27 @@ class FirstFragment : Fragment() {
     private fun loadPlannedOutfits(date: LocalDate) {
         CoroutineScope(Dispatchers.IO).launch {
             val db = AppDatabase.getInstance(requireContext())
-            val dailyPlans = db.dailyPlanDao().getDailyPlansForDate(date.toString())
-            val outfitIds = dailyPlans.map { it.outfitId }
-            val outfits = db.outfitDao().getOutfitsByIds(outfitIds)
+            val ids = db.dailyPlanDao().getDailyPlansForDate(date.toString())
+                .map { it.outfitId }
+            val outfits = db.outfitDao().getOutfitsByIds(ids)
             withContext(Dispatchers.Main) {
-                outfitAdapter.updateData(outfits)
+                recyclerViewOutfits.adapter = PlannedOutfitAdapter(outfits) { outfit ->
+                    AlertDialog.Builder(requireContext())
+                        .setTitle("Удалить комплект?")
+                        .setMessage("Точно убрать этот комплект из планирования?")
+                        .setNegativeButton("Нет", null)
+                        .setPositiveButton("Да") { _, _ ->
+                            CoroutineScope(Dispatchers.IO).launch {
+                                db.dailyPlanDao()
+                                    .deleteByDateAndOutfitId(date.toString(), outfit.id.toLong())
+                                withContext(Dispatchers.Main) {
+                                    checkOutfitPlanForDate(date)
+                                    DataProvider.notifyWidgetDataChanged(requireContext())
+                                }
+                            }
+                        }
+                        .show()
+                }
             }
         }
     }
@@ -326,6 +350,7 @@ class FirstFragment : Fragment() {
             withContext(Dispatchers.Main) {
                 Toast.makeText(requireContext(), "Комплект(ы) запланированы!", Toast.LENGTH_SHORT).show()
                 checkOutfitPlanForDate(date)
+                DataProvider.notifyWidgetDataChanged(requireContext())
             }
         }
     }

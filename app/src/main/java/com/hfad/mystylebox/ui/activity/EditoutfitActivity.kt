@@ -1,4 +1,4 @@
-package com.hfad.mystylebox
+package com.hfad.mystylebox.ui.activity
 
 import android.Manifest
 import android.content.Intent
@@ -34,6 +34,7 @@ import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.Target
 import com.google.android.flexbox.FlexboxLayout
+import com.hfad.mystylebox.R
 import com.hfad.mystylebox.adapter.ClothingAdapter
 import com.hfad.mystylebox.database.AppDatabase
 import com.hfad.mystylebox.database.ClothingItemFull

@@ -11,12 +11,12 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.room.Room
-import com.hfad.mystylebox.ClothingSelectionActivity
-import com.hfad.mystylebox.EditoutfitActivity
-import com.hfad.mystylebox.FilterOutfitActivity
-import com.hfad.mystylebox.OutfitActionsBottomSheet
+import com.hfad.mystylebox.ui.activity.ClothingSelectionActivity
+import com.hfad.mystylebox.ui.activity.EditoutfitActivity
+import com.hfad.mystylebox.ui.activity.FilterOutfitActivity
+import com.hfad.mystylebox.ui.bottomsheet.OutfitActionsBottomSheet
 import com.hfad.mystylebox.R
-import com.hfad.mystylebox.SearchOutfitActivity
+import com.hfad.mystylebox.ui.activity.SearchOutfitActivity
 import com.hfad.mystylebox.adapter.OutfitAdapter
 import com.hfad.mystylebox.database.AppDatabase
 import com.hfad.mystylebox.database.Outfit

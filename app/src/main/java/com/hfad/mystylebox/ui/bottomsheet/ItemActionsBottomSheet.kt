@@ -1,4 +1,4 @@
-package com.hfad.mystylebox
+package com.hfad.mystylebox.ui.bottomsheet
 
 import android.content.Intent
 import android.net.Uri
@@ -12,6 +12,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.hfad.mystylebox.R
 import java.io.File
 
 

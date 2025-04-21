@@ -1,10 +1,12 @@
 package com.hfad.mystylebox.adapter
 
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.annotation.LayoutRes
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -13,9 +15,10 @@ import com.hfad.mystylebox.database.OutfitItemFull
 
 class OutfitSelectionAdapter(
     private var items: List<OutfitItemFull>,
-    private val layoutResId: Int,
+    @LayoutRes private val layoutResId: Int,
     private val selectionListener: OnItemSelectionListener,
-    private val globalSelected: MutableSet<OutfitItemFull>
+    private val globalSelected: MutableSet<OutfitItemFull>,
+    private val preselectedIds: Set<Long>
 ) : RecyclerView.Adapter<OutfitSelectionAdapter.OutfitViewHolder>() {
 
     interface OnItemSelectionListener {
@@ -23,30 +26,25 @@ class OutfitSelectionAdapter(
     }
 
     inner class OutfitViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        // Корневой контейнер элемента (например, ConstraintLayout)
-        val container: ConstraintLayout = itemView as ConstraintLayout
-        val itemImage: ImageView = itemView.findViewById(R.id.itemImage)
-        val itemName: TextView = itemView.findViewById(R.id.itemName)
+        private val container: ConstraintLayout = itemView as ConstraintLayout
+        private val itemImage: ImageView = itemView.findViewById(R.id.itemImage)
+        private val itemName: TextView = itemView.findViewById(R.id.itemName)
 
         fun bind(item: OutfitItemFull) {
-            // Загрузка изображения с помощью Glide
-            Glide.with(itemView.context)
-                .load(item.outfit.imagePath)
-                .into(itemImage)
-
+            Glide.with(itemView).load(item.outfit.imagePath).into(itemImage)
             itemName.text = item.outfit.name
 
-            // Обновляем фон контейнера в зависимости от выбранности
-            if (globalSelected.contains(item)) {
-                container.setBackgroundResource(R.drawable.item_background_active)
-            } else {
-                container.setBackgroundResource(R.drawable.item_background)
-            }
 
-            // Обработчик клика по элементу
-            itemView.setOnClickListener {
-                toggleSelection(item)
-            }
+
+            // Меняем фон в зависимости от текущего состояния выбора
+            val bgRes = if (globalSelected.contains(item))
+                R.drawable.item_background_active
+            else
+                R.drawable.item_background
+            container.setBackgroundResource(bgRes)
+
+            itemView.isEnabled = true
+            itemView.setOnClickListener { toggleSelection(item) }
         }
 
         private fun toggleSelection(item: OutfitItemFull) {
@@ -63,7 +61,8 @@ class OutfitSelectionAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): OutfitViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(layoutResId, parent, false)
+        val view = LayoutInflater.from(parent.context)
+            .inflate(layoutResId, parent, false)
         return OutfitViewHolder(view)
     }
 
@@ -74,7 +73,7 @@ class OutfitSelectionAdapter(
     override fun getItemCount(): Int = items.size
 
     /**
-     * Метод для обновления данных адаптера.
+     * Обновление данных адаптера новым списком
      */
     fun updateData(newItems: List<OutfitItemFull>) {
         items = newItems
