@@ -56,6 +56,8 @@
         <activity android:name=".ui.activity.OutfitActivity"
             android:screenOrientation="portrait"
         android:exported="false"/>
+        <activity android:name=".ui.activity.AboutActivity"
+            android:screenOrientation="portrait"/>
         <activity
             android:name=".ui.activity.TagEditingActivity"
             android:screenOrientation="portrait"

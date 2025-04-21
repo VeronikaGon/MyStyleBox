@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/tvSheetDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:text="Дата"
+        android:layout_gravity="center"
+        android:textColor="@color/gray"
+        android:layout_marginBottom="8dp"/>
+
+    <Button
+        android:id="@+id/btnPrimary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Запланировать комплект"
+        android:textSize="16sp"
+        android:backgroundTint="@android:color/transparent"
+        android:textColor="@color/black"/>
+
+    <Button
+        android:id="@+id/btnRemove"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:backgroundTint="@android:color/transparent"
+        android:textColor="@android:color/holo_red_dark"
+        android:text="Убрать комплект"
+        android:layout_marginTop="8dp"/>
+
+    <Button
+        android:id="@+id/btnCancel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Отмена"
+        android:textSize="16sp"
+        android:backgroundTint="@android:color/transparent"
+        android:textColor="@color/black"
+        android:layout_marginTop="8dp"/>
+</LinearLayout>

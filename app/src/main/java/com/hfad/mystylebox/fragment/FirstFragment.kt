@@ -23,17 +23,22 @@ import com.hfad.mystylebox.ui.widget.DataProvider
 import com.hfad.mystylebox.ui.activity.OutfitSelectionActivity
 import com.hfad.mystylebox.R
 import com.hfad.mystylebox.adapter.OutfitAdapter
-import com.hfad.mystylebox.adapter.PlannedOutfitAdapter
+import com.hfad.mystylebox.adapter.PlannedOutfitActionAdapter
 import com.hfad.mystylebox.database.AppDatabase
 import com.hfad.mystylebox.database.DailyPlan
+import com.hfad.mystylebox.ui.activity.AboutActivity
+import com.hfad.mystylebox.ui.bottomsheet.BottomSheetScheduleFragment
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.threeten.bp.LocalDate
+import org.threeten.bp.format.DateTimeFormatter
+import java.util.Locale
 
 class FirstFragment : Fragment() {
-    // даты
+
     private lateinit var currentDate: LocalDate
     private var selectedDate: LocalDate? = null
     private var currentWeekStart: LocalDate? = null
@@ -46,6 +51,7 @@ class FirstFragment : Fragment() {
     private lateinit var llSaturday: LinearLayout;  private lateinit var tvSaturdaynumber: TextView
     private lateinit var llSunday: LinearLayout;    private lateinit var tvSundaynumber: TextView
 
+    private lateinit var tvDescription : TextView
     private lateinit var tvTitle: TextView
     private lateinit var tvCurrentMonth: TextView
 
@@ -61,7 +67,9 @@ class FirstFragment : Fragment() {
     private val outfitSelectionLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
-                val ids = result.data?.getIntegerArrayListExtra("EXTRA_SELECTED_IDS")
+                val ids = result.data
+                    ?.getStringArrayListExtra("EXTRA_SELECTED_IDS")
+                    ?.mapNotNull { it.toIntOrNull() }
                 if (ids != null && selectedDate != null) saveDailyPlans(selectedDate!!, ids)
             }
         }
@@ -79,12 +87,10 @@ class FirstFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_first, container, false)
 
-        // Инициализируем даты (текущая, выбранная – по умолчанию сегодня, и начало недели)
         currentDate = LocalDate.now()
         selectedDate = currentDate
         currentWeekStart = getStartOfWeek(selectedDate!!)
 
-        // Находим по id элементы дней недели и остальные View
         llMonday = view.findViewById(R.id.llMonday); tvMondaynumber = view.findViewById(R.id.tvMondaynumber)
         llTuesday = view.findViewById(R.id.llTuesday); tvTuesdaynumber = view.findViewById(R.id.tvTuesdaynumber)
         llWednesday = view.findViewById(R.id.llWednesday); tvWednesdaynumber = view.findViewById(R.id.tvWednesdaynumber)
@@ -95,6 +101,7 @@ class FirstFragment : Fragment() {
         tvCurrentMonth = view.findViewById(R.id.tvCurrentMonth)
         tvTitle = view.findViewById(R.id.tvTitle)
 
+        tvDescription = view.findViewById(R.id.tvdesription)
         btnCalendarAddOutfit = view.findViewById(R.id.btnCalendarAddOutfit)
         btnCalendarMonth = view.findViewById(R.id.btnCalendarMonth)
         llAdd = view.findViewById(R.id.lladd)
@@ -103,11 +110,9 @@ class FirstFragment : Fragment() {
         outfitAdapter = OutfitAdapter(emptyList(), R.layout.item_outfit)
         recyclerViewOutfits.adapter = outfitAdapter
 
-        // Находим кнопки для переключения недель (например, btnPrevDay и btnNextDay)
         btnPrevWeek = view.findViewById(R.id.btnPrevDay)
         btnNextWeek = view.findViewById(R.id.btnNextDay)
 
-        // Обновляем название месяца по выбранной дате (полное название месяца)
         tvCurrentMonth.text = getMonthName(selectedDate!!.month.value)
         updateTitle()
 
@@ -118,6 +123,24 @@ class FirstFragment : Fragment() {
             ll.setOnClickListener {
                 selectedDate = currentWeekStart!!.plusDays(idx.toLong())
                 updateWeekView()
+            }
+            ll.setOnLongClickListener {
+                val date = currentWeekStart!!.plusDays(idx.toLong())
+                CoroutineScope(Dispatchers.IO).launch {
+                    val has = AppDatabase.getInstance(requireContext())
+                        .dailyPlanDao().getDailyPlansForDate(date.toString()).isNotEmpty()
+                    withContext(Dispatchers.Main) {
+                        BottomSheetScheduleFragment
+                            .newInstance(date, outfitName = null)
+                            .setCallback(object : BottomSheetScheduleFragment.Callback {
+                                override fun onSchedule(date: LocalDate) { /*…*/ }
+                                override fun onScheduleMore(date: LocalDate) { /*…*/ }
+                                override fun onRemoveOne(date: LocalDate) { /*…*/ }
+                            })
+                            .show(parentFragmentManager, "sheet")
+                    }
+                }
+                true
             }
         }
 
@@ -130,9 +153,21 @@ class FirstFragment : Fragment() {
             updateWeekView()
         }
 
-        btnCalendarAddOutfit.setOnClickListener {
-            val intent = Intent(requireContext(), OutfitSelectionActivity::class.java)
-            outfitSelectionLauncher.launch(intent)
+        btnCalendarAddOutfit.setOnLongClickListener {
+            BottomSheetScheduleFragment
+                .newInstance(selectedDate!!, outfitName = null)
+                .setCallback(object : BottomSheetScheduleFragment.Callback {
+                    override fun onSchedule(date: LocalDate) {
+                        outfitSelectionLauncher.launch(
+                            Intent(requireContext(), OutfitSelectionActivity::class.java)
+                                .putExtra("EXTRA_SELECTED_DATE", date.toString())
+                        )
+                    }
+                    override fun onScheduleMore(date: LocalDate) = Unit
+                    override fun onRemoveOne(date: LocalDate) = Unit
+                })
+                .show(parentFragmentManager, "sheet_empty")
+            true
         }
         btnCalendarMonth.setOnClickListener {
             val intent = Intent(requireContext(), CalendarActivity::class.java)
@@ -146,7 +181,6 @@ class FirstFragment : Fragment() {
     private fun updateWeekView() {
         val days = List(7) { currentWeekStart!!.plusDays(it.toLong()) }
 
-        // заново пишем числа
         tvMondaynumber   .text = days[0].dayOfMonth.toString()
         tvTuesdaynumber  .text = days[1].dayOfMonth.toString()
         tvWednesdaynumber.text = days[2].dayOfMonth.toString()
@@ -161,16 +195,16 @@ class FirstFragment : Fragment() {
                 db.dailyPlanDao().getDailyPlansForDate(it.toString()).isNotEmpty()
             }.toSet()
             withContext(Dispatchers.Main) {
-                updateDayAppearance(llMonday,    days[0], planned)
-                updateDayAppearance(llTuesday,   days[1], planned)
+                updateDayAppearance(llMonday, days[0], planned)
+                updateDayAppearance(llTuesday, days[1], planned)
                 updateDayAppearance(llWednesday, days[2], planned)
-                updateDayAppearance(llThursday,  days[3], planned)
-                updateDayAppearance(llFriday,    days[4], planned)
-                updateDayAppearance(llSaturday,  days[5], planned)
-                updateDayAppearance(llSunday,    days[6], planned)
+                updateDayAppearance(llThursday, days[3], planned)
+                updateDayAppearance(llFriday, days[4], planned)
+                updateDayAppearance(llSaturday, days[5], planned)
+                updateDayAppearance(llSunday, days[6], planned)
 
                 tvCurrentMonth.text = getMonthName(selectedDate!!.monthValue)
-                tvTitle.text        = getFormattedDay(selectedDate!!)
+                tvTitle.text = getFormattedDay(selectedDate!!)
 
                 if (planned.contains(selectedDate!!)) {
                     llAdd.visibility = View.GONE
@@ -179,7 +213,17 @@ class FirstFragment : Fragment() {
                 } else {
                     llAdd.visibility = View.VISIBLE
                     recyclerViewOutfits.visibility = View.GONE
-                    outfitAdapter.updateData(emptyList())
+                    // Динамический текст внизу:
+                    tvDescription.text = when {
+                        selectedDate!!.isEqual(currentDate) ->
+                            "У вас нет запланированных комплектов на сегодня.\nЗапланируйте свой день, чтобы повысить продуктивность!"
+
+                        selectedDate!!.isEqual(currentDate.plusDays(1)) ->
+                            "У вас нет запланированных комплектов на завтра.\nЗапланируйте свой день, чтобы повысить продуктивность!"
+
+                        else ->
+                            "У вас нет запланированных комплектов на ${formatFullDate(selectedDate!!)}\nЗапланируйте свой день, чтобы повысить продуктивность!"
+                    }
                 }
             }
         }
@@ -230,21 +274,20 @@ class FirstFragment : Fragment() {
         }
     }
 
-    /**
-     * При клике по контейнеру дня устанавливается выбранная дата, после чего обновляется весь UI.
-     */
+    // При клике по контейнеру дня устанавливается выбранная дата, после чего обновляется весь UI.
     private fun onDayClicked(date: LocalDate) {
         selectedDate = date
         updateWeekView()
     }
 
-    /**
-     * Обновляет заголовок (tvTitle) с отформатированным текстом для выбранного дня.
-     */
+    //Обновляет заголовок (tvTitle) с отформатированным текстом для выбранного дня.
     private fun updateTitle() {
-        // Используем метод форматирования: если выбранная дата равна сегодняшней, вчера или завтра – возвращает соответствующую строку,
-        // иначе возвращает формат "13 апр."
         tvTitle.text = getFormattedDay(selectedDate!!)
+    }
+    /** Возвращает строку вида "25 апреля 2025 г." */
+    private fun formatFullDate(date: LocalDate): String {
+        val formatter = DateTimeFormatter.ofPattern("d MMMM yyyy 'г.'", Locale("ru"))
+        return date.format(formatter)
     }
 
     /**
@@ -312,34 +355,60 @@ class FirstFragment : Fragment() {
     private fun loadPlannedOutfits(date: LocalDate) {
         CoroutineScope(Dispatchers.IO).launch {
             val db = AppDatabase.getInstance(requireContext())
-            val ids = db.dailyPlanDao().getDailyPlansForDate(date.toString())
-                .map { it.outfitId }
+            val ids = db.dailyPlanDao().getDailyPlansForDate(date.toString()).map { it.outfitId }
             val outfits = db.outfitDao().getOutfitsByIds(ids)
-            withContext(Dispatchers.Main) {
-                recyclerViewOutfits.adapter = PlannedOutfitAdapter(outfits) { outfit ->
-                    AlertDialog.Builder(requireContext())
-                        .setTitle("Удалить комплект?")
-                        .setMessage("Точно убрать этот комплект из планирования?")
-                        .setNegativeButton("Нет", null)
-                        .setPositiveButton("Да") { _, _ ->
-                            CoroutineScope(Dispatchers.IO).launch {
-                                db.dailyPlanDao()
-                                    .deleteByDateAndOutfitId(date.toString(), outfit.id.toLong())
-                                withContext(Dispatchers.Main) {
-                                    checkOutfitPlanForDate(date)
-                                    DataProvider.notifyWidgetDataChanged(requireContext())
+            withContext(Main) {
+                recyclerViewOutfits.adapter = PlannedOutfitActionAdapter(
+                    outfits,
+                    onDeleteRequested = { outfit ->
+                        AlertDialog.Builder(requireContext())
+                            .setTitle("Убрать комплект?")
+                            .setMessage("Точно убрать этот комплект из планирования?")
+                            .setPositiveButton("Да") { _, _ ->
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    db.dailyPlanDao()
+                                        .deleteByDateAndOutfitId(date.toString(), outfit.id.toLong())
+                                    withContext(Main) {
+                                        updateWeekView()
+                                        DataProvider.notifyWidgetDataChanged(requireContext())
+                                    }
                                 }
                             }
-                        }
-                        .show()
-                }
+                            .setNegativeButton("Нет", null)
+                            .show()
+                    },
+                    onItemLongClick = { outfit ->
+                        BottomSheetScheduleFragment
+                            .newInstance(selectedDate!!, outfitName = outfit.name)
+                            .setCallback(object: BottomSheetScheduleFragment.Callback {
+                                override fun onSchedule(d: LocalDate) {
+                                    outfitSelectionLauncher.launch(
+                                        Intent(requireContext(), OutfitSelectionActivity::class.java)
+                                            .putExtra("EXTRA_SELECTED_DATE", d.toString())
+                                    )
+                                }
+                                override fun onScheduleMore(d: LocalDate) {
+                                    onSchedule(d)
+                                }
+                                override fun onRemoveOne(d: LocalDate) {
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        db.dailyPlanDao()
+                                            .deleteByDateAndOutfitId(d.toString(), outfit.id.toLong())
+                                        withContext(Main) {
+                                            updateWeekView()
+                                            DataProvider.notifyWidgetDataChanged(requireContext())
+                                        }
+                                    }
+                                }
+                            })
+                            .show(parentFragmentManager, "sheet_item")
+                    }
+                )
             }
         }
     }
 
-    /**
-     * Сохраняет выбранные комплекты (DailyPlan) для указанной даты.
-     */
+    //Сохраняет выбранные комплекты для указанной даты.
     private fun saveDailyPlans(date: LocalDate, selectedIds: List<Int>) {
         CoroutineScope(Dispatchers.IO).launch {
             val db = AppDatabase.getInstance(requireContext())
