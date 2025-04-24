@@ -15,9 +15,9 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.hfad.mystylebox.R
 import com.hfad.mystylebox.adapter.TagAdapter
 import com.hfad.mystylebox.database.AppDatabase
-import com.hfad.mystylebox.database.ClothingItemTagDao
-import com.hfad.mystylebox.database.Tag
-import com.hfad.mystylebox.database.TagDao
+import com.hfad.mystylebox.database.dao.ClothingItemTagDao
+import com.hfad.mystylebox.database.entity.Tag
+import com.hfad.mystylebox.database.dao.TagDao
 import com.hfad.mystylebox.fragment.TagCreationDialogFragment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -150,7 +150,8 @@ class TagEditingActivity : AppCompatActivity() {
                 val existingTag = tagDao.getTagByName(newTagName.toString())
 
                 if (existingTag == null) {
-                    val newTag = Tag(newTagName.toString())
+                    val newTag =
+                        Tag(newTagName.toString())
                     val newId = tagDao.insert(newTag)
                     val updatedTags = tagDao.getAllTags()
 

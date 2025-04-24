@@ -1,4 +1,4 @@
-package com.hfad.mystylebox.database;
+package com.hfad.mystylebox.database.entity;
 
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
@@ -9,7 +9,6 @@ public class Category {
     public int id;
     public String name;
 
-    //конструктор класса
     public Category(String name) {
         this.name = name;
     }

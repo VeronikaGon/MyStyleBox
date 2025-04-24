@@ -1,23 +1,17 @@
 package com.hfad.mystylebox.adapter
 
 import android.graphics.Color
-import android.net.Uri
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
-import android.view.View.TEXT_ALIGNMENT_CENTER
 import android.view.ViewGroup
-import android.view.ViewGroup.LayoutParams.MATCH_PARENT
-import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.FrameLayout
 import android.widget.GridLayout
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import androidx.room.ColumnInfo.Companion.UNDEFINED
 import com.bumptech.glide.Glide
 import com.hfad.mystylebox.R
-import com.hfad.mystylebox.database.DailyPlanDao
 import org.threeten.bp.LocalDate
 import org.threeten.bp.YearMonth
 import java.io.File

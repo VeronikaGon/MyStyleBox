@@ -96,7 +96,7 @@
                         android:background="@drawable/checkbox_background"
                         android:button="@null"
                         android:enabled="false"
-                        android:drawableStart="@drawable/summer"
+                        android:drawableStart="@drawable/ic_summer"
                         android:gravity="center_vertical"
                         android:padding="8dp" />
 
@@ -107,7 +107,7 @@
                         android:layout_margin="3dp"
                         android:background="@drawable/checkbox_background"
                         android:button="@null"
-                        android:drawableStart="@drawable/sprimg"
+                        android:drawableStart="@drawable/ic_sprimg"
                         android:gravity="center_vertical"
                         android:minHeight="32dp"
                         android:enabled="false"
@@ -299,14 +299,14 @@
         android:layout_height="match_parent"
         android:background="@android:color/transparent"
         android:layout_marginEnd="15dp"
-        app:srcCompat="@drawable/edit" />
+        app:srcCompat="@drawable/ic_edit" />
 
     <ImageButton
         android:id="@+id/buttonshareit"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:background="@android:color/transparent"
-        app:srcCompat="@drawable/share"
+        app:srcCompat="@drawable/ic_share"
         android:layout_marginEnd="20dp"
         />
 </LinearLayout>

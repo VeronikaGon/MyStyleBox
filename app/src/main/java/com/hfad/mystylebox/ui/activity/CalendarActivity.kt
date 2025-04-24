@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.hfad.mystylebox.R
 import com.hfad.mystylebox.adapter.MonthsAdapter
 import com.hfad.mystylebox.database.AppDatabase
-import com.hfad.mystylebox.database.DailyPlanDao
+import com.hfad.mystylebox.database.dao.DailyPlanDao
 import com.hfad.mystylebox.ui.bottomsheet.DayDetailsBottomSheet
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

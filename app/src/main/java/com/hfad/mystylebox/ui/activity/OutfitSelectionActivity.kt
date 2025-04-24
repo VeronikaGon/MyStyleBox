@@ -12,8 +12,8 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.hfad.mystylebox.R
 import com.hfad.mystylebox.database.AppDatabase
-import com.hfad.mystylebox.database.Outfit
-import com.hfad.mystylebox.database.OutfitItemFull
+import com.hfad.mystylebox.database.entity.Outfit
+import com.hfad.mystylebox.database.entity.OutfitItemFull
 import com.hfad.mystylebox.ui.widget.DataProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

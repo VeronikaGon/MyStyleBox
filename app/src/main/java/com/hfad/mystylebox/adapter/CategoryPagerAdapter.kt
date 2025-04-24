@@ -5,7 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.hfad.mystylebox.fragment.SubcategoryFragment
-import com.hfad.mystylebox.database.Category
+import com.hfad.mystylebox.database.entity.Category
 
 class CategoryPagerAdapter(
     activity: AppCompatActivity,

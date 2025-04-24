@@ -28,12 +28,12 @@ import com.google.android.material.slider.RangeSlider
 import com.hfad.mystylebox.MainActivity
 import com.hfad.mystylebox.R
 import com.hfad.mystylebox.database.AppDatabase
-import com.hfad.mystylebox.database.Outfit
-import com.hfad.mystylebox.database.OutfitClothingItem
-import com.hfad.mystylebox.database.OutfitDao
-import com.hfad.mystylebox.database.OutfitTag
-import com.hfad.mystylebox.database.OutfitTagDao
-import com.hfad.mystylebox.database.Tag
+import com.hfad.mystylebox.database.entity.Outfit
+import com.hfad.mystylebox.database.entity.OutfitClothingItem
+import com.hfad.mystylebox.database.dao.OutfitDao
+import com.hfad.mystylebox.database.entity.OutfitTag
+import com.hfad.mystylebox.database.dao.OutfitTagDao
+import com.hfad.mystylebox.database.entity.Tag
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -334,7 +334,12 @@ class OutfitActivity : AppCompatActivity() {
             outfitDao.update(outfit)
             db.outfitTagDao().deleteTagsForOutfit(outfit.id)
             selectedTagIds.forEach { tagId ->
-                db.outfitTagDao().insert(OutfitTag(outfit.id, tagId))
+                db.outfitTagDao().insert(
+                    OutfitTag(
+                        outfit.id,
+                        tagId
+                    )
+                )
             }
             lifecycleScope.launch(Dispatchers.Main) {
                 Toast.makeText(this@OutfitActivity, "Комплект обновлён", Toast.LENGTH_SHORT).show()
@@ -350,7 +355,12 @@ class OutfitActivity : AppCompatActivity() {
             try {
                 val uniqueClothingIds = selectedClothingItemIds.distinct()
                 uniqueClothingIds.forEach { clothingItemId ->
-                    db.outfitClothingItemDao().insert(OutfitClothingItem(clothingItemId, id.toInt()))
+                    db.outfitClothingItemDao().insert(
+                        OutfitClothingItem(
+                            clothingItemId,
+                            id.toInt()
+                        )
+                    )
                 }
             } catch (e: Exception) {
                 Log.e("OutfitActivity", "Ошибка при вставке outfitClothingItem: ${e.message}")
@@ -358,7 +368,12 @@ class OutfitActivity : AppCompatActivity() {
             }
             try {
                 selectedTagIds.forEach { tagId ->
-                    db.outfitTagDao().insert(OutfitTag(id.toInt(), tagId))
+                    db.outfitTagDao().insert(
+                        OutfitTag(
+                            id.toInt(),
+                            tagId
+                        )
+                    )
                 }
             } catch (e: Exception) {
                 Log.e("OutfitActivity", "Ошибка при вставке outfitTag: ${e.message}")

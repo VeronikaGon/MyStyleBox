@@ -7,8 +7,8 @@ import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.hfad.mystylebox.R
-import com.hfad.mystylebox.database.ClothingItemTagDao
-import com.hfad.mystylebox.database.Tag
+import com.hfad.mystylebox.database.dao.ClothingItemTagDao
+import com.hfad.mystylebox.database.entity.Tag
 
 class TagAdapter(
     private var tags: List<Tag>,

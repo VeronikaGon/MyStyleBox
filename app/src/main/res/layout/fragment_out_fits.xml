@@ -27,7 +27,7 @@
             android:background="@android:color/transparent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/filter" />
+            app:srcCompat="@drawable/ic_filter" />
 
         <TextView
             android:id="@+id/textView2"
@@ -50,7 +50,7 @@
             android:background="@android:color/transparent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/search" />
+            app:srcCompat="@drawable/ic_search" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView"

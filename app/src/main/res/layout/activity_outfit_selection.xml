@@ -49,7 +49,7 @@
             android:background="@android:color/transparent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/filter" />
+            app:srcCompat="@drawable/ic_filter" />
 
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tabLayout"

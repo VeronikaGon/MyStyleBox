@@ -1,4 +1,4 @@
-package com.hfad.mystylebox.database
+package com.hfad.mystylebox.database.entity
 
 import android.os.Parcel
 import android.os.Parcelable

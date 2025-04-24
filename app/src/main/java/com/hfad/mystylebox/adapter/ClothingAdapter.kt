@@ -8,11 +8,11 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.hfad.mystylebox.R
-import com.hfad.mystylebox.database.ClothingItemFull
+import com.hfad.mystylebox.database.entity.ClothingItemFull
 
     class ClothingAdapter(
-    initialItems: List<ClothingItemFull>,
-    private val layoutResId: Int
+        initialItems: List<ClothingItemFull>,
+        private val layoutResId: Int
 ) : RecyclerView.Adapter<ClothingAdapter.ClothingViewHolder>() {
 
     private var items = mutableListOf<ClothingItemFull>()

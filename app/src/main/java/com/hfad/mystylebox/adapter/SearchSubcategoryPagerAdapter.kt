@@ -4,7 +4,7 @@ import android.net.Uri
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
-import com.hfad.mystylebox.database.Subcategory
+import com.hfad.mystylebox.database.entity.Subcategory
 import com.hfad.mystylebox.fragment.SearchResultsFragment
 
 class SearchSubcategoryPagerAdapter(

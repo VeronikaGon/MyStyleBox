@@ -14,7 +14,7 @@
     import androidx.room.Room
     import com.hfad.mystylebox.R
     import com.hfad.mystylebox.database.AppDatabase
-    import com.hfad.mystylebox.database.OutfitWithTags
+    import com.hfad.mystylebox.database.entity.OutfitWithTags
     import com.hfad.mystylebox.databinding.ActivityFilterOutfitBinding
     import kotlinx.coroutines.CoroutineScope
     import kotlinx.coroutines.Dispatchers

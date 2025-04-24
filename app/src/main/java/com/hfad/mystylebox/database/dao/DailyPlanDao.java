@@ -1,10 +1,14 @@
-package com.hfad.mystylebox.database;
+package com.hfad.mystylebox.database.dao;
 
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Update;
+
+import com.hfad.mystylebox.database.entity.DailyPlan;
+import com.hfad.mystylebox.database.entity.Outfit;
+import com.hfad.mystylebox.database.entity.PlanImage;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package com.hfad.mystylebox.database
+package com.hfad.mystylebox.database.entity
 
 data class OutfitItemFull(val outfit: Outfit){
 }

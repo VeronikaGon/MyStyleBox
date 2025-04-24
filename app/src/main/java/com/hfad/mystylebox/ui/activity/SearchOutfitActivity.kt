@@ -10,7 +10,7 @@ import androidx.room.Room
 import com.hfad.mystylebox.R
 import com.hfad.mystylebox.adapter.OutfitAdapter
 import com.hfad.mystylebox.database.AppDatabase
-import com.hfad.mystylebox.database.Outfit
+import com.hfad.mystylebox.database.entity.Outfit
 import com.hfad.mystylebox.databinding.ActivitySearchOutfitBinding
 
 class SearchOutfitActivity : AppCompatActivity() {

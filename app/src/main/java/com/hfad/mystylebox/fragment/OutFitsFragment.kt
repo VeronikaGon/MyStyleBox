@@ -19,8 +19,8 @@ import com.hfad.mystylebox.R
 import com.hfad.mystylebox.ui.activity.SearchOutfitActivity
 import com.hfad.mystylebox.adapter.OutfitAdapter
 import com.hfad.mystylebox.database.AppDatabase
-import com.hfad.mystylebox.database.Outfit
-import com.hfad.mystylebox.database.OutfitWithTags
+import com.hfad.mystylebox.database.entity.Outfit
+import com.hfad.mystylebox.database.entity.OutfitWithTags
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

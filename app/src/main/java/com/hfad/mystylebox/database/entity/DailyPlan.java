@@ -1,4 +1,4 @@
-package com.hfad.mystylebox.database;
+package com.hfad.mystylebox.database.entity;
 
 import static androidx.room.ForeignKey.CASCADE;
 

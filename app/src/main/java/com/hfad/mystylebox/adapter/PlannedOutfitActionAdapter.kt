@@ -9,7 +9,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.hfad.mystylebox.R
-import com.hfad.mystylebox.database.Outfit
+import com.hfad.mystylebox.database.entity.Outfit
 
 class PlannedOutfitActionAdapter(
     private var outfits: List<Outfit>,

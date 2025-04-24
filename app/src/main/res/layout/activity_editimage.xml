@@ -38,7 +38,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@android:color/transparent"
-            app:srcCompat="@drawable/eraser" />
+            app:srcCompat="@drawable/ic_eraser" />
 
         <ImageButton
             android:id="@+id/cropButton"
@@ -54,7 +54,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="32dp"
             android:background="@android:color/transparent"
-            app:srcCompat="@drawable/rotate_left" />
+            app:srcCompat="@drawable/ic_rotate_left" />
 
         <ImageButton
             android:id="@+id/rotateRightButton"
@@ -62,7 +62,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="32dp"
             android:background="@android:color/transparent"
-            app:srcCompat="@drawable/rotate_right" />
+            app:srcCompat="@drawable/ic_rotate_right" />
 
     </LinearLayout>
 

@@ -15,7 +15,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.hfad.mystylebox.database.ClothingItem
+import com.hfad.mystylebox.database.entity.ClothingItem
 import android.Manifest
 import android.content.Intent
 import android.widget.Button
@@ -31,11 +31,11 @@ import com.google.android.flexbox.FlexboxLayout
 import com.hfad.mystylebox.R
 import com.hfad.mystylebox.adapter.OutfitAdapter
 import com.hfad.mystylebox.database.AppDatabase
-import com.hfad.mystylebox.database.ClothingItemDao
-import com.hfad.mystylebox.database.ClothingItemFull
-import com.hfad.mystylebox.database.ClothingItemTagDao
-import com.hfad.mystylebox.database.SubcategoryDao
-import com.hfad.mystylebox.database.Tag
+import com.hfad.mystylebox.database.dao.ClothingItemDao
+import com.hfad.mystylebox.database.entity.ClothingItemFull
+import com.hfad.mystylebox.database.dao.ClothingItemTagDao
+import com.hfad.mystylebox.database.dao.SubcategoryDao
+import com.hfad.mystylebox.database.entity.Tag
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext

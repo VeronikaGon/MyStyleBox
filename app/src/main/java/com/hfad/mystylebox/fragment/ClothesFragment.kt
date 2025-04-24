@@ -27,7 +27,7 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import com.hfad.mystylebox.database.ClothingItem
+import com.hfad.mystylebox.database.entity.ClothingItem
 import com.google.android.material.tabs.TabLayout
 import com.hfad.mystylebox.ui.activity.BoardActivity
 import com.hfad.mystylebox.ui.activity.EditImageActivity
@@ -37,7 +37,7 @@ import com.hfad.mystylebox.ui.bottomsheet.ItemActionsBottomSheet
 import com.hfad.mystylebox.R
 import com.hfad.mystylebox.ui.activity.SearchClothingActivity
 import com.hfad.mystylebox.adapter.ClothingAdapter
-import com.hfad.mystylebox.database.ClothingItemFull
+import com.hfad.mystylebox.database.entity.ClothingItemFull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -247,7 +247,7 @@ class ClothesFragment : Fragment() {
     // Метод для выбора изображения (галерея, камера, файлы)
     private fun showImagePickerDialog() {
         val options = arrayOf("Выбрать из галереи", "Сфотографировать", "Выбрать из файлов")
-        val icons = arrayOf(R.drawable.gallery, R.drawable.ic_camera, R.drawable.file)
+        val icons = arrayOf(R.drawable.gallery, R.drawable.ic_camera, R.drawable.ic_file)
         val adapterDialog = object : BaseAdapter() {
             override fun getCount() = options.size
             override fun getItem(position: Int) = options[position]

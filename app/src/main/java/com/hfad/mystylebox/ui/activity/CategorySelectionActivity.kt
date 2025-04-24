@@ -10,12 +10,12 @@ import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.hfad.mystylebox.database.AppDatabase
-import com.hfad.mystylebox.database.Category
+import com.hfad.mystylebox.database.entity.Category
 import androidx.appcompat.widget.SearchView
 import com.hfad.mystylebox.R
 import com.hfad.mystylebox.adapter.CategoryPagerAdapter
 import com.hfad.mystylebox.adapter.SearchSubcategoryPagerAdapter
-import com.hfad.mystylebox.database.Subcategory
+import com.hfad.mystylebox.database.entity.Subcategory
 
 class CategorySelectionActivity : AppCompatActivity() {
 

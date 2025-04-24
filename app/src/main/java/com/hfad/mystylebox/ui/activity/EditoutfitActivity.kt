@@ -37,11 +37,11 @@ import com.google.android.flexbox.FlexboxLayout
 import com.hfad.mystylebox.R
 import com.hfad.mystylebox.adapter.ClothingAdapter
 import com.hfad.mystylebox.database.AppDatabase
-import com.hfad.mystylebox.database.ClothingItemFull
-import com.hfad.mystylebox.database.Outfit
-import com.hfad.mystylebox.database.OutfitDao
-import com.hfad.mystylebox.database.OutfitTagDao
-import com.hfad.mystylebox.database.Tag
+import com.hfad.mystylebox.database.entity.ClothingItemFull
+import com.hfad.mystylebox.database.entity.Outfit
+import com.hfad.mystylebox.database.dao.OutfitDao
+import com.hfad.mystylebox.database.dao.OutfitTagDao
+import com.hfad.mystylebox.database.entity.Tag
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext

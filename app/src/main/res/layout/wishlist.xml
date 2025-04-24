@@ -22,8 +22,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="@string/clothesname"
+        android:text="@string/wishlistsname"
         android:textSize="30sp"
+        android:gravity="center_horizontal"
         android:textColor="#000000"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -123,7 +124,7 @@
                 android:textColor="#000000" />
         </LinearLayout>
         <LinearLayout
-            android:id="@+id/llgender"
+            android:id="@+id/llStoimost"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="32dp"
@@ -135,198 +136,28 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/llcategory">
-            <TextView
-                android:id="@+id/textView30"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/gender"
-                android:textColor="#000000"
-                android:textSize="22sp" />
-
-            <com.google.android.flexbox.FlexboxLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/edittext_background"
-                android:padding="5dp"
-                android:paddingStart="10dp"
-                app:flexWrap="wrap"
-                android:textColor="#000000"
-                android:textSize="18sp" >
-            <RadioGroup
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/radioGroupGender">
-            <RadioButton
-                android:id="@+id/radio_woman"
-                android:theme="@style/MyRadioButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/radio_button_background"
-                android:padding="5dp"
-                android:layout_margin="3dp"
-                android:text="Женский"/>
-            <RadioButton android:id="@+id/radio_man"
-                android:theme="@style/MyRadioButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/radio_button_background"
-                android:padding="5dp"
-                android:layout_margin="3dp"
-                android:text="Мужской"/>
-            </RadioGroup>
-            </com.google.android.flexbox.FlexboxLayout>
-        </LinearLayout>
-        <LinearLayout
-            android:id="@+id/llbrend"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="32dp"
-            android:background="@drawable/linear_background"
-            android:orientation="vertical"
-            android:padding="8dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/llgender">
 
             <TextView
-                android:id="@+id/textView7"
+                android:id="@+id/textView6"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/brend"
+                android:text="@string/count"
                 android:textColor="#000000"
                 android:textSize="22sp" />
 
             <EditText
-                android:id="@+id/enterBrend"
+                android:id="@+id/enterStoimost"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/edittext_background"
                 android:padding="5dp"
                 android:paddingStart="10dp"
                 android:textColor="#000000"
-                android:textSize="18sp" >
-            </EditText>
+                android:textSize="18sp" />
         </LinearLayout>
+
         <LinearLayout
-            android:id="@+id/llseason"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="32dp"
-            android:background="@drawable/linear_background"
-            android:orientation="vertical"
-            android:padding="8dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/llbrend">
-
-            <TextView
-                android:id="@+id/textView8"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/seasons"
-                android:textColor="#000000"
-                android:textSize="22sp" />
-
-            <com.google.android.flexbox.FlexboxLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/edittext_background"
-                android:padding="5dp"
-                android:paddingStart="10dp"
-                app:flexWrap="wrap"
-                android:textColor="#000000"
-                android:textSize="18sp" >
-
-                <CheckBox
-                    android:id="@+id/cbSummer"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/checkbox_background"
-                    android:gravity="center_vertical"
-                    android:padding="8dp"
-                    android:text="Лето"
-                    android:button="@null"
-                    android:layout_margin="3dp"
-                    android:drawableStart="@drawable/ic_summer"
-                    android:drawablePadding="8dp" />
-
-                <CheckBox
-                    android:id="@+id/cbSpring"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Весна"
-                    android:background="@drawable/checkbox_background"
-                    android:padding="8dp"
-                    android:button="@null"
-                    android:gravity="center_vertical"
-                    android:drawableStart="@drawable/ic_sprimg"
-                    android:drawablePadding="8dp"
-                    android:layout_margin="3dp"
-                    android:minHeight="32dp"/>
-                <CheckBox
-                    android:id="@+id/cbWinter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Зима"
-                    android:drawableLeft="@drawable/ic_winter"
-                    android:background="@drawable/checkbox_background"
-                    android:padding="8dp"
-                    android:button="@null"
-                    android:gravity="center_vertical"
-                    android:layout_margin="3dp"
-                    android:minHeight="32dp"/>
-                <CheckBox
-                    android:id="@+id/cbAutumn"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Осень"
-                    android:drawableLeft="@drawable/ic_autumn"
-                    android:background="@drawable/checkbox_background"
-                    android:padding="8dp"
-                    android:button="@null"
-                    android:layout_margin="3dp"
-                    android:gravity="center_vertical"
-                    android:minHeight="32dp"/>
-            </com.google.android.flexbox.FlexboxLayout>
-        </LinearLayout>
-        <LinearLayout
-        android:id="@+id/llStoimost"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="32dp"
-        android:background="@drawable/linear_background"
-        android:orientation="vertical"
-        android:padding="8dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/llseason">
-
-        <TextView
-            android:id="@+id/textView6"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/count"
-            android:textColor="#000000"
-            android:textSize="22sp" />
-
-        <EditText
-            android:id="@+id/enterStoimost"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/edittext_background"
-            android:padding="5dp"
-            android:paddingStart="10dp"
-            android:textColor="#000000"
-            android:textSize="18sp" />
-    </LinearLayout>
-        <LinearLayout
-            android:id="@+id/llStatus"
+            android:id="@+id/llSize"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="32dp"
@@ -340,78 +171,6 @@
             app:layout_constraintTop_toBottomOf="@+id/llStoimost">
 
             <TextView
-                android:id="@+id/textView9"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/status"
-                android:textColor="#000000"
-                android:textSize="22sp" />
-
-            <com.google.android.flexbox.FlexboxLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/edittext_background"
-                android:padding="5dp"
-                android:paddingStart="10dp"
-                app:flexWrap="wrap"
-                android:textColor="#000000"
-                android:textSize="18sp" >
-                <RadioGroup
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/radioGroupStatus">
-                    <RadioButton
-                        android:id="@+id/radio_activeuse"
-                        android:theme="@style/MyRadioButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/radio_button_background"
-                        android:padding="5dp"
-                        android:checked="true"
-                        android:layout_margin="3dp"
-                        android:text="Активное использование"/>
-                    <RadioButton android:id="@+id/radio_remont"
-                        android:theme="@style/MyRadioButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/radio_button_background"
-                        android:padding="5dp"
-                        android:layout_margin="3dp"
-                        android:text="Нуждается в ремонте"/>
-                    <RadioButton android:id="@+id/radio_zapas"
-                        android:theme="@style/MyRadioButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/radio_button_background"
-                        android:padding="5dp"
-                        android:layout_margin="3dp"
-                        android:text="Резерв/Ожидание"/>
-                    <RadioButton android:id="@+id/radio_torg"
-                        android:theme="@style/MyRadioButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/radio_button_background"
-                        android:padding="5dp"
-                        android:layout_margin="3dp"
-                        android:text="На продажу"/>
-                </RadioGroup>
-            </com.google.android.flexbox.FlexboxLayout>
-        </LinearLayout>
-        <LinearLayout
-            android:id="@+id/llSize"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="32dp"
-            android:background="@drawable/linear_background"
-            android:orientation="vertical"
-            android:padding="8dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/llStatus">
-
-            <TextView
                 android:id="@+id/textView10"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -420,7 +179,7 @@
                 android:textSize="22sp" />
 
             <com.google.android.flexbox.FlexboxLayout
-               android:id="@+id/flexboxLayout"
+                android:id="@+id/flexboxLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/edittext_background"
@@ -430,79 +189,79 @@
                 android:textColor="#000000"
                 android:textSize="18sp"
                 >
-                    <RadioButton android:id="@+id/radio_xxs"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textAlignment="center"
-                        android:background="@drawable/checkbox_background"
-                        android:padding="5dp"
-                        android:layout_margin="3dp"
-                        android:button="@null"
-                        android:text="XXS"/>
-                    <RadioButton android:id="@+id/radio_xs"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/checkbox_background"
-                        android:padding="5dp"
-                        android:button="@null"
-                        android:textAlignment="center"
-                        android:layout_margin="3dp"
-                        android:text="XS"/>
-                    <RadioButton android:id="@+id/radio_s"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textAlignment="center"
-                        android:background="@drawable/checkbox_background"
-                        android:padding="5dp"
-                        android:layout_margin="3dp"
-                        android:button="@null"
-                        android:text="S"/>
-                    <RadioButton android:id="@+id/radio_m"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/checkbox_background"
-                        android:padding="5dp"
-                        android:button="@null"
-                        android:textAlignment="center"
-                        android:layout_margin="3dp"
-                        android:text="M"/>
-                    <RadioButton android:id="@+id/radio_l"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/checkbox_background"
-                        android:padding="5dp"
-                        android:textAlignment="center"
-                        android:button="@null"
-                        android:layout_margin="3dp"
-                        android:text="L"/>
-                    <RadioButton android:id="@+id/radio_xl"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/checkbox_background"
-                        android:padding="5dp"
-                        android:layout_margin="3dp"
-                        android:textAlignment="center"
-                        android:button="@null"
-                        android:text="XL"/>
-                    <RadioButton android:id="@+id/radio_xxl"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/checkbox_background"
-                        android:padding="5dp"
-                        android:layout_margin="3dp"
-                        android:button="@null"
-                        android:textAlignment="center"
-                        android:text="XXL"/>
-                    <RadioButton android:id="@+id/radio_xxxl"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/checkbox_background"
-                        android:padding="5dp"
-                        android:layout_margin="3dp"
-                        android:button="@null"
-                        android:textAlignment="center"
-                        android:text="XXXL"/>
-                    <RadioButton android:id="@+id/radio_33"
+                <RadioButton android:id="@+id/radio_xxs"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAlignment="center"
+                    android:background="@drawable/checkbox_background"
+                    android:padding="5dp"
+                    android:layout_margin="3dp"
+                    android:button="@null"
+                    android:text="XXS"/>
+                <RadioButton android:id="@+id/radio_xs"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/checkbox_background"
+                    android:padding="5dp"
+                    android:button="@null"
+                    android:textAlignment="center"
+                    android:layout_margin="3dp"
+                    android:text="XS"/>
+                <RadioButton android:id="@+id/radio_s"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAlignment="center"
+                    android:background="@drawable/checkbox_background"
+                    android:padding="5dp"
+                    android:layout_margin="3dp"
+                    android:button="@null"
+                    android:text="S"/>
+                <RadioButton android:id="@+id/radio_m"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/checkbox_background"
+                    android:padding="5dp"
+                    android:button="@null"
+                    android:textAlignment="center"
+                    android:layout_margin="3dp"
+                    android:text="M"/>
+                <RadioButton android:id="@+id/radio_l"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/checkbox_background"
+                    android:padding="5dp"
+                    android:textAlignment="center"
+                    android:button="@null"
+                    android:layout_margin="3dp"
+                    android:text="L"/>
+                <RadioButton android:id="@+id/radio_xl"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/checkbox_background"
+                    android:padding="5dp"
+                    android:layout_margin="3dp"
+                    android:textAlignment="center"
+                    android:button="@null"
+                    android:text="XL"/>
+                <RadioButton android:id="@+id/radio_xxl"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/checkbox_background"
+                    android:padding="5dp"
+                    android:layout_margin="3dp"
+                    android:button="@null"
+                    android:textAlignment="center"
+                    android:text="XXL"/>
+                <RadioButton android:id="@+id/radio_xxxl"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/checkbox_background"
+                    android:padding="5dp"
+                    android:layout_margin="3dp"
+                    android:button="@null"
+                    android:textAlignment="center"
+                    android:text="XXXL"/>
+                <RadioButton android:id="@+id/radio_33"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@drawable/checkbox_background"
@@ -511,7 +270,7 @@
                     android:button="@null"
                     android:textAlignment="center"
                     android:text="33"/>
-                    <RadioButton android:id="@+id/radio_34"
+                <RadioButton android:id="@+id/radio_34"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@drawable/checkbox_background"
@@ -520,7 +279,7 @@
                     android:button="@null"
                     android:textAlignment="center"
                     android:text="34"/>
-                    <RadioButton android:id="@+id/radio_35"
+                <RadioButton android:id="@+id/radio_35"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@drawable/checkbox_background"
@@ -639,8 +398,9 @@
                     android:text="47"/>
             </com.google.android.flexbox.FlexboxLayout>
         </LinearLayout>
+
         <LinearLayout
-            android:id="@+id/llTegi"
+            android:id="@+id/llgender"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="32dp"
@@ -652,48 +412,46 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/llSize">
-
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/textView11"
-                    android:layout_gravity="left"
-                    android:gravity="center"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:text="@string/tegi"
-                    android:textColor="#000000"
-                    android:textSize="22sp" />
-                <ImageButton
-                   android:paddingBottom="8dp"
-                    android:layout_gravity="right"
-                    android:id="@+id/imageButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:background="@android:color/transparent"
-                    app:srcCompat="@drawable/ic_edit" />
-            </FrameLayout>
-            <ScrollView
+            <TextView
+                android:id="@+id/textView30"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:scrollbars="vertical">
-                <com.google.android.flexbox.FlexboxLayout
-                    android:id="@+id/Tags"
-                    android:layout_width="match_parent"
-                    android:layout_height="150dp"
-                    android:background="@drawable/edittext_background"
-                    android:padding="5dp"
-                    android:paddingStart="10dp"
-                    app:flexWrap="wrap"
-                    android:textColor="#000000"
-                    android:textSize="18sp"
-                    app:alignItems="flex_start"
-                    app:alignContent="flex_start">
-                </com.google.android.flexbox.FlexboxLayout>
-            </ScrollView>
+                android:text="@string/gender"
+                android:textColor="#000000"
+                android:textSize="22sp" />
+
+            <com.google.android.flexbox.FlexboxLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/edittext_background"
+                android:padding="5dp"
+                android:paddingStart="10dp"
+                app:flexWrap="wrap"
+                android:textColor="#000000"
+                android:textSize="18sp" >
+            <RadioGroup
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/radioGroupGender">
+            <RadioButton
+                android:id="@+id/radio_woman"
+                android:theme="@style/MyRadioButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/radio_button_background"
+                android:padding="5dp"
+                android:layout_margin="3dp"
+                android:text="Женский"/>
+            <RadioButton android:id="@+id/radio_man"
+                android:theme="@style/MyRadioButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/radio_button_background"
+                android:padding="5dp"
+                android:layout_margin="3dp"
+                android:text="Мужской"/>
+            </RadioGroup>
+            </com.google.android.flexbox.FlexboxLayout>
         </LinearLayout>
 
         <LinearLayout
@@ -708,7 +466,7 @@
             android:padding="8dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/llTegi">
+            app:layout_constraintTop_toBottomOf="@+id/llgender">
 
             <TextView
                 android:id="@+id/textView14"

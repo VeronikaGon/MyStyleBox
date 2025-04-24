@@ -1,4 +1,4 @@
-package com.hfad.mystylebox.database
+package com.hfad.mystylebox.database.converter
 
 import androidx.room.TypeConverter
 import java.util.Arrays

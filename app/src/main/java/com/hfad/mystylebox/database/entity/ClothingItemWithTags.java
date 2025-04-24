@@ -1,4 +1,4 @@
-package com.hfad.mystylebox.database;
+package com.hfad.mystylebox.database.entity;
 
 import androidx.room.Embedded;
 import androidx.room.Junction;
@@ -6,17 +6,17 @@ import androidx.room.Relation;
 
 import java.util.List;
 
-public class OutfitWithTags {
+public class ClothingItemWithTags {
     @Embedded
-    public Outfit outfit;
+    public ClothingItem clothingItem;
 
     @Relation(
             parentColumn = "id",
             entity = Tag.class,
             entityColumn = "id",
             associateBy = @Junction(
-                    value = OutfitTag.class,
-                    parentColumn = "outfitId",
+                    value = ClothingItemTag.class,
+                    parentColumn = "clothingItemId",
                     entityColumn = "tagId"
             )
     )

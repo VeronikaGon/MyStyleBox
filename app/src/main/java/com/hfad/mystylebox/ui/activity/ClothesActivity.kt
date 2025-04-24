@@ -31,12 +31,12 @@ import com.bumptech.glide.Glide
 import com.google.android.flexbox.FlexboxLayout
 import com.hfad.mystylebox.R
 import com.hfad.mystylebox.database.AppDatabase
-import com.hfad.mystylebox.database.ClothingItem
-import com.hfad.mystylebox.database.ClothingItemDao
-import com.hfad.mystylebox.database.ClothingItemTag
-import com.hfad.mystylebox.database.ClothingItemTagDao
-import com.hfad.mystylebox.database.SubcategoryDao
-import com.hfad.mystylebox.database.Tag
+import com.hfad.mystylebox.database.entity.ClothingItem
+import com.hfad.mystylebox.database.dao.ClothingItemDao
+import com.hfad.mystylebox.database.entity.ClothingItemTag
+import com.hfad.mystylebox.database.dao.ClothingItemTagDao
+import com.hfad.mystylebox.database.dao.SubcategoryDao
+import com.hfad.mystylebox.database.entity.Tag
 import com.hfad.mystylebox.ui.bottomsheet.ImageOptionsBottomSheet
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -263,7 +263,7 @@ class ClothesActivity : AppCompatActivity(), ImageOptionsBottomSheet.ImageOption
     // Метод для выбора изображения (галерея, камера, файлы)
     private fun showImagePickerDialog() {
         val options = arrayOf("Выбрать из галереи", "Сфотографировать", "Выбрать из файлов")
-        val icons = arrayOf(R.drawable.gallery, R.drawable.ic_camera, R.drawable.file)
+        val icons = arrayOf(R.drawable.gallery, R.drawable.ic_camera, R.drawable.ic_file)
         val adapterDialog = object : BaseAdapter() {
             override fun getCount() = options.size
             override fun getItem(position: Int) = options[position]

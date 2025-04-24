@@ -285,7 +285,7 @@
             android:layout_marginStart="3dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="К следующему дню"
-            android:src="@drawable/right_arrow"
+            android:src="@drawable/ic_right_arrow"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

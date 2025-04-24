@@ -25,8 +25,7 @@ import com.hfad.mystylebox.R
 import com.hfad.mystylebox.adapter.OutfitAdapter
 import com.hfad.mystylebox.adapter.PlannedOutfitActionAdapter
 import com.hfad.mystylebox.database.AppDatabase
-import com.hfad.mystylebox.database.DailyPlan
-import com.hfad.mystylebox.ui.activity.AboutActivity
+import com.hfad.mystylebox.database.entity.DailyPlan
 import com.hfad.mystylebox.ui.bottomsheet.BottomSheetScheduleFragment
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

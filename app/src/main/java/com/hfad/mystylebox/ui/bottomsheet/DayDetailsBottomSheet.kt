@@ -19,8 +19,8 @@ import com.hfad.mystylebox.ui.activity.OutfitSelectionActivity
 import com.hfad.mystylebox.R
 import com.hfad.mystylebox.adapter.PlannedOutfitAdapter
 import com.hfad.mystylebox.database.AppDatabase
-import com.hfad.mystylebox.database.DailyPlan
-import com.hfad.mystylebox.database.DailyPlanDao
+import com.hfad.mystylebox.database.entity.DailyPlan
+import com.hfad.mystylebox.database.dao.DailyPlanDao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext

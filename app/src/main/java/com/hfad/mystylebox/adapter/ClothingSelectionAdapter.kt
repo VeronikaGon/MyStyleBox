@@ -10,7 +10,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.hfad.mystylebox.R
-import com.hfad.mystylebox.database.ClothingItemFull
+import com.hfad.mystylebox.database.entity.ClothingItemFull
 
 class ClothingSelectionAdapter(
     private var items: List<ClothingItemFull>,

@@ -1,4 +1,4 @@
-package com.hfad.mystylebox.database;
+package com.hfad.mystylebox.database.dao;
 
 import androidx.room.Dao;
 import androidx.room.Delete;
@@ -7,6 +7,11 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Transaction;
 import androidx.room.Update;
+
+import com.hfad.mystylebox.database.entity.ClothingItem;
+import com.hfad.mystylebox.database.entity.ClothingItemFull;
+import com.hfad.mystylebox.database.entity.ClothingItemWithCategory;
+import com.hfad.mystylebox.database.entity.ClothingItemWithTags;
 
 import java.util.List;
 

@@ -16,7 +16,7 @@ import com.google.android.material.tabs.TabLayout
 import com.hfad.mystylebox.R
 import com.hfad.mystylebox.adapter.ClothingSelectionAdapter
 import com.hfad.mystylebox.database.AppDatabase
-import com.hfad.mystylebox.database.ClothingItemFull
+import com.hfad.mystylebox.database.entity.ClothingItemFull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

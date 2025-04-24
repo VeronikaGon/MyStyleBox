@@ -1,6 +1,5 @@
 package com.hfad.mystylebox.adapter
 
-import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,7 +10,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.hfad.mystylebox.R
-import com.hfad.mystylebox.database.OutfitItemFull
+import com.hfad.mystylebox.database.entity.OutfitItemFull
 
 class OutfitSelectionAdapter(
     private var items: List<OutfitItemFull>,

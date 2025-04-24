@@ -23,7 +23,7 @@
     <androidx.appcompat.widget.SearchView
         android:id="@+id/searchView"
         android:layout_width="0dp"
-        app:searchIcon="@drawable/search"
+        app:searchIcon="@drawable/ic_search"
         app:queryHint="@string/searchsubcategory"
         app:iconifiedByDefault="false"
         android:background="@drawable/rounded_search_view"

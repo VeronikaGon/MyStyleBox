@@ -8,8 +8,8 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.hfad.mystylebox.database.AppDatabase
-import com.hfad.mystylebox.database.Category
-import com.hfad.mystylebox.database.Subcategory
+import com.hfad.mystylebox.database.entity.Category
+import com.hfad.mystylebox.database.entity.Subcategory
 
 class MainActivity : AppCompatActivity() {
     private lateinit var database: AppDatabase
