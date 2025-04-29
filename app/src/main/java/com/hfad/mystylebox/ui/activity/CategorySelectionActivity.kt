@@ -20,6 +20,7 @@ import com.hfad.mystylebox.database.entity.Subcategory
 class CategorySelectionActivity : AppCompatActivity() {
 
     private var imageUri: Uri? = null
+    private var sourceFlag: String? = null
     private lateinit var categories: List<Category>
     private lateinit var db: AppDatabase
     private lateinit var allSubcategories: List<Subcategory>
@@ -46,6 +47,7 @@ class CategorySelectionActivity : AppCompatActivity() {
         })
 
         val uriString = intent.getStringExtra("image_uri")
+        sourceFlag = intent.getStringExtra("source")
         if (!uriString.isNullOrEmpty()) {
             imageUri = Uri.parse(uriString)
         }
@@ -127,6 +129,16 @@ class CategorySelectionActivity : AppCompatActivity() {
 
     // Метод для первичного выбора (когда нужно запустить новую ClothesActivity)
     fun onSubcategorySelectedStart(subcategory: String, selectedSubcategoryId: Int) {
+        if (sourceFlag != null) {
+            val intent = Intent(this, WishListActivity::class.java).apply {
+                putExtra("image_uri", imageUri?.toString().orEmpty())
+                putExtra("subcategory_id", selectedSubcategoryId)
+                putExtra("is_reselection", isReselection)
+            }
+            startActivity(intent)
+            finish()
+            return
+        }
         val targetIntent = Intent(this, ClothesActivity::class.java).apply {
             putExtra("subcategory", subcategory)
             putExtra("selected_subcategory_id", selectedSubcategoryId)

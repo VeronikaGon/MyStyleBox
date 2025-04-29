@@ -382,12 +382,13 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/llTegi" />
+
     <LinearLayout
         android:id="@+id/lloutfits"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
         android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
         android:orientation="vertical"
         android:padding="8dp"
@@ -397,18 +398,19 @@
 
         <TextView
             android:id="@+id/textView101"
-            android:layout_gravity="center"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
+            android:layout_gravity="center"
             android:text="@string/outfitincluded"
             android:textColor="#000000"
             android:textSize="22sp" />
+
         <androidx.recyclerview.widget.RecyclerView
-            android:layout_marginStart="-8dp"
             android:id="@+id/recyclerViewOutfits"
             android:layout_width="match_parent"
             android:layout_height="200dp"
-            android:orientation="horizontal"
+            android:layout_marginStart="-8dp"
+            android:orientation="vertical"
             android:padding="8dp" />
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

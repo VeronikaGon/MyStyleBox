@@ -9,6 +9,7 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
         android:name=".MyApplication"
@@ -57,6 +58,8 @@
             android:screenOrientation="portrait"
         android:exported="false"/>
         <activity android:name=".ui.activity.AboutActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".ui.activity.WishListActivity"
             android:screenOrientation="portrait"/>
         <activity
             android:name=".ui.activity.TagEditingActivity"

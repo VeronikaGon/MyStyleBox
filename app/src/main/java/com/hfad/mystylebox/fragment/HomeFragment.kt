@@ -49,6 +49,7 @@ class HomeFragment : Fragment() {
         tabLayout = view.findViewById(R.id.tabLayout)
 
         viewPager.adapter = ViewPagerAdapter(requireActivity())
+        viewPager.isUserInputEnabled = false
 
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
             tab.text = tabTitles[position]

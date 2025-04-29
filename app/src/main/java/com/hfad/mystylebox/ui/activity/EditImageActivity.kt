@@ -51,6 +51,8 @@ class EditImageActivity : AppCompatActivity() {
         val cancelButton = findViewById<Button>(R.id.cancelButton)
 
         imageUri = savedInstanceState?.getParcelable("imageUri")
+        val source = intent.getStringExtra("source")
+
         if (imageUri == null) {
             val uriString = intent.getStringExtra("result_image_uri")
                 ?: intent.getStringExtra("imageUri")
@@ -72,6 +74,7 @@ class EditImageActivity : AppCompatActivity() {
         eraseButton.setOnClickListener {
             val intent = Intent(this, EraserActivity::class.java)
             intent.putExtra("imageUri", imageUri.toString())
+            intent.putExtra("source", source)
             startActivityForResult(intent, REQUEST_CODE_ERASER)
         }
     }
@@ -202,14 +205,16 @@ class EditImageActivity : AppCompatActivity() {
                 val resultUri = Uri.fromFile(file)
                 withContext(Dispatchers.Main) {
                     val origin = intent.getStringExtra("origin")
-                    if (origin == "clothes") {
+                    if (origin == "clothes"|| origin == "wishlist") {
                         val resultIntent = Intent()
                         resultIntent.putExtra("image_uri", resultUri.toString())
                         setResult(RESULT_OK, resultIntent)
                         finish()
                     } else {
+                        val source = intent.getStringExtra("source")
                         val intent = Intent(this@EditImageActivity, CategorySelectionActivity::class.java)
                         intent.putExtra("image_uri", resultUri.toString())
+                        intent.putExtra("source", source)
                         startActivity(intent)
                         finish()
                     }
@@ -235,7 +240,6 @@ class EditImageActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        currentBitmap?.recycle()
         currentBitmap = null
         super.onDestroy()
     }

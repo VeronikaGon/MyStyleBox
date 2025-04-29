@@ -5,20 +5,20 @@ import android.os.Parcelable;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
+import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
 import com.hfad.mystylebox.database.entity.Subcategory;
 
 @Entity(
         tableName = "wish_list_item",
-        foreignKeys = {
-                @ForeignKey(
-                        entity = Subcategory.class,
-                        parentColumns = {"id"},
-                        childColumns = {"subcategory_id"},
-                        onDelete = ForeignKey.CASCADE
-                )
-        }
+        foreignKeys = @ForeignKey(
+                entity = Subcategory.class,
+                parentColumns = "id",
+                childColumns = "subcategory_id",
+                onDelete = ForeignKey.CASCADE
+        ),
+        indices = {@Index(value = "subcategory_id")}
 )
 public class WishListItem implements Parcelable {
     @PrimaryKey(autoGenerate = true)

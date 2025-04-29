@@ -1,20 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Состояние "выбран" -->
     <item android:state_checked="true">
         <shape android:shape="rectangle">
-            <solid android:color="#FFB5A7"/> <!-- Фон розовый -->
-            <stroke android:width="2dp" android:color="#000000"/> <!-- Черная обводка -->
-            <corners android:radius="50dp"/> <!-- Закругленные углы -->
+            <solid android:color="#FFB5A7"/>
+            <stroke android:width="2dp" android:color="#000000"/>
+            <corners android:radius="50dp"/>
         </shape>
     </item>
 
-    <!-- Состояние "не выбран" -->
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#FFFFFF"/> <!-- Белый фон -->
-            <stroke android:width="2dp" android:color="#000000"/> <!-- Черная обводка -->
-            <corners android:radius="50dp"/> <!-- Закругленные углы -->
+            <solid android:color="#FFFFFF"/>
+            <stroke android:width="2dp" android:color="#000000"/>
+            <corners android:radius="50dp"/>
         </shape>
     </item>
 </selector>

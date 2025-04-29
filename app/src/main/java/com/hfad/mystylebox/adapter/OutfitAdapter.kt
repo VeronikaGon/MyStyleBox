@@ -1,6 +1,7 @@
 package com.hfad.mystylebox.adapter
 
 import android.content.Context
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -27,6 +28,16 @@ class OutfitAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): OutfitViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(itemLayout, parent, false)
+        val itemWidth = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            140f,
+            parent.context.resources.displayMetrics
+        ).toInt()
+
+        val lp = view.layoutParams
+        lp.width = itemWidth
+        view.layoutParams = lp
+
         return OutfitViewHolder(view)
     }
 

@@ -22,6 +22,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
@@ -105,7 +106,7 @@ class EditoutfitActivity : AppCompatActivity() {
 
         flexboxTags = findViewById(R.id.Tags)
         recyclerViewClothes = findViewById(R.id.recyclerViewClothes)
-        recyclerViewClothes.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        recyclerViewClothes.layoutManager = GridLayoutManager(this, 1, GridLayoutManager.HORIZONTAL, false)
         recyclerViewClothes.adapter = ClothingAdapter(emptyList(), R.layout.item_clothing)
 
         // Проверка разрешений

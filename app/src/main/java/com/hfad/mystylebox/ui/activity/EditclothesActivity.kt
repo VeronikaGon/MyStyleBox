@@ -23,6 +23,7 @@ import android.widget.ImageButton
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
@@ -99,7 +100,7 @@ class EditclothesActivity : AppCompatActivity() {
         }
         val recyclerViewOutfits = findViewById<RecyclerView>(R.id.recyclerViewOutfits)
         outfitAdapter = OutfitAdapter(emptyList(), R.layout.item_clothing)
-        recyclerViewOutfits.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        recyclerViewOutfits.layoutManager = GridLayoutManager(this, 1, GridLayoutManager.HORIZONTAL, false)
         recyclerViewOutfits.adapter = outfitAdapter
 
         val buttonAddOutfit = findViewById<Button>(R.id.ButtonAddOutfit)
