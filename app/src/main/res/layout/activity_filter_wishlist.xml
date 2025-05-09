@@ -23,7 +23,8 @@
             android:id="@+id/edittitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/filterclothing"
+            android:layout_marginStart="8dp"
+            android:text="@string/filterwishlist"
             android:textColor="#000000"
             android:textSize="26sp"
             app:layout_constraintStart_toStartOf="parent"
@@ -489,7 +490,7 @@
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/blockStatus"
+                android:id="@+id/blockCount"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
@@ -502,15 +503,15 @@
                     android:layout_height="wrap_content">
 
                     <TextView
-                        android:id="@+id/tvStatusTitle"
+                        android:id="@+id/tvCountTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/status"
+                        android:text="@string/count"
                         android:textColor="@android:color/black"
                         android:textSize="25sp" />
 
                     <ImageView
-                        android:id="@+id/ivStatusArrow"
+                        android:id="@+id/ivCountArrow"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentRight="true"
@@ -518,7 +519,7 @@
                 </RelativeLayout>
 
                 <com.google.android.flexbox.FlexboxLayout
-                    android:id="@+id/statusContainer"
+                    android:id="@+id/countContainer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="#000000"
@@ -526,7 +527,7 @@
                     app:flexWrap="wrap">
 
                     <CheckBox
-                        android:id="@+id/cbactiveuse"
+                        android:id="@+id/cbbefore1000"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
@@ -536,10 +537,10 @@
                         android:gravity="center"
                         android:paddingStart="16dp"
                         android:paddingEnd="16dp"
-                        android:text="Активное использование" />
+                        android:text="до 1000" />
 
                     <CheckBox
-                        android:id="@+id/cbneedremont"
+                        android:id="@+id/cbbefore3000"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
@@ -549,10 +550,10 @@
                         android:gravity="center"
                         android:paddingStart="16dp"
                         android:paddingEnd="16dp"
-                        android:text="Нуждается в ремонте" />
+                        android:text="от 1000 до 3000" />
 
                     <CheckBox
-                        android:id="@+id/cbwaiting"
+                        android:id="@+id/cbbefore5000"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
@@ -562,10 +563,10 @@
                         android:gravity="center"
                         android:paddingStart="16dp"
                         android:paddingEnd="16dp"
-                        android:text="Резерв/Ожидание" />
+                        android:text="от 3000 до 5000" />
 
                     <CheckBox
-                        android:id="@+id/cbsale"
+                        android:id="@+id/cbbefore10000"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
@@ -575,14 +576,39 @@
                         android:gravity="center"
                         android:paddingStart="16dp"
                         android:paddingEnd="16dp"
-                        android:text="На продажу" />
+                        android:text="от 5000 до 10000" />
+
+                    <CheckBox
+                        android:id="@+id/cbbefore40000"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/checkbox_background"
+                        android:button="@null"
+                        android:gravity="center"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:text="от 10000 до 40000" />
+                    <CheckBox
+                        android:id="@+id/cbmore40000"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/checkbox_background"
+                        android:button="@null"
+                        android:gravity="center"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:text="больше 40000" />
                 </com.google.android.flexbox.FlexboxLayout>
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
 
     <Button
-        android:id="@+id/btnApply"
+            android:id="@+id/btnApply"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Применить"

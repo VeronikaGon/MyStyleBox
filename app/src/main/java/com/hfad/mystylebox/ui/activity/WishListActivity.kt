@@ -99,7 +99,7 @@ class WishListActivity : AppCompatActivity(), ImageOptionsBottomSheet.ImageOptio
         }
         tvCategory.text = subcatDao.getSubcategoryNameById(subcatId)
         val imageUriString = intent.getStringExtra("image_uri").orEmpty()
-
+        imagePath = imageUriString
         findViewById<ImageView>(R.id.clothingImageView).let {
             Glide.with(this).load(imageUriString).into(it)
         }
@@ -143,7 +143,7 @@ class WishListActivity : AppCompatActivity(), ImageOptionsBottomSheet.ImageOptio
             val notes = etNotes.text.toString().trim()
             val size = flexSize.children
                 .filterIsInstance<RadioButton>()
-                .firstOrNull { it.isChecked }?.text.toString()
+                .firstOrNull { it.isChecked }?.text?.toString() ?: ""
             val gender = rgGender.checkedRadioButtonId.takeIf { it != -1 }
                 ?.let { findViewById<RadioButton>(it).text.toString() }
                 ?: "Универсально"

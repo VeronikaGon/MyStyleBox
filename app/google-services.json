@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "380283333391",
+    "project_id": "wardrobesyncproject",
+    "storage_bucket": "wardrobesyncproject.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:380283333391:android:b0b1c6711508a9f03fac7a",
+        "android_client_info": {
+          "package_name": "com.hfad.mystylebox"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCF-aogjwxSrzqk_m4_EDU-AtdfHTHUm2k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

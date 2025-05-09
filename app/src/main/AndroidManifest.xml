@@ -85,6 +85,9 @@
             android:name=".ui.activity.FilterOutfitActivity"
             android:screenOrientation="portrait" />
         <activity
+            android:name=".ui.activity.FilterWishlistActivity"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".ui.activity.OutfitSelectionActivity"
             android:screenOrientation="portrait" />
         <activity

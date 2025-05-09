@@ -10,6 +10,10 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
         maven(url = "https://jitpack.io")
+        plugins {
+            kotlin("android") version "2.1.0"
+            id("org.jetbrains.kotlin.plugin.compose") version "2.1.0"
+        }
     }
 }
 dependencyResolutionManagement {
