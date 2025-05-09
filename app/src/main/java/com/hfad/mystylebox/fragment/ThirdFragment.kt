@@ -7,6 +7,7 @@ import android.graphics.Rect
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.text.InputType
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
@@ -16,6 +17,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.RadioButton
 import androidx.appcompat.widget.SearchView
 import android.widget.Switch
@@ -113,7 +115,9 @@ class ThirdFragment : Fragment() {
         tabLayout = view.findViewById(R.id.tabLayout)
         rv = view.findViewById(R.id.recyclerView)
         imageFilter = view.findViewById(R.id.imageFilter) // найдём ImageButton
-
+        val toggleGroup    = view.findViewById<LinearLayout>(R.id.toggleGroup)
+        val llSearch       = view.findViewById<LinearLayout>(R.id.llsearch)
+        val lp             = llSearch.layoutParams as LinearLayout.LayoutParams
         // Настройка RecyclerView и адаптера
         rv.layoutManager = GridLayoutManager(context, 2)
         adapter = WishListAdapter(emptyList(), R.layout.item_clothing,
@@ -122,14 +126,47 @@ class ThirdFragment : Fragment() {
         )
         rv.adapter = adapter
 
+        val closeButton: ImageView =
+            searchView.findViewById(androidx.appcompat.R.id.search_close_btn)
+        closeButton.setOnClickListener {
+            searchView.setQuery("", false)
+            searchView.clearFocus()
+        }
+
         // Поиск по тексту
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(q: String?) = false
             override fun onQueryTextChange(q: String?): Boolean {
-                applyCombinedFilters(text = q.orEmpty(), categoryId = tabLayout.selectedTabPosition.takeIf { it != 0 }?.let { displayedCategories[it - 1].id })
-                return true
+                val text = q.orEmpty()
+
+                if (text.isEmpty()) {
+                    imageFilter.visibility = View.VISIBLE
+                    toggleGroup.visibility = View.VISIBLE
+                    lp.weight = 1.0F
+                    llSearch.layoutParams = lp
+                    searchView.clearFocus()
+                    applyCombinedFilters(text = "", categoryId = null)
+                } else {
+                    // Скрываем и растягиваем на весь экран
+                    imageFilter.visibility = View.GONE
+                    toggleGroup.visibility = View.GONE
+                    lp.weight = 0f
+                    llSearch.layoutParams = lp
+
+
+                    applyCombinedFilters(
+                        text = q.orEmpty(),
+                        categoryId = tabLayout.selectedTabPosition.takeIf { it != 0 }
+                            ?.let { displayedCategories[it - 1].id })
+                }
+               return true
             }
         })
+        searchView.setOnCloseListener {
+            searchView.clearFocus()
+            true
+        }
+
 
         // Grid/List переключение
         fun selectGrid() {
@@ -218,11 +255,21 @@ class ThirdFragment : Fragment() {
         }
         bsView.findViewById<TextView>(R.id.btnDelete).setOnClickListener {
             dialog.dismiss()
-            CoroutineScope(Dispatchers.IO).launch {
-                Room.databaseBuilder(requireContext(), AppDatabase::class.java, "wardrobe_db")
-                    .build().wishListItemDao().delete(item)
-                allItems = allItems.filterNot { it.id == item.id }
-            }
+            AlertDialog.Builder(requireContext())
+                .setTitle("Удалить вещь?")
+                .setMessage("Вы действительно хотите удалить «${item.name}» из списка желаний?")
+                .setPositiveButton("Удалить") { _, _ ->
+                    CoroutineScope(Dispatchers.IO).launch {
+                        Room.databaseBuilder(requireContext(), AppDatabase::class.java, "wardrobe_db")
+                            .build().wishListItemDao().delete(item)
+                        allItems = allItems.filterNot { it.id == item.id }
+                        withContext(Dispatchers.Main) {
+                            adapter.updateData(allItems)
+                        }
+                    }
+                }
+                .setNegativeButton("Отмена", null)
+                .show()
         }
         bsView.findViewById<TextView>(R.id.btnCancel).setOnClickListener {
             dialog.dismiss()
@@ -239,6 +286,7 @@ class ThirdFragment : Fragment() {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(requireContext(),
                         "Перенесено в гардероб", Toast.LENGTH_SHORT).show()
+                    adapter.updateData(allItems)
                 }
             }
         }
@@ -266,6 +314,12 @@ class ThirdFragment : Fragment() {
             withContext(Dispatchers.Main) {
                 tabLayout.removeAllTabs()
                 tabLayout.addTab(tabLayout.newTab().setText("Все"))
+                for (i in 0 until tabLayout.tabCount) {
+                    val tab = (tabLayout.getChildAt(0) as ViewGroup).getChildAt(i)
+                    val layoutParams = tab.layoutParams as ViewGroup.MarginLayoutParams
+                    layoutParams.setMargins(4, 0, 4, 0)
+                    tab.requestLayout()
+                }
                 displayedCategories.forEach { tabLayout.addTab(tabLayout.newTab().setText(it.name)) }
 
                 tabLayout.addOnTabSelectedListener(object: TabLayout.OnTabSelectedListener {
