@@ -1,15 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/white"
+    android:orientation="vertical"
+    >
 
-    <TextView
-        android:id="@+id/tvFirst"
+    <HorizontalScrollView
+        android:layout_marginStart="8dp"
+        android:id="@+id/hsv"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="8dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Содержимое второй вкладки"
-        android:textSize="20sp"
-        android:layout_gravity="center" />
-</FrameLayout>
+        android:backgroundTint="@color/backgroundpink"
+        android:background="@drawable/item_background"
+        android:padding="7dp"
+        android:gravity="center"
+        android:layout_gravity="center"
+        android:scrollbars="none"
+        android:clipToPadding="false">
+        <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+            android:id="@+id/ll"
+            android:orientation="horizontal">
+        <RadioButton
+            android:id="@+id/rbStatGarderob"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:button="@null"
+            android:gravity="center"
+            android:padding="7dp"
+            android:text="Статистика гардероба"
+            android:background="@drawable/radio_bg_selector"
+            android:textColor="@color/radio_text_color_selector"
+            android:drawableTint="@color/black"
+            android:checked="true"
+            android:layout_marginEnd="4dp"
+            />
+
+        <RadioButton
+            android:id="@+id/rbStatPlan"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:button="@null"
+            android:gravity="center"
+            android:padding="7dp"
+            android:background="@drawable/radio_bg_selector"
+            android:textColor="@color/radio_text_color_selector"
+            android:text="Статистика планирования"
+            android:drawableTint="@color/black"
+            />
+        <RadioButton
+            android:id="@+id/rbStatWishlist"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:button="@null"
+            android:gravity="center"
+            android:padding="7dp"
+            android:background="@drawable/radio_bg_selector"
+            android:textColor="@color/radio_text_color_selector"
+            android:text="Статистика списка желаний"
+            android:drawableTint="@color/black"
+            />
+        </LinearLayout>
+    </HorizontalScrollView>
+    <FrameLayout
+        android:id="@+id/stats_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+</LinearLayout>

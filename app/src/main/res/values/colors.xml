@@ -11,4 +11,21 @@
     <color name="darkpink">#E8A598</color>
     <color name="lightorange">#F9DCC4</color>
     <color name="orange">#FEC89A</color>
+    <color name="pie1">#FDCFC7</color>
+    <color name="pie2">#FFC4B9</color>
+    <color name="pie3">#FFB5A7</color>
+    <color name="pie4">#E8A598</color>
+    <color name="pie5">#d3968a</color>
+    <color name="pie6">#c0887d</color>
+    <color name="pie7">#af7c72</color>
+    <color name="pie8">#fbd9c9</color>
+    <color name="pie9">#fdd1b2</color>
+    <color name="pie10">#fec89a</color>
+    <color name="pie11">#b85d5a</color>
+    <color name="pie12">#9f534e</color>
+    <color name="piesummer">#bacdb0</color>
+    <color name="piespring">#fcd5ce</color>
+    <color name="piewinter">#8ae0db</color>
+    <color name="pieautumn">#ffe294</color>
+    <color name="pienotseasons">#7a889b</color>
 </resources>
