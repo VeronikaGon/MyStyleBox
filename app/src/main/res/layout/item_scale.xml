@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingVertical="4dp">
+
+    <TextView
+        android:id="@+id/tvPercent"
+        android:layout_width="40dp"
+        android:layout_height="wrap_content"
+        android:text="40%"
+        android:textSize="14sp"/>
+
+    <TextView
+        android:id="@+id/tvName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="2"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:text="Головные уборы"
+        android:textSize="14sp"
+        android:paddingStart="4dp"/>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="0dp"
+        android:layout_height="8dp"
+        android:layout_weight="2"
+        android:progress="40"
+        android:max="100"
+        android:indeterminate="false"
+        android:progressDrawable="@drawable/progress_horizontal_rounded"/>
+
+    <TextView
+        android:id="@+id/tvCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="12"
+        android:textSize="14sp"
+        android:paddingStart="8dp"
+        android:gravity="end"/>
+</LinearLayout>

@@ -22,7 +22,8 @@
             <RadioButton
                 android:id="@+id/rbThings"
                 style="@style/Widget.AppCompat.CompoundButton.RadioButton"
-                android:layout_width="wrap_content"
+                android:layout_width="100dp"
+                android:textAlignment="center"
                 android:layout_height="wrap_content"
                 android:button="@null"
                 android:background="@drawable/radio_bg_selector"
@@ -35,7 +36,9 @@
             <RadioButton
                 android:id="@+id/rbOutfits"
                 style="@style/Widget.AppCompat.CompoundButton.RadioButton"
-                android:layout_width="wrap_content"
+                android:layout_width="100dp"
+
+                android:textAlignment="center"
                 android:layout_height="wrap_content"
                 android:button="@null"
                 android:background="@drawable/radio_bg_selector"
@@ -53,50 +56,98 @@
             app:layout_constraintTop_toBottomOf="@id/toggleGroup"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toTopOf="@+id/llBottom"/>
+            app:layout_constraintBottom_toTopOf="@+id/flsorting"/>
 
-        <LinearLayout
-            android:id="@+id/llBottom"
+        <com.google.android.flexbox.FlexboxLayout
+            android:id="@+id/flsorting"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            app:flexWrap="wrap"
+            app:flexDirection="row"
+            app:justifyContent="flex_start"
+            app:alignItems="center"
             android:padding="8dp"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/pieChart"
             app:layout_constraintStart_toStartOf="parent"
-            android:orientation="horizontal"
-            >
-            <TextView
-                android:id="@+id/tvBottom"
-                android:layout_width="100dp"
-                android:layout_height="wrap_content"
-                android:text="Здесь появится статистика"
-                android:padding="8dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"/>
-            <TextView
-                android:id="@+id/tvBottom1"
-                android:layout_width="100dp"
-                android:layout_height="wrap_content"
-                android:text="Здесь появится статистика"
-                android:padding="8dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"/>
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/llScales">
 
-            <ProgressBar
-                android:id="@+id/progressBar"
-
-                style="?android:attr/progressBarStyleHorizontal"
+            <RadioButton
+                android:id="@+id/rbByCategory"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1" />
-
-            <TextView
-                android:id="@+id/tvBottom2"
-                android:layout_width="100dp"
-                android:layout_height="wrap_content"
-                android:text="Здесь появится статистика"
+                style="@style/Widget.AppCompat.CompoundButton.RadioButton"
+                android:button="@null"
+                android:background="@drawable/checkbox_background"
                 android:padding="8dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"/>
-        </LinearLayout>
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:checked="true"
+                android:text="@string/category"
+                app:layout_flexShrink="0"/>
+
+            <RadioButton
+                android:id="@+id/rbBySeason"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                style="@style/Widget.AppCompat.CompoundButton.RadioButton"
+                android:button="@null"
+                android:background="@drawable/checkbox_background"
+                android:padding="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:text="@string/season"
+                app:layout_flexShrink="0"/>
+
+            <RadioButton
+                android:id="@+id/rbByStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                style="@style/Widget.AppCompat.CompoundButton.RadioButton"
+                android:button="@null"
+                android:background="@drawable/checkbox_background"
+                android:padding="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:text="@string/status"
+                app:layout_flexShrink="0"/>
+
+            <RadioButton
+                android:id="@+id/rbByTegi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                style="@style/Widget.AppCompat.CompoundButton.RadioButton"
+                android:button="@null"
+                android:background="@drawable/checkbox_background"
+                android:padding="8dp"
+                android:layout_marginEnd="8dp"
+                android:text="@string/tegi"
+                android:layout_marginTop="8dp"
+                app:layout_flexShrink="0"/>
+
+            <RadioButton
+                android:id="@+id/rbBySize"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                style="@style/Widget.AppCompat.CompoundButton.RadioButton"
+                android:button="@null"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/checkbox_background"
+                android:padding="8dp"
+                android:layout_marginEnd="8dp"
+                android:text="@string/size"
+                app:layout_flexShrink="0"/>
+
+        </com.google.android.flexbox.FlexboxLayout>
+
+        <LinearLayout
+            android:id="@+id/llScales"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="8dp"
+            app:layout_constraintTop_toBottomOf="@id/flsorting"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

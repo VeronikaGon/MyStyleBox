@@ -13,6 +13,7 @@ import com.hfad.mystylebox.database.entity.ClothingItem;
 import com.hfad.mystylebox.database.entity.ClothingItemFull;
 import com.hfad.mystylebox.database.entity.ClothingItemWithCategory;
 import com.hfad.mystylebox.database.entity.ClothingItemWithTags;
+import com.hfad.mystylebox.database.entity.SeasonCount;
 
 import java.util.List;
 
@@ -75,15 +76,12 @@ public interface ClothingItemDao {
             "WHERE clothing_item.notes LIKE :query")
     List<ClothingItemFull> searchByDescriptionWithFull(String query);
 
-    @Query("SELECT COUNT(*) FROM clothing_item")
-    int getTotalItemsCount();
-
-    @Query(" SELECT cat.name   AS categoryName, COUNT(item.id) AS count FROM clothing_item AS item JOIN subcategories AS sub ON item.subcategory_id = sub.id JOIN categories   AS cat ON sub.category_id = cat.id GROUP BY cat.id")
-    List<CategoryCount> getItemCountByCategory();
-
-    @Query("SELECT COUNT(*) FROM clothing_item")
-    Flow<Integer> getTotalItemsCountFlow();
-
-    @Query(" SELECT cat.name   AS categoryName, COUNT(item.id) AS count FROM clothing_item AS item JOIN subcategories AS sub ON item.subcategory_id = sub.id JOIN categories   AS cat ON sub.category_id = cat.id GROUP BY cat.id")
-    Flow<List<CategoryCount>> getItemCountByCategoryFlow();
+    @Transaction
+    @Query("  SELECT clothing_item.*, \n" +
+            "             categories.name   AS category_name,\n" +
+            "             subcategories.name AS subcategory_name\n" +
+            "        FROM clothing_item\n" +
+            "        JOIN subcategories ON clothing_item.subcategory_id = subcategories.id\n" +
+            "        JOIN categories    ON subcategories.category_id = categories.id")
+    Flow<List<ClothingItemFull>> getAllItemsFullFlow();
 }

@@ -43,6 +43,14 @@ class SecondFragment : Fragment() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        val current = childFragmentManager.findFragmentById(R.id.stats_container)
+        if (current is WardrobeStatsFragment) {
+            replaceStatsFragment(WardrobeStatsFragment())
+        }
+    }
+
     private fun setChecked(selected: RadioButton) {
         listOf(rbGarderob, rbPlan, rbWishlist).forEach { rb ->
             rb.isChecked = (rb == selected)
