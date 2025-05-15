@@ -7,8 +7,11 @@ import androidx.room.Query;
 import androidx.room.Update;
 
 import com.hfad.mystylebox.database.entity.DailyPlan;
+import com.hfad.mystylebox.database.entity.MonthCount;
 import com.hfad.mystylebox.database.entity.Outfit;
+import com.hfad.mystylebox.database.entity.OutfitUsage;
 import com.hfad.mystylebox.database.entity.PlanImage;
+import com.hfad.mystylebox.database.entity.WeekdayCount;
 
 import java.util.List;
 
@@ -37,4 +40,19 @@ public interface DailyPlanDao {
 
     @Query("DELETE FROM daily_plan WHERE plan_date = :date AND outfitId = :outfitId")
     void deleteByDateAndOutfitId(String date, Long outfitId);
+
+    @Query("SELECT COUNT(*) FROM daily_plan")
+    int getTotalDaysPlanned();
+
+    @Query("SELECT strftime('%w', plan_date) as weekday, COUNT(*) as cnt FROM daily_plan GROUP BY weekday ")
+    List<WeekdayCount> getCountByWeekday();
+
+    @Query("SELECT outfitId, COUNT(*) as cnt FROM daily_plan GROUP BY outfitId ORDER BY cnt DESC LIMIT :limit ")
+    List<OutfitUsage> getMostFrequent(int limit);
+
+    @Query("SELECT outfitId, COUNT(*) as cnt FROM daily_plan GROUP BY outfitId ORDER BY cnt ASC LIMIT :limit ")
+    List<OutfitUsage>  getLeastFrequent(int limit);
+
+    @Query("SELECT strftime('%m', plan_date) as month, COUNT(*) as cnt FROM daily_plan GROUP BY month ORDER BY month ")
+    List<MonthCount> getCountByMonth();
 }

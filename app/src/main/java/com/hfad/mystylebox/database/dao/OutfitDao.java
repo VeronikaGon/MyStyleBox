@@ -8,9 +8,12 @@ import androidx.room.Transaction;
 import androidx.room.Update;
 
 import com.hfad.mystylebox.database.entity.ClothingItem;
+import com.hfad.mystylebox.database.entity.MonthCount;
 import com.hfad.mystylebox.database.entity.Outfit;
 import com.hfad.mystylebox.database.entity.OutfitClothingItem;
+import com.hfad.mystylebox.database.entity.OutfitUsage;
 import com.hfad.mystylebox.database.entity.OutfitWithTags;
+import com.hfad.mystylebox.database.entity.WeekdayCount;
 
 import java.util.List;
 @Dao
