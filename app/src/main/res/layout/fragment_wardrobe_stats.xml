@@ -138,6 +138,20 @@
                 android:text="@string/size"
                 app:layout_flexShrink="0"/>
 
+            <RadioButton
+                android:id="@+id/rbByTemperature"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                style="@style/Widget.AppCompat.CompoundButton.RadioButton"
+                android:button="@null"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/checkbox_background"
+                android:padding="8dp"
+                android:layout_marginEnd="8dp"
+                android:visibility="gone"
+                android:text="@string/temperature"
+                app:layout_flexShrink="0"/>
+
         </com.google.android.flexbox.FlexboxLayout>
 
         <LinearLayout
