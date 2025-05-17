@@ -37,14 +37,18 @@
     <string name="searchsubcategory"> Поиск по категориям </string>
     <string name="outfits"> Комплекты </string>
     <string name="help"> Справка </string>
-    <string name="favoritedaytoplan"> Любимый день для планирования: </string>
+    <string name="favoritedaytoplan"> Самый часто планируемый день: </string>
     <string name="totaldaysplanned"> Всего дней запланировано: </string>
     <string name="usuallyinsetofthings">  Обычно в комплекте вещей: </string>
-    <string name="planneddaysinrow"> Запланировано дней подряд</string>
+    <string name="planneddaysinrow"> Запланировано дней подряд:</string>
     <string name="empty_plan_description">
     У вас нет запланированных комплектов на сегодня.
     Запланируйте свой день, чтобы повысить продуктивность!
     </string>
+    <string name="wishlistcost">Стоимость списка желаний:</string>
+    <string name="averagewishlistcost">Средняя сумма желаний:</string>
+    <string name="mostexpensiveitem">Самая дорогая вещь:</string>
+    <string name="mostсheapestitem">Самая дешевая вещь:</string>
     <string name="widget_label">Планирование на сегодня</string>
     <string name="widget_description">
         У вас нет запланированных комплектов на сегодня. Запланируйте свой день, чтобы повысить продуктивность!

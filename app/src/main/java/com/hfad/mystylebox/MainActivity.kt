@@ -34,7 +34,6 @@ class MainActivity : AppCompatActivity() {
             navController.navigate(R.id.outfitsFragment)
         }
     }
-
     private fun populateInitialData() {
         try {
             val categoryDao = database.categoryDao()

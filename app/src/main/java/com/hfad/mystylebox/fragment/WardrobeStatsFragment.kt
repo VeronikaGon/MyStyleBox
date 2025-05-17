@@ -314,14 +314,12 @@ class WardrobeStatsFragment : Fragment(R.layout.fragment_wardrobe_stats) {
         items: List<CategoryCount>,
         centerText: String
     ) {
-        // Цвета для сегментов (переиспользуем палитру)
         val colors = listOf(
             R.color.pie1, R.color.pie2, R.color.pie3, R.color.pie4,
             R.color.pie5, R.color.pie6, R.color.pie7, R.color.pie8,
             R.color.pie9, R.color.pie10, R.color.pie11, R.color.pie12
         ).map { ContextCompat.getColor(requireContext(), it) }
 
-        // Данные для PieChart
         val entries = items.map { PieEntry(it.count.toFloat(), it.categoryName) }
         val set = PieDataSet(entries, "").apply {
             setDrawValues(false)

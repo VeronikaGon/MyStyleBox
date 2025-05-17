@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_home"
+        android:title="Аккаунт"
+        android:icon="@drawable/ic_account" />
+    <item
+        android:id="@+id/nav_synchronization"
+        android:title="Синхронизация"
+        android:icon="@drawable/ic_synchronization" />
+    <item
+        android:id="@+id/newpassword"
+        android:title="Установить новый пароль"
+        android:icon="@drawable/ic_newpassword" />
+    <item
+        android:id="@+id/nav_changeemail"
+        android:title="Изменить почту"
+        android:icon="@drawable/ic_changeemail" />
+    <item
+        android:id="@+id/nav_importdatabase"
+        android:title="Импорт базы"
+        android:icon="@drawable/ic_importdatabase" />
+    <item
+        android:id="@+id/nav_help"
+        android:title="О приложении"
+        android:icon="@drawable/ic_help" />
+</menu>

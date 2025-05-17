@@ -1,13 +1,113 @@
 package com.hfad.mystylebox.fragment
 
+import android.content.Context
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.View
+import android.widget.LinearLayout
+import android.widget.ProgressBar
+import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import com.github.mikephil.charting.charts.PieChart
+import com.github.mikephil.charting.data.PieData
+import com.github.mikephil.charting.data.PieDataSet
+import com.github.mikephil.charting.data.PieEntry
 import com.hfad.mystylebox.R
+import com.hfad.mystylebox.database.AppDatabase
+import com.hfad.mystylebox.database.dao.WishListItemDao
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class WishlistStatsFragment: Fragment(R.layout.fragment_wishlist_stats) {
+
+    private lateinit var pieChart: PieChart
+    private lateinit var llScales: LinearLayout
+    private lateinit var tvMostExpensive: TextView
+    private lateinit var tvCheapest: TextView
+    private lateinit var tvWishlistCost: TextView
+    private lateinit var tvAverageWishlistCost: TextView
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // … ваша логика отображения статистики списка желаний
+
+        pieChart        = view.findViewById(R.id.pieChart)
+        llScales        = view.findViewById(R.id.llScales)
+        tvMostExpensive = view.findViewById(R.id.tvmostexpensiveitem)
+        tvCheapest      = view.findViewById(R.id.tvmostCheapestitem)
+        tvWishlistCost = view.findViewById(R.id.tvwishlistcost)
+        tvAverageWishlistCost      = view.findViewById(R.id.tvaveragewishlistcost)
+
+        lifecycleScope.launch {
+            val dao      = AppDatabase.getInstance(requireContext()).wishListItemDao()
+            val allItems = withContext(Dispatchers.IO) { dao.getAll() }
+
+            val totalCost    = dao.getAll().sumOf { it.price }
+            val averageCost  = dao.getAll().map { it.price }.average()
+            val mostExp      = dao.getAll().maxByOrNull { it.price }?.price ?: 0.0
+            val cheapest     = dao.getAll().minByOrNull { it.price }?.price ?: 0.0
+
+            tvWishlistCost.text       = totalCost.toInt().toString()
+            tvAverageWishlistCost.text= averageCost.toInt().toString()
+            tvMostExpensive.text      = mostExp.toInt().toString()
+            tvCheapest.text           = cheapest.toInt().toString()
+
+            val statsByCategory = withContext(Dispatchers.IO) {
+                dao.getCountByCategory()
+            }
+            if (statsByCategory.isNotEmpty()) {
+                setupPieChart(statsByCategory)
+                setupScales(statsByCategory)
+            }
+        }
     }
+
+    private fun setupPieChart(data: List<WishListItemDao.CategoryCount>) {
+        val entries = data.map { PieEntry(it.wishCount.toFloat(), it.categoryName) }
+        val colors  = getCategoryColors(requireContext())
+
+        PieDataSet(entries, "").apply {
+            this.colors = colors
+        }.let { set ->
+            pieChart.data = PieData(set).apply { setDrawValues(false) }
+        }
+
+        pieChart.apply {
+            setDrawEntryLabels(false)
+            description.isEnabled   = false
+            isRotationEnabled       = false
+            legend.isEnabled        = false
+            holeRadius = 60f
+            setCenterText("${data.sumOf { it.wishCount }}\nжел. вещей")
+            setCenterTextSize(16f)
+            animateY(500)
+            invalidate()
+        }
+    }
+
+    private fun setupScales(data: List<WishListItemDao.CategoryCount>) {
+        llScales.removeAllViews()
+        val total  = data.sumOf { it.wishCount }.toFloat()
+        val colors = getCategoryColors(requireContext())
+
+        data.forEachIndexed { i, stat ->
+            val pct = if (total > 0) (stat.wishCount / total * 100).toInt() else 0
+            val row = layoutInflater.inflate(R.layout.item_scale, llScales, false)
+            row.findViewById<TextView>(R.id.tvPercent).text = "$pct%"
+            row.findViewById<TextView>(R.id.tvName).text    = stat.categoryName
+            row.findViewById<TextView>(R.id.tvCount).text   = stat.wishCount.toString()
+            val pb = row.findViewById<ProgressBar>(R.id.progressBar)
+            pb.max = 100; pb.progress = pct
+            pb.progressTintList = ColorStateList.valueOf(colors[i % colors.size])
+            llScales.addView(row)
+        }
+    }
+    private fun getCategoryColors(context: Context): List<Int> =
+        listOf(
+            R.color.pie1, R.color.pie2, R.color.pie3,
+            R.color.pie4, R.color.pie5, R.color.pie6,
+            R.color.pie7, R.color.pie8, R.color.pie9
+        ).map { ContextCompat.getColor(context, it) }
 }

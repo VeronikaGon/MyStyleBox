@@ -24,6 +24,11 @@ public interface WishListItemDao {
     @Query("SELECT * FROM wish_list_item")
     List<WishListItem> getAll();
 
-    @Query("SELECT * FROM wish_list_item WHERE id = :id")
-    WishListItem getById(int id);
+    @Query("SELECT c.name AS categoryName, COUNT(*) AS wishCount FROM wish_list_item wi JOIN subcategories sc ON wi.subcategory_id = sc.id JOIN categories c ON sc.category_id    = c.id GROUP BY c.name")
+    List<CategoryCount> getCountByCategory();
+
+    class CategoryCount {
+        public String categoryName;
+        public int    wishCount;
+    }
 }

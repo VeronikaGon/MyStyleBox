@@ -19,6 +19,16 @@
         android:layout_marginBottom="102dp"
         android:layout_weight="1">
 
+        <ImageButton
+            android:id="@+id/imageAccount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginStart="8dp"
+            android:background="@android:color/transparent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_account" />
         <TextView
             android:id="@+id/textView2"
             android:layout_width="wrap_content"

@@ -71,15 +71,37 @@ class PlanningStatsFragment: Fragment(R.layout.fragment_plan_stats) {
             val distinctDates = allPlans.map { it.planDate }.distinct().size
             tvTotal.text     = distinctDates.toString()
 
-            // 2) tvFav: любимый день(дни)
+            val fmt = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+
+            val thisYearPlans = allPlans.filter { plan ->
+                runCatching {
+                    fmt.parse(plan.planDate)?.let { date ->
+                        Calendar.getInstance().apply { time = date }
+                            .get(Calendar.YEAR) == currentYear
+                    }
+                }.getOrNull() == true
+            }
+
+            val monthCountMap = mutableMapOf<Int, Int>()
+            thisYearPlans.forEach { plan ->
+                fmt.parse(plan.planDate)?.let { date ->
+                    val month = Calendar.getInstance().apply { time = date }
+                        .get(Calendar.MONTH) + 1  // январь = 0
+                    monthCountMap[month] = (monthCountMap[month] ?: 0) + 1
+                }
+            }
+
+            val months = (1..12).map { monthCountMap[it] ?: 0 }
+
+            setupBarChart(barChart, months)
+
             val weekCounts = dailyPlanDao.getCountByWeekday()
             val maxCnt     = weekCounts.maxOfOrNull { it.cnt } ?: 0
             val favDays    = weekCounts.filter { it.cnt == maxCnt }
                 .map { it.weekday.toWeekdayName() }
-            // заголовок не трогаем, меняем только значение
-            tvFavValue.text = favDays.joinToString(", ")
+            tvFavValue.text = favDays.joinToString(",\n")
 
-            // 3) rvMost / rvLeast
             val usageAll   = dailyPlanDao.getMostFrequent(Int.MAX_VALUE)
             val maxUse     = usageAll.maxOfOrNull { it.cnt } ?: 0
             val minUse     = usageAll.minOfOrNull { it.cnt } ?: 0
@@ -90,7 +112,12 @@ class PlanningStatsFragment: Fragment(R.layout.fragment_plan_stats) {
             val mostList   = outfitDao.getOutfitsByIds(mostIds)
             val leastList  = outfitDao.getOutfitsByIds(leastIds)
 
-            // меняем заголовки
+            view.findViewById<TextView>(R.id.tvfavoritedaytoplanning).apply {
+                text = if (favDays.size > 1)
+                    "Самые часто планируемые дни:"
+                else
+                    "Самый часто планируемый день:"
+            }
             tvFavHeader.text = "Самые часто планируемые дни"
             view.findViewById<TextView>(R.id.tvMostLabel).apply {
                 text = if (mostList.size > 1)
@@ -108,20 +135,14 @@ class PlanningStatsFragment: Fragment(R.layout.fragment_plan_stats) {
             mostAdapter.updateData(mostList)
             leastAdapter.updateData(leastList)
 
-            // 4) BarChart по месяцам
             val rawMonths = dailyPlanDao.getCountByMonth()
             val monthMap  = rawMonths.associate { it.month.toInt() to it.cnt }
-            val months    = (1..12).map { monthMap[it] ?: 0 }
             setupBarChart(barChart, months)
 
-            // 5) tvUsually и tvInRow
-            // avg items per planned outfit
             val totalItems = allPlans.sumOfPlanItems()
             val avgItems   = if (allPlans.isEmpty()) 0 else totalItems / allPlans.size
             tvUsually.text = avgItems.toString()
 
-            // longest streak — через SimpleDateFormat + Calendar
-            val fmt = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
             val dates = allPlans.mapNotNull {
                 runCatching { fmt.parse(it.planDate) }.getOrNull()
             }.distinct().sorted()
@@ -146,6 +167,15 @@ class PlanningStatsFragment: Fragment(R.layout.fragment_plan_stats) {
             val usedCount    = mostIds.union(leastIds).size
             val usedPercent  = if (totalOutfits == 0) 0 else usedCount * 100 / totalOutfits
             setupPieChart(pieChart, usedPercent)
+
+            for (plan in thisYearPlans) {
+                fmt.parse(plan.planDate)?.let { date ->
+                    val cal = Calendar.getInstance().apply { time = date }
+                    val month = cal.get(Calendar.MONTH) + 1
+                    monthCountMap[month] = (monthCountMap[month] ?: 0) + 1
+                }
+            }
+            setupBarChart(barChart, months)
         }
     }
 
@@ -165,9 +195,12 @@ class PlanningStatsFragment: Fragment(R.layout.fragment_plan_stats) {
 
     private fun setupBarChart(barChart: BarChart, values: List<Int>) {
         val entries = values.mapIndexed { i, v -> BarEntry(i.toFloat(), v.toFloat()) }
-        val color   = ContextCompat.getColor(requireContext(), R.color.pie3)
+        val pink = ContextCompat.getColor(requireContext(), R.color.pie3)
+        val gray = ContextCompat.getColor(requireContext(), android.R.color.darker_gray)
+
+        val colors = values.map { v -> if (v == 0) gray else pink }
         val ds = BarDataSet(entries, "").apply {
-            setColor(color)
+            setColors(colors)
             setDrawValues(true)
             valueFormatter = object : ValueFormatter() {
                 override fun getFormattedValue(value: Float): String =
@@ -176,15 +209,17 @@ class PlanningStatsFragment: Fragment(R.layout.fragment_plan_stats) {
         }
 
         barChart.apply {
-            data = BarData(ds).apply { barWidth = 0.6f }
+            data = BarData(ds).apply { barWidth = 0.2f }
             description.isEnabled = false
             legend.isEnabled      = false
             axisRight.isEnabled    = false
-
+            setFitBars(true)
+            xAxis.axisMinimum = -0.2f
+            xAxis.axisMaximum = values.size - 0.2f
             xAxis.apply {
                 position       = XAxis.XAxisPosition.BOTTOM
                 granularity    = 1f
-                labelCount     = 12
+                labelCount     = 10
                 setDrawGridLines(false)
                 setCenterAxisLabels(false)
                 valueFormatter = IndexAxisValueFormatter(
@@ -215,6 +250,9 @@ class PlanningStatsFragment: Fragment(R.layout.fragment_plan_stats) {
             setEntryLabelColor(Color.BLACK)
             legend.isEnabled      = false
             description.isEnabled = false
+            centerText = "$percent%"
+            setCenterTextColor(Color.BLACK)
+            setCenterTextSize(16f)
             invalidate()
         }
     }
