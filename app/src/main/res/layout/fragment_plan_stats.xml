@@ -59,7 +59,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_marginStart="8dp"
-                android:layout_weight="0.8"
+                android:layout_weight="0.73"
                 android:layout_gravity="center"
                 android:gravity="center"
                 android:background="@drawable/background_stroke"
@@ -121,7 +121,8 @@
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvMostFrequent"
                     android:scrollbars="horizontal"
-                    android:layout_width="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"/>
 
@@ -157,7 +158,8 @@
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvLeastFrequent"
                     android:scrollbars="horizontal"
-                    android:layout_width="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"/>
 

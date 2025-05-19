@@ -17,11 +17,12 @@ import com.github.mikephil.charting.data.PieEntry
 import com.hfad.mystylebox.R
 import com.hfad.mystylebox.database.AppDatabase
 import com.hfad.mystylebox.database.dao.WishListItemDao
+import com.hfad.mystylebox.database.entity.WishListItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class WishlistStatsFragment: Fragment(R.layout.fragment_wishlist_stats) {
+class WishlistStatsFragment : Fragment(R.layout.fragment_wishlist_stats), SecondFragment.StatsUpdatable {
 
     private lateinit var pieChart: PieChart
     private lateinit var llScales: LinearLayout
@@ -39,7 +40,7 @@ class WishlistStatsFragment: Fragment(R.layout.fragment_wishlist_stats) {
         tvCheapest      = view.findViewById(R.id.tvmostCheapestitem)
         tvWishlistCost = view.findViewById(R.id.tvwishlistcost)
         tvAverageWishlistCost      = view.findViewById(R.id.tvaveragewishlistcost)
-
+        updateStats()
         lifecycleScope.launch {
             val dao      = AppDatabase.getInstance(requireContext()).wishListItemDao()
             val allItems = withContext(Dispatchers.IO) { dao.getAll() }
@@ -63,8 +64,55 @@ class WishlistStatsFragment: Fragment(R.layout.fragment_wishlist_stats) {
             }
         }
     }
+    override fun updateStats() {
+        view?.let { root ->
+            lifecycleScope.launch {
+                val dao = AppDatabase.getInstance(requireContext()).wishListItemDao()
+                val items = withContext(Dispatchers.IO) { dao.getAll() }
+                renderWishlist(root, items, dao.getCountByCategory())
+            }
+        }
+    }
 
-    private fun setupPieChart(data: List<WishListItemDao.CategoryCount>) {
+    private fun renderWishlist(
+        root: View,
+        items: List<WishListItem>,
+        stats: List<WishListItemDao.CategoryCount>
+    ) {
+        val totalCost = items.sumOf { it.price.toInt() }
+        val avgCost   = if (items.isEmpty()) 0 else items.map { it.price.toInt() }.average().toInt()
+        val maxPrice  = items.maxOfOrNull { it.price.toInt() } ?: 0
+        val minPrice  = items.minOfOrNull { it.price.toInt() } ?: 0
+
+        root.findViewById<TextView>(R.id.tvwishlistcost).text       = totalCost.toString()
+        root.findViewById<TextView>(R.id.tvaveragewishlistcost).text= avgCost.toString()
+        root.findViewById<TextView>(R.id.tvmostexpensiveitem).text = maxPrice.toString()
+        root.findViewById<TextView>(R.id.tvmostCheapestitem).text  = minPrice.toString()
+
+        val entries = stats.map { PieEntry(it.wishCount.toFloat(), it.categoryName) }
+        val colors  = stats.mapIndexed { idx, _ -> ContextCompat.getColor(requireContext(), R.color.pie1 + idx % 10) }
+        val pie     = root.findViewById<PieChart>(R.id.pieChart)
+        pie.data = PieData(PieDataSet(entries, "").apply { this.colors = colors; setDrawValues(false) })
+        pie.centerText = "${stats.sumOf { it.wishCount }}\nжел. вещей"
+        pie.invalidate()
+
+        val ll = root.findViewById<LinearLayout>(R.id.llScales)
+        ll.removeAllViews()
+        val totalItems = stats.sumOf { it.wishCount }
+        stats.forEachIndexed { idx, st ->
+            val pct = if (totalItems > 0) st.wishCount * 100 / totalItems else 0
+            val row = layoutInflater.inflate(R.layout.item_scale, ll, false)
+            row.findViewById<TextView>(R.id.tvName).text    = st.categoryName
+            row.findViewById<TextView>(R.id.tvCount).text   = st.wishCount.toString()
+            row.findViewById<TextView>(R.id.tvPercent).text = "${pct}%"
+            val pb = row.findViewById<ProgressBar>(R.id.progressBar)
+            pb.max = 100; pb.progress = pct
+            pb.progressTintList = ColorStateList.valueOf(colors[idx])
+            ll.addView(row)
+        }
+    }
+
+private fun setupPieChart(data: List<WishListItemDao.CategoryCount>) {
         val entries = data.map { PieEntry(it.wishCount.toFloat(), it.categoryName) }
         val colors  = getCategoryColors(requireContext())
 

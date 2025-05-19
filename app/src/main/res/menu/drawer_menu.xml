@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/nav_home"
+        android:id="@+id/nav_account"
         android:title="Аккаунт"
+        android:iconTint="@android:color/transparent"
         android:icon="@drawable/ic_account" />
     <item
         android:id="@+id/nav_synchronization"
@@ -21,7 +23,32 @@
         android:title="Импорт базы"
         android:icon="@drawable/ic_importdatabase" />
     <item
+        android:id="@+id/nav_notifications"
+        android:title=""
+        app:actionLayout="@layout/menu_item_switch"
+        />
+    <item
+        android:id="@+id/nav_downloadarchive"
+        android:title="Скачать архив"
+        android:tooltipText="Будет сформирован ZIP-архив с вещами, комплектами и их изображениями в формате CSV. Внимание: архив нельзя загрузить обратно в приложение."
+        android:iconTint="@android:color/transparent" />
+
+    <item
+        android:id="@+id/nav_savebackupdatabase"
+        android:title="Сохранить резервную копию базы (JSON-файл)"
+        android:tooltipText="Будет сгенерирован единый JSON-файл со всей базой. При импорте приложение принимает только файл в этом формате."
+        android:iconTint="@android:color/transparent" />
+    <item
         android:id="@+id/nav_help"
         android:title="О приложении"
+        android:iconTint="@android:color/transparent"
         android:icon="@drawable/ic_help" />
+    <item
+        android:id="@+id/nav_logout"
+        android:title="Выйти"
+         />
+    <item
+        android:id="@+id/nav_deleteaccount"
+        android:title="Удалить аккаунт"
+        />
 </menu>

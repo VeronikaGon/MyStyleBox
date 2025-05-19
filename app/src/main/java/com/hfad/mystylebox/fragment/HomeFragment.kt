@@ -2,14 +2,20 @@ package com.hfad.mystylebox.fragment
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.Gravity
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
+import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
+import com.hfad.mystylebox.MainActivity
 import com.hfad.mystylebox.R
 import com.hfad.mystylebox.adapter.ViewPagerAdapter
 import com.hfad.mystylebox.ui.activity.AboutActivity
@@ -48,6 +54,10 @@ class HomeFragment : Fragment() {
         viewPager = view.findViewById(R.id.viewPager)
         tabLayout = view.findViewById(R.id.tabLayout)
 
+        val btnAccount: ImageButton = view.findViewById(R.id.imageAccount)
+        btnAccount.setOnClickListener {
+            (activity as? MainActivity)?.drawerLayout?.openDrawer(GravityCompat.START)
+        }
         viewPager.adapter = ViewPagerAdapter(requireActivity())
         viewPager.isUserInputEnabled = false
 

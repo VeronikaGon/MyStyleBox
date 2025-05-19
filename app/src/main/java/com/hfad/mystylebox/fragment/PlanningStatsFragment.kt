@@ -32,7 +32,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
-class PlanningStatsFragment: Fragment(R.layout.fragment_plan_stats) {
+class PlanningStatsFragment : Fragment(R.layout.fragment_plan_stats), SecondFragment.StatsUpdatable {
     private lateinit var mostAdapter: OutfitAdapter
     private lateinit var leastAdapter: OutfitAdapter
 
@@ -44,7 +44,6 @@ class PlanningStatsFragment: Fragment(R.layout.fragment_plan_stats) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1) TextView-ы
         val tvFavDay = view.findViewById<TextView>(R.id.tvfavoritedaytoplan)
         val tvTotal = view.findViewById<TextView>(R.id.tvtotaldaysplanned)
         val tvUsually = view.findViewById<TextView>(R.id.tvusuallyinsetofthings)
@@ -56,17 +55,16 @@ class PlanningStatsFragment: Fragment(R.layout.fragment_plan_stats) {
         val rvLeast = view.findViewById<RecyclerView>(R.id.rvLeastFrequent)
         rvMost.layoutManager  = LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false)
         rvLeast.layoutManager = LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false)
-        mostAdapter  = OutfitAdapter(emptyList(), R.layout.item_outfit)
-        leastAdapter = OutfitAdapter(emptyList(), R.layout.item_outfit)
+        mostAdapter  = OutfitAdapter(emptyList(), R.layout.item_grayborder)
+        leastAdapter = OutfitAdapter(emptyList(), R.layout.item_grayborder)
         rvMost.adapter  = mostAdapter
         rvLeast.adapter = leastAdapter
+        updateStats()
 
-        // Графики
         val barChart = view.findViewById<BarChart>(R.id.barChart)
         val pieChart = view.findViewById<PieChart>(R.id.pieChart)
 
         viewLifecycleOwner.lifecycleScope.launch {
-            // 1) tvTotal: уникальные даты
             val allPlans      = dailyPlanDao.getAllDailyPlans()
             val distinctDates = allPlans.map { it.planDate }.distinct().size
             tvTotal.text     = distinctDates.toString()
@@ -162,7 +160,6 @@ class PlanningStatsFragment: Fragment(R.layout.fragment_plan_stats) {
             }
             tvInRow.text = maxStreak.toString()
 
-            // 6) PieChart
             val totalOutfits = outfitDao.getAllOutfits().size
             val usedCount    = mostIds.union(leastIds).size
             val usedPercent  = if (totalOutfits == 0) 0 else usedCount * 100 / totalOutfits
@@ -200,12 +197,11 @@ class PlanningStatsFragment: Fragment(R.layout.fragment_plan_stats) {
 
         val colors = values.map { v -> if (v == 0) gray else pink }
         val ds = BarDataSet(entries, "").apply {
-            setColors(colors)
             setDrawValues(true)
             valueFormatter = object : ValueFormatter() {
-                override fun getFormattedValue(value: Float): String =
-                    value.toInt().toString()
+                override fun getFormattedValue(value: Float) = value.toInt().toString()
             }
+            setColors(colors)
         }
 
         barChart.apply {
@@ -229,6 +225,65 @@ class PlanningStatsFragment: Fragment(R.layout.fragment_plan_stats) {
             axisLeft.setDrawGridLines(false)
             invalidate()
         }
+    }
+    override fun updateStats() {
+        view?.let { root ->
+            val tvTotal   = root.findViewById<TextView>(R.id.tvtotaldaysplanned)
+            val tvUsually = root.findViewById<TextView>(R.id.tvusuallyinsetofthings)
+            val tvInRow   = root.findViewById<TextView>(R.id.tvplanneddaysinrow)
+            val barChart  = root.findViewById<BarChart>(R.id.barChart)
+            val pieChart  = root.findViewById<PieChart>(R.id.pieChart)
+
+            lifecycleScope.launch {
+                val allPlans = dailyPlanDao.getAllDailyPlans()
+                tvTotal.text = allPlans.map { it.planDate }.distinct().size.toString()
+                val totalItems = allPlans.sumOf { plan ->
+                    outfitDao.getClothingItemsForOutfit(plan.outfitId).size
+                }
+                tvUsually.text = if (allPlans.isEmpty()) "0" else (totalItems / allPlans.size).toString()
+                tvInRow.text = computeMaxStreak(allPlans).toString()
+                setupBarChart(barChart, computeMonthlyPlanCounts(allPlans))
+                setupPieChart(pieChart, computeUsedPercent(allPlans))
+                val usage = dailyPlanDao.getMostFrequent(Int.MAX_VALUE)
+                val maxCnt = usage.maxOfOrNull { it.cnt } ?: 0
+                val minCnt = usage.minOfOrNull { it.cnt } ?: 0
+                val mostIds = usage.filter { it.cnt == maxCnt }.map { it.outfitId }
+                val leastIds = usage.filter { it.cnt == minCnt }.map { it.outfitId }
+                mostAdapter.updateData(outfitDao.getOutfitsByIds(mostIds))
+                leastAdapter.updateData(outfitDao.getOutfitsByIds(leastIds))
+            }
+        }
+    }
+    private fun computeMaxStreak(plans: List<com.hfad.mystylebox.database.entity.DailyPlan>): Int {
+        val fmt = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val dates = plans.mapNotNull { runCatching { fmt.parse(it.planDate) }.getOrNull() }
+            .distinct().sorted()
+        var maxStreak = 1; var curr = 1
+        for (i in 1 until dates.size) {
+            val prev = dates[i - 1]; val cur = dates[i]
+            Calendar.getInstance().apply { time = prev }.apply { add(Calendar.DAY_OF_YEAR, 1) }
+                .takeIf { it.time == cur }?.let { curr++ } ?: run { curr = 1 }
+            if (curr > maxStreak) maxStreak = curr
+        }
+        return maxStreak
+    }
+
+    private fun computeMonthlyPlanCounts(plans: List<com.hfad.mystylebox.database.entity.DailyPlan>): List<Int> {
+        val fmt = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val monthMap = mutableMapOf<Int, MutableSet<Int>>()
+        plans.forEach { plan ->
+            fmt.parse(plan.planDate)?.let { date ->
+                val m = Calendar.getInstance().apply { time = date }.get(Calendar.MONTH)
+                monthMap.getOrPut(m) { mutableSetOf() }.add(plan.outfitId.toInt())
+            }
+        }
+        return (0..11).map { monthMap[it]?.size ?: 0 }
+    }
+
+    private fun computeUsedPercent(plans: List<com.hfad.mystylebox.database.entity.DailyPlan>): Int {
+        val totalOut = outfitDao.getAllOutfits().size
+        val usedCount = plans.map { it.outfitId }.toSet().size
+        return if (totalOut == 0) 0 else usedCount * 100 / totalOut
     }
 
     private fun setupPieChart(pieChart: PieChart, percent: Int) {

@@ -1,22 +1,72 @@
 package com.hfad.mystylebox
 
 import android.content.Context
+import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
+import android.util.Log
+import android.view.Gravity
+import android.view.MenuItem
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.navigation.NavigationView
 import com.hfad.mystylebox.database.AppDatabase
 import com.hfad.mystylebox.database.entity.Category
 import com.hfad.mystylebox.database.entity.Subcategory
+import com.hfad.mystylebox.ui.activity.WelcomeActivity
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
+    lateinit var drawerLayout: DrawerLayout
+    private lateinit var navView: NavigationView
     private lateinit var database: AppDatabase
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         installSplashScreen()
         setContentView(R.layout.activity_main)
+
+        drawerLayout = findViewById(R.id.drawer_layout)
+        navView = findViewById(R.id.nav_view)
+        navView.setNavigationItemSelectedListener(this)
+
+        drawerLayout.setDrawerLockMode(
+            DrawerLayout.LOCK_MODE_UNLOCKED,
+            Gravity.START
+        )
+
+        navView.itemIconTintList = null
+
+        navView.setNavigationItemSelectedListener(this)
+        val navHost = supportFragmentManager
+            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        val navController = navHost.navController
+        NavigationUI.setupWithNavController(
+            findViewById<BottomNavigationView>(R.id.bottom_nav),
+            navController
+        )
+        val menu = navView.menu
+        val deleteItem = menu.findItem(R.id.nav_deleteaccount)
+
+        val redTitle = SpannableString(deleteItem.title)
+        redTitle.setSpan(
+            ForegroundColorSpan(Color.RED),
+            0, redTitle.length,
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        deleteItem.title = redTitle
+
+        disableMenuItem(R.id.nav_synchronization)
+        disableMenuItem(R.id.newpassword)
+        disableMenuItem(R.id.nav_changeemail)
+
         database = AppDatabase.getInstance(this)
         Thread {
             val categories = database.categoryDao().getAllCategories()
@@ -24,16 +74,54 @@ class MainActivity : AppCompatActivity() {
                 populateInitialData()
             }
         }.start()
-        val navHostFragment = supportFragmentManager
-            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        val navController = navHostFragment.navController
         val bottomNavView = findViewById<BottomNavigationView>(R.id.bottom_nav)
         NavigationUI.setupWithNavController(bottomNavView, navController)
         val openFragment = intent.getStringExtra("openFragment")
         if (openFragment == "outfits") {
             navController.navigate(R.id.outfitsFragment)
         }
+        intent.getStringExtra("openFragment")?.let {
+            if (it == "outfits") navController.navigate(R.id.outfitsFragment)
+        }
     }
+
+    override fun onNavigationItemSelected(item: MenuItem): Boolean {
+        drawerLayout.closeDrawer(Gravity.START)
+        when (item.itemId) {
+            R.id.nav_account -> {
+                startActivity(Intent(this, WelcomeActivity::class.java))
+                return true
+            }
+            R.id.nav_synchronization -> {
+                // переход в настройки
+                return true
+            }
+            R.id.newpassword -> {
+                // дизлог
+                return true
+            }
+        }
+        return false
+    }
+    fun disableMenuItem(id: Int) {
+        val item = navView.menu.findItem(id)
+        item.isEnabled = false
+        // сделать заголовок серым
+        val gray = ContextCompat.getColor(this, android.R.color.darker_gray)
+        val span = SpannableString(item.title)
+        span.setSpan(ForegroundColorSpan(gray), 0, span.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        item.title = span
+    }
+    override fun onBackPressed() {
+        drawerLayout.setDrawerElevation(20f)
+        drawerLayout.setScrimColor(Color.TRANSPARENT)
+        if (drawerLayout.isDrawerOpen(Gravity.START)) {
+            drawerLayout.closeDrawer(Gravity.START)
+        } else {
+            super.onBackPressed()
+        }
+    }
+
     private fun populateInitialData() {
         try {
             val categoryDao = database.categoryDao()

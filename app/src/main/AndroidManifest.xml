@@ -91,6 +91,12 @@
             android:name=".ui.activity.OutfitSelectionActivity"
             android:screenOrientation="portrait" />
         <activity
+            android:name=".ui.activity.WelcomeActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.activity.LoginActivity"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".ui.activity.CalendarActivity"
             android:screenOrientation="portrait" />
         <provider

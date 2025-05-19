@@ -46,6 +46,12 @@
     Запланируйте свой день, чтобы повысить продуктивность!
     </string>
     <string name="wishlistcost">Стоимость списка желаний:</string>
+    <string name="login">Вход</string>
+    <string name="email">E-mail</string>
+    <string name="password">Пароль</string>
+    <string name="withgoogle"> Продолжить с Google</string>
+    <string name="registration">Регистрация</string>
+    <string name="recoverpassword">Восстановить пароль</string>
     <string name="averagewishlistcost">Средняя сумма желаний:</string>
     <string name="mostexpensiveitem">Самая дорогая вещь:</string>
     <string name="mostсheapestitem">Самая дешевая вещь:</string>

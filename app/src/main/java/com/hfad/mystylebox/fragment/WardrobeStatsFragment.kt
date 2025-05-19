@@ -23,6 +23,7 @@ import com.hfad.mystylebox.database.entity.ClothingItemFull
 import com.hfad.mystylebox.database.entity.SeasonCount
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -33,7 +34,7 @@ class StatsRepository(context: Context) {
         dao.getAllItemsFullFlow()
 }
 
-class WardrobeStatsFragment : Fragment(R.layout.fragment_wardrobe_stats) {
+class WardrobeStatsFragment : Fragment(R.layout.fragment_wardrobe_stats), SecondFragment.StatsUpdatable {
 
     private lateinit var rbByCategory: RadioButton
     private lateinit var rbBySeason:   RadioButton
@@ -66,6 +67,7 @@ class WardrobeStatsFragment : Fragment(R.layout.fragment_wardrobe_stats) {
         rbOutfits   = view.findViewById(R.id.rbOutfits)
         pieChart    = view.findViewById(R.id.pieChart)
         llScales    = view.findViewById(R.id.llScales)
+        updateStats()
 
         val allFilterButtons = listOf(
             rbByCategory, rbBySeason, rbByStatus,
@@ -128,6 +130,42 @@ class WardrobeStatsFragment : Fragment(R.layout.fragment_wardrobe_stats) {
             }
         }
     }
+
+    override fun updateStats() {
+        view?.let { root ->
+            lifecycleScope.launch {
+                val items: List<ClothingItemFull> = StatsRepository(requireContext()).allItemsFull().first()
+                renderItems(root, items)
+            }
+        }
+    }
+
+    private fun renderItems(root: View, items: List<ClothingItemFull>) {
+        val total = items.size
+        val grouped = items.groupingBy { it.categoryName }.eachCount().toList()
+        val entries = grouped.map { PieEntry(it.second.toFloat(), it.first) }
+        val colors  = grouped.mapIndexed { idx, _ -> ContextCompat.getColor(requireContext(), R.color.pie1 + idx % 10) }
+
+        val pie = root.findViewById<PieChart>(R.id.pieChart)
+        pie.data = PieData(PieDataSet(entries, "").apply { this.colors = colors; setDrawValues(false) })
+        pie.centerText = "$total\nвещей"
+        pie.invalidate()
+
+        val ll = root.findViewById<LinearLayout>(R.id.llScales)
+        ll.removeAllViews()
+        grouped.forEachIndexed { idx, (label, count) ->
+            val percent = if (total > 0) count * 100 / total else 0
+            val row = layoutInflater.inflate(R.layout.item_scale, ll, false)
+            row.findViewById<TextView>(R.id.tvName).text = label
+            row.findViewById<TextView>(R.id.tvCount).text = count.toString()
+            row.findViewById<TextView>(R.id.tvPercent).text = "$percent%"
+            val pb = row.findViewById<ProgressBar>(R.id.progressBar)
+            pb.max = 100; pb.progress = percent
+            pb.progressTintList = ColorStateList.valueOf(colors[idx])
+            ll.addView(row)
+        }
+    }
+
 
     private fun renderCurrent() {
         if (onlyThings) {
