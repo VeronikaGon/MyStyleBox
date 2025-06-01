@@ -49,8 +49,12 @@
     <string name="login">Вход</string>
     <string name="email">E-mail</string>
     <string name="password">Пароль</string>
+    <string name="confirmpassword">Подтверждение пароля</string>
     <string name="withgoogle"> Продолжить с Google</string>
     <string name="registration">Регистрация</string>
+    <string name="nameperson">Имя</string>
+    <string name="accountphoto">Фото аккаунта</string>
+    <string name="register">Зарегистрироваться</string>
     <string name="recoverpassword">Восстановить пароль</string>
     <string name="averagewishlistcost">Средняя сумма желаний:</string>
     <string name="mostexpensiveitem">Самая дорогая вещь:</string>
@@ -59,11 +63,13 @@
     <string name="widget_description">
         У вас нет запланированных комплектов на сегодня. Запланируйте свой день, чтобы повысить продуктивность!
     </string>
+    <string name="default_web_client_id">380283333391-narke48afmigupb5q97mcfuh782mjc1k.apps.googleusercontent.com</string>
     <string name="sheet_schedule"> Запланировать комплект </string>
     <string name="sheet_schedule_more"> Запланировать ещё </string>
     <string name="hintsearch"> Поиск по названию вещи </string>
     <string name="edittags">  Редактирование тегов </string>
     <string name="filterclothing">  Фильтр вещей </string>
+    <string name="importingdatabase">Импорт базы данных </string>
     <string name="filterwishlist">  Фильтр желанных \n вещей </string>
     <string name="filteroutfit">  Фильтр комплектов </string>
     <string name="clothingtagscount">  Вещей с тегом: 0</string>

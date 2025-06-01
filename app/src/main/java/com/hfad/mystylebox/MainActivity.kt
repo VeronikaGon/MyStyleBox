@@ -1,9 +1,19 @@
 package com.hfad.mystylebox
 
 import android.content.Context
+import android.Manifest
+import android.app.ProgressDialog
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.drawable.BitmapDrawable
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
+import android.os.Environment
+import android.provider.MediaStore
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
@@ -11,6 +21,11 @@ import android.util.Log
 import android.view.Gravity
 import android.view.MenuItem
 import android.view.View
+import android.widget.ImageView
+import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -23,11 +38,49 @@ import com.hfad.mystylebox.database.AppDatabase
 import com.hfad.mystylebox.database.entity.Category
 import com.hfad.mystylebox.database.entity.Subcategory
 import com.hfad.mystylebox.ui.activity.WelcomeActivity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import androidx.core.view.GravityCompat
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.target.SimpleTarget
+import com.bumptech.glide.request.transition.Transition
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import java.io.BufferedOutputStream
+import java.io.BufferedWriter
+import java.io.File
+import java.io.FileOutputStream
+import java.io.OutputStreamWriter
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
+import com.google.gson.Gson
+import com.hfad.mystylebox.ui.activity.AboutActivity
+import com.hfad.mystylebox.ui.activity.AccountActivity
+import com.hfad.mystylebox.ui.activity.ImportActivity
+import java.io.FileInputStream
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
     lateinit var drawerLayout: DrawerLayout
     private lateinit var navView: NavigationView
     private lateinit var database: AppDatabase
+
+    private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (!granted) {
+                AlertDialog.Builder(this)
+                    .setTitle("Требуется разрешение")
+                    .setMessage("Для сохранения архива необходим доступ к хранилищу.")
+                    .setPositiveButton("Открыть настройки") { _, _ ->
+                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                            Uri.parse("package:$packageName"))
+                        startActivity(intent)
+                    }
+                    .setNegativeButton("Отмена", null)
+                    .show()
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         installSplashScreen()
@@ -37,9 +90,43 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         navView = findViewById(R.id.nav_view)
         navView.setNavigationItemSelectedListener(this)
 
+        val user = FirebaseAuth.getInstance().currentUser
+        val header = navView.getHeaderView(0)
+        val ivAvatar = header.findViewById<ImageView>(R.id.header_avatar)
+        val tvName   = header.findViewById<TextView>(R.id.header_name)
+
+        if (user != null) {
+            // имя
+            tvName.text = user.displayName ?: user.email
+
+            // фото (если есть)
+            Glide.with(this)
+                .load(user.photoUrl)   // <- URL из FirebaseAuth
+                .circleCrop()
+                .placeholder(R.drawable.ic_account)
+                .into(ivAvatar)
+
+            // иконка в пункте меню
+            val acctItem = navView.menu.findItem(R.id.nav_account)
+            acctItem.title = user.displayName ?: "Профиль"
+            Glide.with(this)
+                .asBitmap()
+                .load(user.photoUrl)
+                .circleCrop()
+                .into(object: SimpleTarget<Bitmap>() {
+                    override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
+                        acctItem.icon = BitmapDrawable(resources, resource)
+                    }
+                })
+        } else {
+            // гость
+            tvName.text = "Аккаунт"
+            ivAvatar.setImageResource(R.drawable.ic_account)
+        }
+
         drawerLayout.setDrawerLockMode(
             DrawerLayout.LOCK_MODE_UNLOCKED,
-            Gravity.START
+            GravityCompat.START
         )
 
         navView.itemIconTintList = null
@@ -62,10 +149,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
         )
         deleteItem.title = redTitle
+        val isLoggedIn = FirebaseAuth.getInstance().currentUser != null
 
-        disableMenuItem(R.id.nav_synchronization)
-        disableMenuItem(R.id.newpassword)
-        disableMenuItem(R.id.nav_changeemail)
+        menu.findItem(R.id.nav_synchronization).isVisible = isLoggedIn
+        menu.findItem(R.id.newpassword).isVisible       = isLoggedIn
+        menu.findItem(R.id.nav_changeemail).isVisible   = isLoggedIn
+        menu.findItem(R.id.nav_logout).isVisible        = isLoggedIn
+        menu.findItem(R.id.nav_deleteaccount).isVisible = isLoggedIn
+
 
         database = AppDatabase.getInstance(this)
         Thread {
@@ -84,25 +175,304 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             if (it == "outfits") navController.navigate(R.id.outfitsFragment)
         }
     }
+    override fun onResume() {
+        super.onResume()
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user != null) {
+            FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(user.uid)
+                .get()
+                .addOnSuccessListener { doc ->
+                    val localPath = doc.getString("localAvatarPath")
+                    if (!localPath.isNullOrEmpty()) {
+                        val file = File(localPath)
+                        if (file.exists()) {
+                            val uri = Uri.fromFile(file)
+                            // Обновляем картинку в шапке навигационного меню
+                            val header = navView.getHeaderView(0)
+                            val ivAvatar = header.findViewById<ImageView>(R.id.header_avatar)
+                            Glide.with(this)
+                                .load(uri)
+                                .circleCrop()
+                                .into(ivAvatar)
+
+                            // Если вы также хотите обновить иконку в пункте "Аккаунт", то:
+                            val accountItem = navView.menu.findItem(R.id.nav_account)
+                            accountItem.icon = BitmapDrawable(resources, MediaStore.Images.Media.getBitmap(contentResolver, uri))
+                            accountItem.title = user.displayName ?: "Профиль"
+                        }
+                    }
+                }
+        }
+    }
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
-        drawerLayout.closeDrawer(Gravity.START)
+        drawerLayout.closeDrawer( GravityCompat.START   )
         when (item.itemId) {
             R.id.nav_account -> {
-                startActivity(Intent(this, WelcomeActivity::class.java))
-                return true
+                drawerLayout.closeDrawer(GravityCompat.START)
+                val user = FirebaseAuth.getInstance().currentUser
+                if (user != null) {
+                    startActivity(Intent(this, AccountActivity::class.java))
+                } else {
+                    startActivity(Intent(this, WelcomeActivity::class.java))
+                }
+                true
             }
             R.id.nav_synchronization -> {
-                // переход в настройки
+                return true
+            }
+            R.id.nav_changeemail -> {
                 return true
             }
             R.id.newpassword -> {
-                // дизлог
+                return true
+            }
+            R.id.nav_importdatabase -> {
+                startActivity(Intent(this, ImportActivity::class.java))
+                return true
+            }
+            R.id.nav_downloadarchive -> {
+                checkStoragePermissionAnd { exportDatabaseToZip() }
+                return true
+            }
+            R.id.nav_savebackupdatabase -> {
+                checkStoragePermissionAnd { backupDatabaseWithPhotos() }
+                return true
+            }
+            R.id.nav_help -> {
+                startActivity(Intent(this, AboutActivity::class.java))
+                return true
+            }
+            R.id.nav_logout -> {
+                AlertDialog.Builder(this)
+                    .setTitle("Выход из аккаунта")
+                    .setMessage("Вы точно хотите выйти из аккаунта?")
+                    .setPositiveButton("Выйти") { _, _ ->
+                        FirebaseAuth.getInstance().signOut()
+                        startActivity(Intent(this, MainActivity::class.java))
+                        finish()
+                    }
+                    .setNegativeButton("Отмена", null)
+                    .show()
+                return true
+            }
+            R.id.nav_deleteaccount -> {
+                AlertDialog.Builder(this)
+                    .setTitle("Удалить аккаунт")
+                    .setMessage("Вы точно хотите удалить аккаунт? Данные нельзя будет восстановить.")
+                    .setPositiveButton("Удалить") { _, _ ->
+                        val user = FirebaseAuth.getInstance().currentUser
+                        user?.delete()?.addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                Toast.makeText(this, "Аккаунт удалён", Toast.LENGTH_SHORT).show()
+                                startActivity(Intent(this, WelcomeActivity::class.java))
+                                finish()
+                            } else {
+                                Toast.makeText(this, "Ошибка: ${task.exception?.message}", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    }
+                    .setNegativeButton("Отмена", null)
+                    .show()
                 return true
             }
         }
         return false
     }
+
+    private fun checkStoragePermissionAnd(action: () -> Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            action()
+        } else {
+            when {
+                ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                ) == PackageManager.PERMISSION_GRANTED -> {
+                    action()
+                }
+                else -> {
+                    requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                }
+            }
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun exportDatabaseToZip() {
+        // 1) Создаём и показываем ProgressDialog
+        val progressDialog = ProgressDialog(this).apply {
+            setTitle("Создание архива")
+            setMessage("Пожалуйста, подождите…")
+            setCancelable(false)
+            isIndeterminate = true
+            show()
+        }
+
+        // 2) Запускаем работу в фоне
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val downloadDir = Environment
+                    .getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                val zipFile = File(downloadDir, "mystylebox_archive_${System.currentTimeMillis()}.zip")
+
+                ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use { zos ->
+                    val db = database.openHelper.readableDatabase
+
+                    // Экспорт таблиц
+                    db.query("SELECT name FROM sqlite_master WHERE type='table'", arrayOfNulls<Any>(0)).use { cursor ->
+                        while (cursor.moveToNext()) {
+                            val table = cursor.getString(0)
+                            if (table in listOf("android_metadata", "sqlite_sequence", "room_master_table")) continue
+
+                            zos.putNextEntry(ZipEntry("$table.csv"))
+                            db.query("SELECT * FROM `$table`", arrayOfNulls<Any>(0)).use { c ->
+                                val writer = BufferedWriter(OutputStreamWriter(zos))
+                                val cols = c.columnNames
+                                writer.write(cols.joinToString(","))
+                                writer.newLine()
+                                while (c.moveToNext()) {
+                                    val row = cols.map { col ->
+                                        c.getString(c.getColumnIndexOrThrow(col)).replace("\"", "\"\"")
+                                    }
+                                    writer.write(row.joinToString(",") { "\"$it\"" })
+                                    writer.newLine()
+                                }
+                                writer.flush()
+                            }
+                            zos.closeEntry()
+                        }
+                    }
+
+                    // Добавление фото (как было ранее)
+                    val roots = listOfNotNull(
+                        File(filesDir, "photos"),
+                        getExternalFilesDir("photos")?.let { File(it.absolutePath) },
+                        getExternalFilesDir(Environment.DIRECTORY_PICTURES)?.let { File(it.absolutePath) },
+                        File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "MyStyleBox")
+                    )
+                    val seen = mutableSetOf<String>()
+                    fun zipRec(dir: File, base: String) {
+                        if (!dir.exists()) return
+                        dir.listFiles()?.forEach { f ->
+                            val entryName = "$base/${f.name}"
+                            if (f.isDirectory) zipRec(f, entryName)
+                            else if (seen.add(f.absolutePath)) {
+                                zos.putNextEntry(ZipEntry(entryName))
+                                FileInputStream(f).use { fis -> fis.copyTo(zos) }
+                                zos.closeEntry()
+                            }
+                        }
+                    }
+                    roots.forEach { zipRec(it, "photos") }
+                }
+
+                // 3) Всё готово — назад в UI-поток
+                runOnUiThread {
+                    progressDialog.dismiss()
+                    AlertDialog.Builder(this@MainActivity)
+                        .setTitle("Готово")
+                        .setMessage("ZIP-архив сохранён в папке Download.")
+                        .setPositiveButton("ОК", null)
+                        .show()
+                }
+            } catch (e: Exception) {
+                Log.e("ExportZip", "Ошибка при экспорте", e)
+                runOnUiThread {
+                    progressDialog.dismiss()
+                    AlertDialog.Builder(this@MainActivity)
+                        .setTitle("Ошибка")
+                        .setMessage("Не удалось создать архив:\n${e.localizedMessage}")
+                        .setPositiveButton("ОК", null)
+                        .show()
+                }
+            }
+        }
+    }
+
+    private fun backupDatabaseWithPhotos() {
+        // 1) Показываем ProgressDialog
+        val progressDialog = ProgressDialog(this).apply {
+            setTitle("Создание резервной копии")
+            setMessage("Пожалуйста, подождите…")
+            setCancelable(false)
+            isIndeterminate = true
+            show()
+        }
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // 2) Собираем данные из базы и формируем JSON-строку
+                val allCategories = database.categoryDao().getAllCategories()
+                val allSubcategories = database.subcategoryDao().getAllSubcategories()
+                val backupMap = mapOf(
+                    "categories" to allCategories,
+                    "subcategories" to allSubcategories
+                )
+                val json = Gson().toJson(backupMap)
+
+                // 3) Определяем, куда сохранить ZIP
+                val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                val zipFile = File(downloadDir, "mystylebox_backup_${System.currentTimeMillis()}.zip")
+
+                // 4) Открываем ZipOutputStream и пишем внутрь JSON + фото
+                ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use { zos ->
+                    // 4.1) Записываем JSON как отдельную запись в ZIP
+                    zos.putNextEntry(ZipEntry("backup_data.json"))
+                    val writer = BufferedWriter(OutputStreamWriter(zos))
+                    writer.write(json)
+                    writer.flush()
+                    zos.closeEntry()
+
+                    // 4.2) Рекурсивно добавляем все файлы из папок photos
+                    val roots = listOfNotNull(
+                        File(filesDir, "photos"),
+                        getExternalFilesDir("photos")?.let { File(it.absolutePath) },
+                        getExternalFilesDir(Environment.DIRECTORY_PICTURES)?.let { File(it.absolutePath) },
+                        File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "MyStyleBox")
+                    )
+                    val seen = mutableSetOf<String>()
+                    fun zipRec(dir: File, base: String) {
+                        if (!dir.exists()) return
+                        dir.listFiles()?.forEach { f ->
+                            val entryName = "$base/${f.name}"
+                            if (f.isDirectory) {
+                                zipRec(f, entryName)
+                            } else if (seen.add(f.absolutePath)) {
+                                zos.putNextEntry(ZipEntry(entryName))
+                                FileInputStream(f).use { fis -> fis.copyTo(zos) }
+                                zos.closeEntry()
+                            }
+                        }
+                    }
+                    roots.forEach { zipRec(it, "photos") }
+                }
+
+                // 5) В UI-потоке сообщаем об успешном завершении
+                runOnUiThread {
+                    progressDialog.dismiss()
+                    AlertDialog.Builder(this@MainActivity)
+                        .setTitle("Готово")
+                        .setMessage("Резервная копия (JSON + фото) сохранена в папке Download:\n${zipFile.name}")
+                        .setPositiveButton("ОК", null)
+                        .show()
+                }
+            } catch (e: Exception) {
+                Log.e("BackupZip", "Ошибка при создании резервной копии", e)
+                runOnUiThread {
+                    progressDialog.dismiss()
+                    AlertDialog.Builder(this@MainActivity)
+                        .setTitle("Ошибка")
+                        .setMessage("Не удалось сохранить резервную копию:\n${e.localizedMessage}")
+                        .setPositiveButton("ОК", null)
+                        .show()
+                }
+            }
+        }
+    }
+
     fun disableMenuItem(id: Int) {
         val item = navView.menu.findItem(id)
         item.isEnabled = false
@@ -115,8 +485,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     override fun onBackPressed() {
         drawerLayout.setDrawerElevation(20f)
         drawerLayout.setScrimColor(Color.TRANSPARENT)
-        if (drawerLayout.isDrawerOpen(Gravity.START)) {
-            drawerLayout.closeDrawer(Gravity.START)
+        if (drawerLayout.isDrawerOpen( GravityCompat.START   )) {
+            drawerLayout.closeDrawer( GravityCompat.START   )
         } else {
             super.onBackPressed()
         }

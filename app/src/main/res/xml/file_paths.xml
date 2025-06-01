@@ -2,6 +2,7 @@
     <external-path name="my_images" path="Android/data/com.hfad.mystylebox/files/Pictures/"/>
     <cache-path name="cache" path="."/>
     <external-cache-path name="external_cache" path="." />
+    <external-cache-path name="ext_cache" path="."/>
     <external-files-path
         name="external_files"
         path="." />

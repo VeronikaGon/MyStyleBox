@@ -11,8 +11,11 @@ pluginManagement {
         gradlePluginPortal()
         maven(url = "https://jitpack.io")
         plugins {
-            kotlin("android") version "2.1.0"
-            id("org.jetbrains.kotlin.plugin.compose") version "2.1.0"
+            id("com.android.application") version "8.6.0" apply false
+            id("com.android.library")     version "8.6.0" apply false
+            kotlin("android")             version "2.1.0" apply false
+            id("org.jetbrains.kotlin.plugin.compose") version "2.1.0" apply false
+            id("com.google.gms.google-services") version "4.4.2" apply false
         }
     }
 }
@@ -27,4 +30,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "MyStyleBox"
 include(":app")
- 

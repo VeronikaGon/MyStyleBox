@@ -25,4 +25,7 @@ import java.util.List;
 
         @Query("SELECT * FROM subcategories")
         List<Subcategory> getAllSubcategories();
+
+        @Query("DELETE FROM subcategories")
+        void deleteAllSubcategories();
     }

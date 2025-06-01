@@ -8,6 +8,7 @@
 
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <uses-permission android:name="android.permission.INTERNET"/>
 
@@ -97,6 +98,9 @@
             android:name=".ui.activity.LoginActivity"
             android:screenOrientation="portrait" />
         <activity
+            android:name=".ui.activity.RegistrationActivity"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".ui.activity.CalendarActivity"
             android:screenOrientation="portrait" />
         <provider
@@ -106,11 +110,18 @@
             android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths" />
+                android:resource="@xml/file_paths"
+                />
         </provider>
 
         <activity
             android:name=".ui.activity.ClothesActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.activity.AccountActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.activity.ImportActivity"
             android:screenOrientation="portrait" />
         <activity
             android:name=".ui.activity.CategorySelectionActivity"
