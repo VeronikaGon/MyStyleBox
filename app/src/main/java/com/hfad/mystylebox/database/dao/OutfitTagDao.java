@@ -11,6 +11,12 @@ import com.hfad.mystylebox.database.entity.Tag;
 import java.util.List;
 @Dao
 public interface OutfitTagDao {
+    @Query("SELECT * FROM outfit_tag")
+    List<OutfitTag> getAllOutfitTags();
+
+    @Query("DELETE FROM outfit_tag")
+    void deleteAll();
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     long insert(OutfitTag outfitTag);
 

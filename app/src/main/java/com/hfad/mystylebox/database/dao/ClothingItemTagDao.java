@@ -5,6 +5,7 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
+import com.hfad.mystylebox.database.entity.ClothingItem;
 import com.hfad.mystylebox.database.entity.ClothingItemTag;
 import com.hfad.mystylebox.database.entity.Tag;
 
@@ -12,6 +13,9 @@ import java.util.List;
 
 @Dao
 public interface ClothingItemTagDao {
+    @Query("SELECT * FROM clothing_item_tag")
+    List<ClothingItemTag> getAllClothingItemTags();
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(ClothingItemTag clothingItemTag);
 
@@ -20,6 +24,9 @@ public interface ClothingItemTagDao {
 
     @Query("SELECT COUNT(*) FROM clothing_item_tag WHERE tagId = :tagId")
     int getCountForTag(int tagId);
+
+    @Query("DELETE FROM clothing_item_tag")
+    void deleteAll();
 
     @Query("DELETE FROM clothing_item_tag WHERE clothingItemId = :clothingItemId")
     void deleteTagsForClothingItem(int clothingItemId);

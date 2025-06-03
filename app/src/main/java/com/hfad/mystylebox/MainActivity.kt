@@ -64,6 +64,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     lateinit var drawerLayout: DrawerLayout
     private lateinit var navView: NavigationView
     private lateinit var database: AppDatabase
+    private lateinit var bottomNavView: BottomNavigationView
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -96,17 +97,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val tvName   = header.findViewById<TextView>(R.id.header_name)
 
         if (user != null) {
-            // имя
             tvName.text = user.displayName ?: user.email
 
-            // фото (если есть)
             Glide.with(this)
-                .load(user.photoUrl)   // <- URL из FirebaseAuth
+                .load(user.photoUrl)
                 .circleCrop()
                 .placeholder(R.drawable.ic_account)
                 .into(ivAvatar)
 
-            // иконка в пункте меню
             val acctItem = navView.menu.findItem(R.id.nav_account)
             acctItem.title = user.displayName ?: "Профиль"
             Glide.with(this)
@@ -119,7 +117,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     }
                 })
         } else {
-            // гость
             tvName.text = "Аккаунт"
             ivAvatar.setImageResource(R.drawable.ic_account)
         }
@@ -131,14 +128,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         navView.itemIconTintList = null
 
-        navView.setNavigationItemSelectedListener(this)
         val navHost = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         val navController = navHost.navController
-        NavigationUI.setupWithNavController(
-            findViewById<BottomNavigationView>(R.id.bottom_nav),
-            navController
-        )
+
+        bottomNavView = findViewById(R.id.bottom_nav)
+        NavigationUI.setupWithNavController(bottomNavView, navController)
+
         val menu = navView.menu
         val deleteItem = menu.findItem(R.id.nav_deleteaccount)
 
@@ -165,16 +161,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 populateInitialData()
             }
         }.start()
-        val bottomNavView = findViewById<BottomNavigationView>(R.id.bottom_nav)
-        NavigationUI.setupWithNavController(bottomNavView, navController)
+
         val openFragment = intent.getStringExtra("openFragment")
         if (openFragment == "outfits") {
-            navController.navigate(R.id.outfitsFragment)
-        }
-        intent.getStringExtra("openFragment")?.let {
-            if (it == "outfits") navController.navigate(R.id.outfitsFragment)
+            bottomNavView.selectedItemId = R.id.outfitsFragment
         }
     }
+
     override fun onResume() {
         super.onResume()
         val user = FirebaseAuth.getInstance().currentUser
@@ -393,7 +386,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     private fun backupDatabaseWithPhotos() {
-        // 1) Показываем ProgressDialog
         val progressDialog = ProgressDialog(this).apply {
             setTitle("Создание резервной копии")
             setMessage("Пожалуйста, подождите…")
@@ -404,29 +396,42 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // 2) Собираем данные из базы и формируем JSON-строку
-                val allCategories = database.categoryDao().getAllCategories()
-                val allSubcategories = database.subcategoryDao().getAllSubcategories()
+                val allCategories      = database.categoryDao().getAllCategories()
+                val allSubcategories   = database.subcategoryDao().getAllSubcategories()
+                val allClothingItems   = database.clothingItemDao().getAllClothingItems()
+                val allTags            = database.tagDao().getAllTags()
+                val allClothingItemTags = database.clothingItemTagDao().getAllClothingItemTags()
+                val allOutfits         = database.outfitDao().getAllOutfits()
+                val allOutfitClothingItems = database.outfitClothingItemDao().getAllOutfitClothingItems()
+                val allOutfitTags      = database.outfitTagDao().getAllOutfitTags()
+                val allDailyPlans      = database.dailyPlanDao().getAllDailyPlans()
+                val allWishListItems   = database.wishListItemDao().getAllWishListItems()
+
                 val backupMap = mapOf(
-                    "categories" to allCategories,
-                    "subcategories" to allSubcategories
+                    "categories"               to allCategories,
+                    "subcategories"            to allSubcategories,
+                    "clothing_items"           to allClothingItems,
+                    "tags"                     to allTags,
+                    "clothing_item_tags"       to allClothingItemTags,
+                    "outfits"                  to allOutfits,
+                    "outfit_clothing_items"    to allOutfitClothingItems,
+                    "outfit_tags"              to allOutfitTags,
+                    "daily_plans"              to allDailyPlans,
+                    "wish_list_items"          to allWishListItems
                 )
+
                 val json = Gson().toJson(backupMap)
 
-                // 3) Определяем, куда сохранить ZIP
                 val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                 val zipFile = File(downloadDir, "mystylebox_backup_${System.currentTimeMillis()}.zip")
 
-                // 4) Открываем ZipOutputStream и пишем внутрь JSON + фото
                 ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use { zos ->
-                    // 4.1) Записываем JSON как отдельную запись в ZIP
                     zos.putNextEntry(ZipEntry("backup_data.json"))
                     val writer = BufferedWriter(OutputStreamWriter(zos))
                     writer.write(json)
                     writer.flush()
                     zos.closeEntry()
 
-                    // 4.2) Рекурсивно добавляем все файлы из папок photos
                     val roots = listOfNotNull(
                         File(filesDir, "photos"),
                         getExternalFilesDir("photos")?.let { File(it.absolutePath) },
@@ -450,7 +455,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     roots.forEach { zipRec(it, "photos") }
                 }
 
-                // 5) В UI-потоке сообщаем об успешном завершении
                 runOnUiThread {
                     progressDialog.dismiss()
                     AlertDialog.Builder(this@MainActivity)
@@ -476,7 +480,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     fun disableMenuItem(id: Int) {
         val item = navView.menu.findItem(id)
         item.isEnabled = false
-        // сделать заголовок серым
         val gray = ContextCompat.getColor(this, android.R.color.darker_gray)
         val span = SpannableString(item.title)
         span.setSpan(ForegroundColorSpan(gray), 0, span.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)

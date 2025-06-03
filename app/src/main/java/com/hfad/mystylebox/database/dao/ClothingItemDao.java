@@ -21,6 +21,12 @@ import kotlinx.coroutines.flow.Flow;
 
 @Dao
 public interface ClothingItemDao {
+    @Query("DELETE FROM clothing_item")
+    void deleteAll();
+
+    @Query("SELECT * FROM clothing_item")
+    List<ClothingItem> getAllClothingItems();
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     long insert(ClothingItem item);
 

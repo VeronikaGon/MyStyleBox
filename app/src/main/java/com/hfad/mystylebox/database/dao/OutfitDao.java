@@ -25,6 +25,9 @@ public interface OutfitDao {
     @Insert
     void insertOutfitClothingItem(OutfitClothingItem outfitClothingItem);
 
+    @Query("DELETE FROM outfits")
+    void deleteAll();
+
     @Update
     void update(Outfit outfit);
 

@@ -65,6 +65,8 @@ class HomeFragment : Fragment() {
             tab.text = tabTitles[position]
         }.attach()
 
+        viewPager.currentItem = 1
+
         return view
     }
 

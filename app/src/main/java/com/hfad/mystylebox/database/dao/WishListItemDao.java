@@ -12,6 +12,12 @@ import java.util.List;
 
 @Dao
 public interface WishListItemDao {
+    @Query("SELECT * FROM wish_list_item")
+    List<WishListItem> getAllWishListItems();
+
+    @Query("DELETE FROM wish_list_item")
+    void deleteAll();
+
     @Insert
     long insert(WishListItem item);
 

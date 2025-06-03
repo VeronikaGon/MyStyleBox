@@ -53,6 +53,7 @@ class MonthsAdapter(
             dateImageMap: Map<String, List<String>>,
             onDateClick: (LocalDate) -> Unit
         ) {
+
             val monthName = MONTH_NAMES[month.monthValue - 1]
             tvHeader.text = "$monthName ${month.year} г."
             tvHeader.setTextColor(
@@ -92,55 +93,55 @@ class MonthsAdapter(
 
             val dp = itemView.context.resources.displayMetrics.density
             val cellSize = (48 * dp).toInt()
-            val badgeSize = (20 * dp).toInt()
 
             for (day in 1..month.lengthOfMonth()) {
                 val date = month.atDay(day)
                 val paths = dateImageMap[date.toString()] ?: emptyList()
+                val cellView = LayoutInflater.from(itemView.context)
+                    .inflate(R.layout.item_month_cell, glDays, false)
 
-                val cellView = if (paths.isEmpty()) {
-                    TextView(itemView.context).apply {
-                        text = day.toString()
-                        textSize = 16f
-                        setTextColor(if (date == today) Color.BLUE else Color.BLACK)
-                        gravity = Gravity.CENTER
-                        layoutParams = GridLayout.LayoutParams().apply {
-                            width = 0
-                            height = cellSize
-                            columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1, 1f)
-                        }
+                val container = cellView.findViewById<FrameLayout>(R.id.dayCellContainer)
+                val tvDayNumber = cellView.findViewById<TextView>(R.id.tvDayNumber)
+                val tvBadgeCount = cellView.findViewById<TextView>(R.id.tvBadgeCount)
+                val ivOutfit = cellView.findViewById<ImageView>(R.id.ivOutfit)
+
+                tvDayNumber.text = day.toString()
+
+                if (paths.isNotEmpty()) {
+                    ivOutfit.visibility = View.VISIBLE
+                    Glide.with(ivOutfit.context)
+                        .load( File(paths[0]) )
+                        .into(ivOutfit)
+
+                    tvDayNumber.visibility = View.GONE
+
+                    if (paths.size >= 2) {
+                        tvBadgeCount.visibility = View.VISIBLE
+                        tvBadgeCount.text = paths.size.toString()
+                    } else {
+                        tvBadgeCount.visibility = View.GONE
                     }
+
                 } else {
-                    FrameLayout(itemView.context).apply {
-                        layoutParams = GridLayout.LayoutParams().apply {
-                            width = 0
-                            height = cellSize
-                            columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1, 1f)
-                        }
-                        addView(ImageView(context).apply {
-                            scaleType = ImageView.ScaleType.CENTER_CROP
-                            layoutParams = FrameLayout.LayoutParams(cellSize, cellSize)
-                            Glide.with(this).load(File(paths[0])).into(this)
-                        })
-                        if (paths.size >= 2) {
-                            addView(TextView(context).apply {
-                                text = paths.size.toString()
-                                textSize = 10f
-                                gravity = Gravity.CENTER
-                                setBackgroundResource(R.drawable.badge_background)
-                                setTextColor(Color.BLACK)
-                                layoutParams = FrameLayout.LayoutParams(
-                                    badgeSize, badgeSize,
-                                    Gravity.END or Gravity.TOP
-                                ).apply {
-                                    setMargins(0, -5, -5, 0)
-                                }
-                            })
-                        }
-                    }
+                    tvDayNumber.visibility  = View.VISIBLE
+                    ivOutfit.visibility = View.GONE
+                    tvBadgeCount.visibility = View.GONE
+                    tvDayNumber.setTextColor(Color.BLACK)
                 }
+
+                if (date == today) {
+                    container.setBackgroundResource(R.drawable.item_background_active)
+                } else {
+                    container.setBackgroundResource(0)
+                }
+
                 cellView.setOnClickListener { onDateClick(date) }
-                glDays.addView(cellView)
+
+                glDays.addView(cellView, GridLayout.LayoutParams().apply {
+                    width = 0
+                    height = cellSize
+                    columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1, 1f)
+                })
             }
 
             val totalCells = 7 + offset + month.lengthOfMonth()

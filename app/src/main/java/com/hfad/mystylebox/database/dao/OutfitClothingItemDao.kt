@@ -7,9 +7,15 @@ import com.hfad.mystylebox.database.entity.OutfitClothingItem
 
 @Dao
 interface OutfitClothingItemDao {
+    @Query("SELECT * FROM outfit_clothing_item")
+    fun getAllOutfitClothingItems(): List<OutfitClothingItem>
+
     @Insert
     fun insert(outfitClothingItem: OutfitClothingItem): Long
 
     @Query("DELETE FROM outfit_clothing_item WHERE outfitId = :outfitId")
     fun deleteForOutfit(outfitId: Int)
+
+    @Query("DELETE FROM daily_plan")
+    fun deleteAll();
 }

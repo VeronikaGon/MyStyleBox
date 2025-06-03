@@ -20,6 +20,9 @@ public interface DailyPlanDao {
     @Insert
     long insert(DailyPlan dailyPlan);
 
+    @Query("DELETE FROM daily_plan")
+    void deleteAll();
+
     @Update
     void update(DailyPlan dailyPlan);
 

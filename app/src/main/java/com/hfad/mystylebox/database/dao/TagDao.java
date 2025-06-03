@@ -21,6 +21,9 @@ public interface TagDao {
     @Delete
     void delete(Tag tag);
 
+    @Query("DELETE FROM tag")
+    void deleteAll();
+
     @Query("SELECT * FROM tag WHERE name = :name LIMIT 1")
     Tag getTagByName(String name);
 }

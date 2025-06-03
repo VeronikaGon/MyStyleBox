@@ -1,0 +1,42 @@
+<!-- res/layout/item_month_cell.xml -->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/dayCellContainer"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:clipToPadding="false"
+    android:clipChildren="false">
+
+     <ImageView
+        android:id="@+id/ivOutfit"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="4dp"
+         android:scaleType="fitCenter"
+        android:visibility="gone"
+        android:contentDescription="Фото комплекта" />
+
+
+    <TextView
+        android:id="@+id/tvDayNumber"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:text="1"
+        android:textSize="16sp"
+        android:textColor="@android:color/black" />
+
+    <TextView
+        android:id="@+id/tvBadgeCount"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_margin="0dp"
+        android:layout_gravity="end|top"
+        android:background="@drawable/badge_background"
+        android:gravity="center"
+        android:text="3"
+        android:textColor="@android:color/black"
+        android:textSize="12sp"
+        android:visibility="gone"
+       />
+</FrameLayout>

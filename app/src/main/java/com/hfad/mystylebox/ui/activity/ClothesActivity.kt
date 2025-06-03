@@ -85,6 +85,16 @@ class ClothesActivity : AppCompatActivity(), ImageOptionsBottomSheet.ImageOption
         super.onCreate(savedInstanceState)
         setContentView(R.layout.clothes)
 
+        // Инициализация БД и DAO
+        db = Room.databaseBuilder(
+            applicationContext,
+            AppDatabase::class.java,
+            "wardrobe_db"
+        ).allowMainThreadQueries().build()
+        clothingItemDao = db.clothingItemDao()
+        subcategoryDao = db.subcategoryDao()
+        clothingItemTagDao = db.clothingItemTagDao()
+
         flexboxTags = findViewById(R.id.Tags)
         clothingImageView = findViewById(R.id.clothingImageView)
         clothingNameEditText = findViewById(R.id.enterName)
@@ -98,43 +108,57 @@ class ClothesActivity : AppCompatActivity(), ImageOptionsBottomSheet.ImageOption
         saveButton = findViewById(R.id.ButtonSAVE)
         textviewTitle = findViewById(R.id.textviewtitle)
         categoryField = findViewById(R.id.categoryField)
+        subcategory = intent.getStringExtra("subcategory")
 
-        // Инициализация лончеров для запуска активностей и получения результатов
-        tagEditingLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val returnedTags = result.data?.getParcelableArrayListExtra<Tag>("selected_tags")
-                if (returnedTags != null) {
+        if (!subcategory.isNullOrEmpty() && clothingNameEditText.text.isEmpty()) {
+            categoryField.text = subcategory
+            clothingNameEditText.setText(subcategory)
+        }
+
+        intent.getParcelableExtra<ClothingItem>("clothingItem")?.let { item ->
+            lifecycleScope.launch(Dispatchers.IO) {
+                val savedTagIds = clothingItemTagDao
+                    .getTagsForClothingItem(item.id)
+                    .map { it.id }
+                    .toSet()
+                withContext(Dispatchers.Main) {
                     selectedTagIds.clear()
-                    selectedTags = returnedTags
-                    returnedTags.forEach { tag ->
-                        selectedTagIds.add(tag.id)
-                    }
-                    displayTagsAsCheckboxes(returnedTags, selectedTagIds)
+                    selectedTagIds.addAll(savedTagIds)
                 }
             }
         }
 
-        // Запуск TagEditingActivity при клике по блоку с тегами
-        val llTegi = findViewById<LinearLayout>(R.id.llTegi)
-        llTegi.setOnClickListener {
+        tagEditingLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val returnedTags = result.data
+                    ?.getParcelableArrayListExtra<Tag>("selected_tags")
+                if (returnedTags != null) {
+                    selectedTagIds.clear()
+                    returnedTags.forEach { tag -> selectedTagIds.add(tag.id) }
+                }
+                loadTagsFromDatabase()
+            }
+        }
+        loadTagsFromDatabase()
+
+        findViewById<LinearLayout>(R.id.llTegi).setOnClickListener {
             val intent = Intent(this, TagEditingActivity::class.java)
             tagEditingLauncher.launch(intent)
         }
-        val tagEditButton = findViewById<ImageButton>(R.id.imageButton)
-        tagEditButton.setOnClickListener {
+        findViewById<ImageButton>(R.id.imageButton).setOnClickListener {
             val intent = Intent(this, TagEditingActivity::class.java)
             tagEditingLauncher.launch(intent)
         }
 
-        // Лончер для CategorySelectionActivity – теперь возвращаем результат через ActivityResult
         categoryResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val returnedSubcategory = result.data?.getStringExtra("subcategory")
                 selectedSubcategoryId = result.data?.getIntExtra("selected_subcategory_id", -1) ?: -1
                 categoryField.text = returnedSubcategory ?: "Не выбрано"
-                // Если название вещи не заполнено – подставляем выбранную подкатегорию
-                if (clothingNameEditText.text.toString().trim().isEmpty()) {
-                    clothingNameEditText.setText(returnedSubcategory ?: "")
+                if (clothingNameEditText.text.isEmpty()) {
+                    clothingNameEditText.setText(returnedSubcategory)
                 }
             }
         }
@@ -182,16 +206,6 @@ class ClothesActivity : AppCompatActivity(), ImageOptionsBottomSheet.ImageOption
             imagePath = it.getString("image_path")
         }
 
-        // Инициализация БД и DAO
-        db = Room.databaseBuilder(
-            applicationContext,
-            AppDatabase::class.java,
-            "wardrobe_db"
-        ).allowMainThreadQueries().build()
-        clothingItemDao = db.clothingItemDao()
-        subcategoryDao = db.subcategoryDao()
-        clothingItemTagDao = db.clothingItemTagDao()
-
         // Получаем данные, переданные через Intent
         subcategory = intent.getStringExtra("subcategory")
         selectedSubcategoryId = intent.getIntExtra("selected_subcategory_id", -1)
@@ -234,7 +248,6 @@ class ClothesActivity : AppCompatActivity(), ImageOptionsBottomSheet.ImageOption
         } else {
             saveButton.setOnClickListener { saveClothingItem() }
         }
-        loadTagsFromDatabase()
     }
 
     override fun onEditOptionSelected() {
@@ -343,6 +356,7 @@ class ClothesActivity : AppCompatActivity(), ImageOptionsBottomSheet.ImageOption
         outState.putString("notes", clothingNotesEditText.text.toString())
         outState.putString("subcategory", categoryField.text.toString())
         outState.putString("image_path", imagePath)
+        outState.putIntegerArrayList("selected_tags_ids", ArrayList(selectedTagIds))
     }
 
     override fun onBackPressed() {
@@ -456,11 +470,6 @@ class ClothesActivity : AppCompatActivity(), ImageOptionsBottomSheet.ImageOption
     private fun loadTagsFromDatabase() {
         lifecycleScope.launch(Dispatchers.IO) {
             val allTags = db.tagDao().getAllTags()
-            val preselectedIds = intent.getParcelableExtra<ClothingItem>("clothingItem")?.let { editingItem ->
-                clothingItemTagDao.getTagsForClothingItem(editingItem.id).map { it.id }.toSet()
-            } ?: emptySet()
-            selectedTagIds.clear()
-            selectedTagIds.addAll(preselectedIds)
             withContext(Dispatchers.Main) { displayTagsAsCheckboxes(allTags, selectedTagIds) }
         }
     }
@@ -524,7 +533,7 @@ class ClothesActivity : AppCompatActivity(), ImageOptionsBottomSheet.ImageOption
                 text = tag.name
                 id = tag.id
                 setBackgroundResource(R.drawable.checkbox_background)
-                setButtonDrawable(null)
+                buttonDrawable = null
                 setPadding(16, 5, 16, 5)
                 isChecked = tag.id in preselectedTagIds
             }
@@ -589,6 +598,15 @@ class ClothesActivity : AppCompatActivity(), ImageOptionsBottomSheet.ImageOption
         }
         Toast.makeText(this, "Вещь сохранена", Toast.LENGTH_SHORT).show()
         finish()
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        val saved = savedInstanceState.getIntegerArrayList("selected_tags_ids")
+        if (saved != null) {
+            selectedTagIds.clear()
+            selectedTagIds.addAll(saved)
+        }
     }
 
     override fun onResume() {
