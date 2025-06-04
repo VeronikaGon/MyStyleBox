@@ -103,7 +103,7 @@ class ClothingSelectionActivity : AppCompatActivity() {
     // Обновление счетчика выбранных элементов и цвета/видимости контейнера clayout
     private fun updateSelectionCount() {
         selectedCountText.text = selectedItems.size.toString()
-        if (selectedItems.isEmpty()) {
+        if (selectedItems.isEmpty()|| selectedItems.size < 2 ) {
             clayout.visibility = View.GONE
         } else {
             clayout.visibility = View.VISIBLE

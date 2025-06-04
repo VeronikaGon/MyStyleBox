@@ -1,5 +1,6 @@
 package com.hfad.mystylebox.ui.activity
 
+import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -210,13 +211,17 @@ class BoardActivity : AppCompatActivity() {
             }
             selectedView?.background = originalBackground
 
-            val intent = Intent(this, OutfitActivity::class.java)
-            intent.putExtra("imagePath", file.path)
-            intent.putIntegerArrayListExtra(
-                "selected_clothing_ids",
-                ArrayList(itemIdMapping.values.distinct())
-            )
-            startActivity(intent)
+            val resultIntent = Intent().apply {
+                putExtra("imagePath", file.path)
+                putIntegerArrayListExtra(
+                    "selected_item_ids",
+                    ArrayList(itemIdMapping.values.distinct())
+                )
+                val allPaths = boardItems.map { it.tag.toString() }
+                putStringArrayListExtra("selected_image_paths", ArrayList(allPaths))
+            }
+            setResult(Activity.RESULT_OK, resultIntent)
+            finish()
         } catch (e: Exception) {
             e.printStackTrace()
             Toast.makeText(this, "Ошибка сохранения изображения", Toast.LENGTH_SHORT).show()

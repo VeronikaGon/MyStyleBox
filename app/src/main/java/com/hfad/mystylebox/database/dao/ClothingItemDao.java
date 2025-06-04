@@ -90,4 +90,7 @@ public interface ClothingItemDao {
             "        JOIN subcategories ON clothing_item.subcategory_id = subcategories.id\n" +
             "        JOIN categories    ON subcategories.category_id = categories.id")
     Flow<List<ClothingItemFull>> getAllItemsFullFlow();
+
+    @Query("SELECT * FROM clothing_item WHERE id = :id LIMIT 1")
+    ClothingItem getById(int id);
 }

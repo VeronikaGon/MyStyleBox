@@ -18,4 +18,7 @@ interface OutfitClothingItemDao {
 
     @Query("DELETE FROM daily_plan")
     fun deleteAll();
+
+    @Query("SELECT * FROM outfit_clothing_item WHERE outfitId = :outfitId")
+    fun getItemsForOutfit(outfitId: Int): List<OutfitClothingItem>
 }

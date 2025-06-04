@@ -29,16 +29,35 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+        <LinearLayout
+            android:id="@+id/ClIm"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textviewtitle"
+            >
+
         <ImageView
         android:id="@+id/outfitImageView"
         android:layout_width="250dp"
         android:layout_height="250dp"
         android:layout_marginTop="8dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textviewtitle"
-        tools:ignore="MissingConstraints" />
-
+        android:background="#FFFFFF"
+        android:scaleType="fitCenter"
+        />
+            <ImageButton
+                android:id="@+id/editimage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_gravity="left"
+                android:layout_marginTop="-44dp"
+                android:background="@android:color/transparent"
+                app:srcCompat="@drawable/ic_editimage" />
+        </LinearLayout>
         <LinearLayout
         android:id="@+id/linearLayout"
         android:layout_width="match_parent"
@@ -51,7 +70,7 @@
         android:padding="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/outfitImageView">
+        app:layout_constraintTop_toBottomOf="@+id/ClIm">
 
         <TextView
             android:id="@+id/textView3"
@@ -249,13 +268,13 @@
 
                 <CheckBox
                     android:id="@+id/cbHeat"
-                    android:layout_width="80dp"
+                    android:layout_width="90dp"
                     android:layout_height="wrap_content"
                     android:background="@drawable/checkbox_background"
                     android:gravity="center"
                     android:padding="8dp"
                     android:textAlignment="center"
-                    android:text="Жара 35°C "
+                    android:text="Жара \n 50 ... 35°C "
                     android:button="@null"
                     android:layout_margin="3dp"/>
 
@@ -305,13 +324,13 @@
                     android:layout_margin="3dp"/>
                 <CheckBox
                     android:id="@+id/cbFrost"
-                    android:layout_width="70dp"
+                    android:layout_width="90dp"
                     android:layout_height="wrap_content"
                     android:background="@drawable/checkbox_background"
                     android:gravity="center"
                     android:padding="8dp"
                     android:textAlignment="center"
-                    android:text="Мороз  -6°C"
+                    android:text="Мороз\n-6 ... -50°C"
                     android:button="@null"
                     android:layout_margin="3dp"/>
             </com.google.android.flexbox.FlexboxLayout>

@@ -180,7 +180,7 @@ class ThirdFragment : Fragment() {
             rbList.setBackgroundResource(R.drawable.edittext_background)
             rbGrid.setBackgroundResource(0)
             rv.layoutManager = LinearLayoutManager(context)
-            adapter.layoutRes = R.layout.item_clothing1
+            adapter.layoutRes = R.layout.item_wishlist
             adapter.notifyDataSetChanged()
         }
         rbGrid.setOnClickListener {
