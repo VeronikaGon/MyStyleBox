@@ -25,15 +25,21 @@ import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
 import com.google.android.material.slider.Slider
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.hfad.mystylebox.MainActivity
 import com.hfad.mystylebox.R
+import org.json.JSONArray
+import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 
 data class ImageState(
     var alpha: Float = 1f,
     var rotation: Float = 0f,
-    var scale: Float = 1f
+    var scale: Float = 1f,
+    var posX: Float = 0f,
+    var posY: Float = 0f
 )
 
 class BoardViewModel : androidx.lifecycle.ViewModel() {
@@ -81,6 +87,7 @@ class BoardActivity : AppCompatActivity() {
 
     companion object {
         private const val REQUEST_CODE_ADD_ITEMS = 1001
+        private const val EXTRA_ITEM_STATES = "item_states"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -122,9 +129,22 @@ class BoardActivity : AppCompatActivity() {
         val passedIds = intent.getIntegerArrayListExtra("selected_item_ids") ?: arrayListOf()
         Log.d("BoardActivity", "Полученные пути изображений: $passedImagePaths")
         Log.d("BoardActivity", "Полученные идентификаторы: $passedIds")
+
+        val statesJson = intent.getStringExtra("item_states_json")
+        val initialStates: Map<String, ImageState> = if (!statesJson.isNullOrEmpty()) {
+            val type = object : TypeToken<Map<String, ImageState>>() {}.type
+            Gson().fromJson(statesJson, type)
+        } else {
+            emptyMap()
+        }
+
         selectedIds.addAll(passedIds)
         for (i in passedImagePaths.indices) {
-            addBoardItem(passedImagePaths[i], passedIds[i])
+            addBoardItem(
+                path = passedImagePaths[i],
+                clothingItemId = passedIds[i],
+                initialState = initialStates[passedImagePaths[i]]
+            )
         }
 
         btnForeground.setOnClickListener {
@@ -181,7 +201,7 @@ class BoardActivity : AppCompatActivity() {
                         }
                     }
                     viewModel.updateImageState(imageId, newState)
-                    applyNewState(newState)
+                    applyNewState(view, newState)
                 }
             }
         }
@@ -211,6 +231,9 @@ class BoardActivity : AppCompatActivity() {
             }
             selectedView?.background = originalBackground
 
+            val allStates = viewModel.imageStates.value ?: emptyMap()
+            val json = Gson().toJson(allStates)
+
             val resultIntent = Intent().apply {
                 putExtra("imagePath", file.path)
                 putIntegerArrayListExtra(
@@ -219,8 +242,10 @@ class BoardActivity : AppCompatActivity() {
                 )
                 val allPaths = boardItems.map { it.tag.toString() }
                 putStringArrayListExtra("selected_image_paths", ArrayList(allPaths))
+                putExtra("item_states_json", json)
             }
             setResult(Activity.RESULT_OK, resultIntent)
+
             finish()
         } catch (e: Exception) {
             e.printStackTrace()
@@ -256,26 +281,36 @@ class BoardActivity : AppCompatActivity() {
     }
 
     // Добавление изображения на доску
-    private fun addBoardItem(path: String, clothingItemId: Int) {
+    private fun addBoardItem(path: String, clothingItemId: Int, initialState: ImageState? = null) {
         val imageView = ImageView(this)
         Glide.with(this).load(path).into(imageView)
         val layoutParams = FrameLayout.LayoutParams(300, 300)
         imageView.layoutParams = layoutParams
         imageView.setBackgroundResource(0)
         imageView.setOnClickListener { view -> selectBoardItem(view as ImageView) }
-        imageView.setOnTouchListener(MultiTouchListener())
+        imageView.setOnTouchListener(MultiTouchListener { view, dx, dy ->
+            val imageId = (view as ImageView).tag.toString()
+            val curState = viewModel.getImageState(imageId)
+            val newState = curState.copy().apply {
+                posX = view.x
+                posY = view.y
+            }
+            viewModel.updateImageState(imageId, newState)
+        })
         boardContainer.addView(imageView)
         boardItems.add(imageView)
         addThumbnail(imageView, path)
         imageView.tag = path
-        viewModel.updateImageState(path, ImageState())
-        imageView.rotation = 0f
-        imageView.alpha = 1f
-        imageView.scaleX = 1f
-        imageView.scaleY = 1f
-        val offset = boardItems.size * 20
-        imageView.x = offset.toFloat()
-        imageView.y = offset.toFloat()
+        val state = initialState ?: ImageState(
+            alpha = 1f,
+            rotation = 0f,
+            scale = 1f,
+            posX = boardItems.size * 20f,
+            posY = boardItems.size * 20f
+        )
+        viewModel.updateImageState(path, state)
+        applyNewState(imageView, state)
+
         selectedIds.add(clothingItemId)
         itemIdMapping[imageView] = clothingItemId
         selectBoardItem(imageView)
@@ -407,12 +442,14 @@ class BoardActivity : AppCompatActivity() {
     }
 
     // Применение нового состояния к выбранному ImageView
-    private fun applyNewState(state: ImageState) {
-        selectedView?.apply {
+    private fun applyNewState(view: ImageView, state: ImageState) {
+        view.apply {
             alpha = state.alpha
             rotation = state.rotation
             scaleX = state.scale
             scaleY = state.scale
+            x = state.posX
+            y = state.posY
         }
     }
 
@@ -490,7 +527,9 @@ class BoardActivity : AppCompatActivity() {
     }
 }
 // Класс MultiTouchListener для перетаскивания изображения на доске.
-class MultiTouchListener : View.OnTouchListener {
+class MultiTouchListener(
+    private val onMove: ((view: View, dx: Float, dy: Float) -> Unit)? = null
+) : View.OnTouchListener {
     private var lastX = 0f
     private var lastY = 0f
     private var isDragging = false
@@ -509,6 +548,7 @@ class MultiTouchListener : View.OnTouchListener {
                 if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
                     view.x += dx
                     view.y += dy
+                    onMove?.invoke(view, dx, dy)
                     lastX = event.rawX
                     lastY = event.rawY
                     isDragging = true

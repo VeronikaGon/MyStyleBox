@@ -28,15 +28,6 @@ class OutfitAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): OutfitViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(itemLayout, parent, false)
-        val itemWidth = TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP,
-            140f,
-            parent.context.resources.displayMetrics
-        ).toInt()
-
-        val lp = view.layoutParams
-        lp.width = itemWidth
-        view.layoutParams = lp
 
         return OutfitViewHolder(view)
     }

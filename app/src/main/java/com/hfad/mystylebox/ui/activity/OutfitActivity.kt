@@ -84,6 +84,7 @@ class OutfitActivity : AppCompatActivity() {
     private var selectedClothingItemIds: MutableList<Int> = mutableListOf()
     private lateinit var LL:LinearLayout
     private var selectedClothingImagePaths: MutableList<String> = mutableListOf()
+    private var savedItemStatesJson: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -143,8 +144,12 @@ class OutfitActivity : AppCompatActivity() {
         }
 
         editImageButton.setOnClickListener {
-            val intent = Intent(this, BoardActivity::class.java)
             if (selectedClothingImagePaths.isNotEmpty()) {
+                val intent = Intent(this, BoardActivity::class.java)
+                if (savedItemStatesJson != null) {
+                    intent.putExtra("item_states_json", savedItemStatesJson)
+                }
+
                 intent.putStringArrayListExtra(
                     "selected_image_paths",
                     ArrayList(selectedClothingImagePaths)
@@ -194,12 +199,13 @@ class OutfitActivity : AppCompatActivity() {
 
         val returnedPaths = intent.getStringArrayListExtra("selected_image_paths")
         val returnedIds   = intent.getIntegerArrayListExtra("selected_item_ids")
+        val returnedJson  = intent.getStringExtra("item_states_json")
         if (returnedIds != null && returnedPaths != null) {
-            // Если пришли из BoardActivity после сохранения
             selectedClothingItemIds.clear()
             selectedClothingItemIds.addAll(returnedIds)
             selectedClothingImagePaths.clear()
             selectedClothingImagePaths.addAll(returnedPaths)
+            savedItemStatesJson = returnedJson
         }
         else if (currentOutfit != null) {
             lifecycleScope.launch(Dispatchers.IO) {
@@ -351,6 +357,7 @@ class OutfitActivity : AppCompatActivity() {
             val newImagePath = data?.getStringExtra("imagePath")
             val newIds = data?.getIntegerArrayListExtra("selected_item_ids")
             val newPaths = data?.getStringArrayListExtra("selected_image_paths")
+            val newStatesJson = data?.getStringExtra("item_states_json")
             if (!newImagePath.isNullOrEmpty()) {
                 ImagePath = newImagePath
                 val bitmap = BitmapFactory.decodeFile(ImagePath)
@@ -361,6 +368,7 @@ class OutfitActivity : AppCompatActivity() {
                 selectedClothingItemIds.addAll(newIds)
                 selectedClothingImagePaths.clear()
                 selectedClothingImagePaths.addAll(newPaths)
+                savedItemStatesJson = newStatesJson
             }
         }
     }

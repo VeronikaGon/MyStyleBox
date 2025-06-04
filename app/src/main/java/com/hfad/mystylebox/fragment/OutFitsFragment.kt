@@ -97,12 +97,9 @@ class OutFitsFragment : Fragment() {
             currentFilters?.let {
                 putStringArrayListExtra("selectedSeasons", it.getStringArrayList("seasons"))
                 putStringArrayListExtra("selectedTags", it.getStringArrayList("tags"))
-                if (it.containsKey("selectedTemperature")) {
-                    putExtra("selectedTemperature", it.getInt("selectedTemperature"))
-                }
-                if (it.containsKey("selectedNotTemperature")) {
-                    putExtra("selectedNotTemperature", it.getBoolean("selectedNotTemperature"))
-                }   }
+                putStringArrayListExtra("selectedTempLabels", it.getStringArrayList("tempLabels"))
+                putExtra("selectedNotTemperature", it.getBoolean("notTemperature", false))
+            }
         }
         filterActivityLauncher.launch(intent)
     }
@@ -112,20 +109,23 @@ class OutFitsFragment : Fragment() {
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            val selectedSeasons = result.data?.getStringArrayListExtra("selectedSeasons") ?: arrayListOf()
-            val selectedTags = result.data?.getStringArrayListExtra("selectedTags") ?: arrayListOf()
-            val selectedTemperature = result.data?.getIntExtra("selectedTemperature", Int.MIN_VALUE) ?: Int.MIN_VALUE
-            val selectedNotTemperature = result.data?.getBooleanExtra("selectedNotTemperature", false) ?: false
+            val data = result.data ?: return@registerForActivityResult
+            val selectedSeasons = data.getStringArrayListExtra("selectedSeasons") ?: arrayListOf()
+            val selectedTags = data.getStringArrayListExtra("selectedTags") ?: arrayListOf()
+            val selectedTempLabels = data.getStringArrayListExtra("selectedTempLabels") ?: arrayListOf()
+            val selectedNotTemperature = data.getBooleanExtra("selectedNotTemperature", false)
 
             currentFilters = Bundle().apply {
-                putStringArrayList("seasons", selectedSeasons)
-                putStringArrayList("tags", selectedTags)
-                if (selectedTemperature != Int.MIN_VALUE) putInt("selectedTemperature", selectedTemperature)
-                   putBoolean("selectedNotTemperature", selectedNotTemperature)
+                putStringArrayList("seasons", ArrayList(selectedSeasons))
+                putStringArrayList("tags", ArrayList(selectedTags))
+                putStringArrayList("tempLabels", ArrayList(selectedTempLabels))
+                putBoolean("notTemperature", selectedNotTemperature)
             }
 
-            val hasFilters = listOf(selectedSeasons, selectedTags).any { it.isNotEmpty() } ||
-                    (selectedTemperature != Int.MIN_VALUE) || selectedNotTemperature
+            val hasFilters = selectedSeasons.isNotEmpty()
+                    || selectedTags.isNotEmpty()
+                    || selectedTempLabels.isNotEmpty()
+                    || selectedNotTemperature
 
             imageFilter.setColorFilter(
                 if (hasFilters) Color.parseColor("#FFB5A7")
@@ -167,35 +167,53 @@ class OutFitsFragment : Fragment() {
                 requireContext(), AppDatabase::class.java, "wardrobe_db"
             ).build()
             val allOutfitsWithTags: List<OutfitWithTags> = db.outfitDao().getAllOutfitsWithTags()
-
             val seasons = filters.getStringArrayList("seasons") ?: arrayListOf()
             val tags = filters.getStringArrayList("tags") ?: arrayListOf()
-            val temperature = filters.getInt("selectedTemperature", Int.MIN_VALUE)
-            val notTemperature = filters.getBoolean("selectedNotTemperature", false)
-            Log.d("OutFitsFragment", "Фильтры - сезоны: $seasons, теги: $tags, температура: $temperature, без температуры: $notTemperature")
+            val tempLabels = filters.getStringArrayList("tempLabels") ?: arrayListOf()
+            val notTemperature = filters.getBoolean("notTemperature", false)
+
+            Log.d("OutFitsFragment", "Фильтры – сезоны: $seasons, теги: $tags, tempLabels: $tempLabels, без температуры: $notTemperature")
+
+            val labelToRange = mapOf(
+                "Heat"  to Pair(35, 100),
+                "Hot"   to Pair(27, 34),
+                "Warm"  to Pair(20, 26),
+                "Cool"  to Pair(10, 19),
+                "Cold"  to Pair(-5, 9),
+                "Frost" to Pair(-50, -6)
+            )
 
             val filteredOutfits = allOutfitsWithTags.filter { outfitWithTags ->
                 val outfit = outfitWithTags.outfit
                 val outfitSeasons = outfit.seasons?.map { it.trim().lowercase() } ?: emptyList()
-                val seasonMatch = if (seasons.isEmpty()) true
-                else seasons.any { season ->
-                    if (season == "Без сезона") outfitSeasons.isEmpty()
-                    else outfitSeasons.contains(season.trim().lowercase())
+                val seasonMatch = if (seasons.isEmpty()) {
+                    true
+                } else {
+                    seasons.any { season ->
+                        if (season == "Без сезона") outfitSeasons.isEmpty()
+                        else outfitSeasons.contains(season.trim().lowercase())
+                    }
                 }
-
-                Log.d("OutFitsFragment", "Outfit ${outfit.id} - minTemp: ${outfit.minTemp}, maxTemp: ${outfit.maxTemp}")
 
                 val temperatureMatch = when {
-                    notTemperature -> outfit.minTemp == NOT_TEMPERATURE && outfit.maxTemp == NOT_TEMPERATURE
-                    temperature != Int.MIN_VALUE -> outfit.minTemp <= temperature && outfit.maxTemp >= temperature
-                    else -> true
+                    notTemperature -> (outfit.minTemp == NOT_TEMPERATURE && outfit.maxTemp == NOT_TEMPERATURE)
+                    tempLabels.isEmpty() -> true
+                    else -> tempLabels.any { label ->
+                        val range = labelToRange[label]
+                        if (range == null) {
+                            false
+                        } else {
+                            val (rMin, rMax) = range
+                            outfit.maxTemp >= rMin && outfit.minTemp <= rMax
+                        }
+                    }
                 }
-
 
                 val outfitTagNames = outfitWithTags.tags.map { it.name.trim().lowercase() }
                 val tagMatch = when {
                     tags.contains("Без тегов") -> outfitTagNames.isEmpty()
-                    tags.isNotEmpty() -> tags.filter { it != "Без тегов" }
+                    tags.isNotEmpty() -> tags
+                        .filter { it != "Без тегов" }
                         .map { it.trim().lowercase() }
                         .all { tag -> outfitTagNames.contains(tag) }
                     else -> true
@@ -203,9 +221,10 @@ class OutFitsFragment : Fragment() {
 
                 seasonMatch && temperatureMatch && tagMatch
             }
+
             withContext(Dispatchers.Main) {
-                // Здесь обновляем адаптер, например, отображая только сами объекты outfit
-                outfitAdapter.updateData(filteredOutfits.map { it.outfit })
+                val resultList = filteredOutfits.map { it.outfit }
+                outfitAdapter.updateData(resultList)
             }
         }
     }

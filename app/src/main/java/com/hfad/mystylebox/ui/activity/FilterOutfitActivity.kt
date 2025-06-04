@@ -25,12 +25,12 @@
         private lateinit var binding: ActivityFilterOutfitBinding
         private lateinit var db: AppDatabase
 
-        private val rangeHeat = Pair(35, 100)         // "Жара 35°C" – от 35 и выше
-        private val rangeHot = Pair(27, 34)             // "Жарко 27 ... 34°C"
-        private val rangeWarm = Pair(20, 26)            // "Тепло 20 ... 26°C"
-        private val rangeCool = Pair(10, 19)            // "Прохладно 10 ... 19°C"
-        private val rangeCold = Pair(-5, 9)             // "Холодно -5 ... 9°C"
-        private val rangeFrost = Pair(-50, -6)          // "Мороз  -6°C" (условно от -50 до -6)
+        private val rangeHeat = Pair(35, 100)
+        private val rangeHot = Pair(27, 34)
+        private val rangeWarm = Pair(20, 26)
+        private val rangeCool = Pair(10, 19)
+        private val rangeCold = Pair(-5, 9)
+        private val rangeFrost = Pair(-50, -6)
         private val NOT_TEMPERATURE = -99
 
         override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,13 +46,11 @@
                 .allowMainThreadQueries()
                 .build()
 
-            // Восстанавливаем ранее выбранные сезоны и теги, если таковые переданы
             val selectedSeasons = intent.getStringArrayListExtra("selectedSeasons") ?: emptyList()
             val selectedTags = intent.getStringArrayListExtra("selectedTags") ?: emptyList()
-            val selectedTemperature = intent.getIntExtra("selectedTemperature", Int.MIN_VALUE)
             val selectedNotTemperature = intent.getBooleanExtra("selectedNotTemperature", false)
+            val selectedTempLabels = intent.getStringArrayListExtra("selectedTempLabels") ?: emptyList()
 
-            // Отмечаем чекбоксы сезонов по переданным значениям
             selectedSeasons.forEach {
                 when (it) {
                     "Лето" -> binding.cbSummer.isChecked = true
@@ -63,21 +61,21 @@
                 }
             }
 
-            if (selectedNotTemperature)
-                binding.cbNotTemperature.isChecked = true
+            if (selectedNotTemperature) binding.cbNotTemperature.isChecked = true
 
-            if (selectedTemperature != Int.MIN_VALUE) {
-                if (selectedTemperature in rangeHeat.first..rangeHeat.second) binding.cbHeat.isChecked = true
-                if (selectedTemperature in rangeHot.first..rangeHot.second) binding.cbHot.isChecked = true
-                if (selectedTemperature in rangeWarm.first..rangeWarm.second) binding.cbWarm.isChecked = true
-                if (selectedTemperature in rangeCool.first..rangeCool.second) binding.cbCool.isChecked = true
-                if (selectedTemperature in rangeCold.first..rangeCold.second) binding.cbCold.isChecked = true
-                if (selectedTemperature in rangeFrost.first..rangeFrost.second) binding.cbFrost.isChecked = true
+            selectedTempLabels.forEach { label ->
+                when (label) {
+                    "Heat"  -> binding.cbHeat.isChecked = true
+                    "Hot"   -> binding.cbHot.isChecked = true
+                    "Warm"  -> binding.cbWarm.isChecked = true
+                    "Cool"  -> binding.cbCool.isChecked = true
+                    "Cold"  -> binding.cbCold.isChecked = true
+                    "Frost" -> binding.cbFrost.isChecked = true
+                }
             }
-            // Загружаем теги из базы данных и создаём чекбоксы динамически
+
             loadTags()
 
-            // Восстанавливаем выбранные теги по наименованию
             selectedTags.forEach { tag ->
                 (0 until binding.tagsContainer.childCount)
                     .map { binding.tagsContainer.getChildAt(it) }
@@ -95,12 +93,10 @@
                 finish()
             }
 
-            // Слушатели для переключения видимости блоков фильтров
             binding.blockSeason.setOnClickListener { toggleVisibility(binding.seasonContainer, binding.ivSeasonArrow) }
             binding.blockTemperature.setOnClickListener { toggleVisibility(binding.temperatureContainer, binding.ivTemperatureArrow) }
             binding.blockTags.setOnClickListener { toggleVisibility(binding.tagsContainer, binding.ivTagsArrow) }
 
-            // По умолчанию скрываем контейнеры фильтров
             binding.seasonContainer.visibility = View.GONE
             binding.ivSeasonArrow.setImageResource(R.drawable.ic_arrow_drop_down)
             binding.temperatureContainer.visibility = View.GONE
@@ -201,11 +197,24 @@
                     if (binding.cbFrost.isChecked) add(rangeFrost)
                 }
             }
-            val selectedTags = mutableListOf<String>().apply {
+            val selectedTempLabels = mutableListOf<String>().apply {
+                if (!binding.cbNotTemperature.isChecked) {
+                    if (binding.cbHeat.isChecked) add("Heat")
+                    if (binding.cbHot.isChecked) add("Hot")
+                    if (binding.cbWarm.isChecked) add("Warm")
+                    if (binding.cbCool.isChecked) add("Cool")
+                    if (binding.cbCold.isChecked) add("Cold")
+                    if (binding.cbFrost.isChecked) add("Frost")
+                }
+            }
+            val isNotTemperature = binding.cbNotTemperature.isChecked
+
+            val tags = mutableListOf<String>().apply {
                 for (i in 0 until binding.tagsContainer.childCount) {
                     val view = binding.tagsContainer.getChildAt(i)
-                    if (view is CheckBox && view.isChecked)
+                    if (view is CheckBox && view.isChecked) {
                         add(view.text.toString())
+                    }
                 }
             }
 
@@ -222,20 +231,24 @@
                     }
 
                     val temperatureMatch = when {
-                        binding.cbNotTemperature.isChecked ->
-                            outfit.minTemp == NOT_TEMPERATURE && outfit.maxTemp == NOT_TEMPERATURE
-                        selectedTempRanges.isEmpty() -> true
-                        else -> selectedTempRanges.any { range ->
-                            rangesIntersect(outfit.minTemp, outfit.maxTemp, range.first, range.second)
-                        }
+                        isNotTemperature ->
+                            (outfit.minTemp == NOT_TEMPERATURE && outfit.maxTemp == NOT_TEMPERATURE)
+                        selectedTempRanges.isEmpty() ->
+                            true
+                        else ->
+                            selectedTempRanges.any { range ->
+                                rangesIntersect(outfit.minTemp, outfit.maxTemp, range.first, range.second)
+                            }
                     }
                     val outfitTagNames = outfitWithTags.tags.map { it.name.trim().lowercase() }
                     val tagMatch = when {
-                        selectedTags.contains("Без тегов") -> outfitTagNames.isEmpty()
-                        selectedTags.isNotEmpty() -> selectedTags
-                            .filter { it != "Без тегов" }
-                            .map { it.trim().lowercase() }
-                            .all { tag -> outfitTagNames.contains(tag) }
+                        tags.contains("Без тегов") -> outfitTagNames.isEmpty()
+                        tags.isNotEmpty() -> {
+                            tags
+                                .filter { it != "Без тегов" }
+                                .map { it.trim().lowercase() }
+                                .all { tag -> outfitTagNames.contains(tag) }
+                        }
                         else -> true
                     }
 
@@ -245,16 +258,15 @@
                     if (filteredOutfits.isEmpty()) {
                         Toast.makeText(this@FilterOutfitActivity, "Ничего не найдено", Toast.LENGTH_SHORT).show()
                     } else {
+                        val matchingIds = filteredOutfits.map { it.outfit.id.toString() }
                         val resultIntent = Intent().apply {
+                            putStringArrayListExtra("filtered_outfit_ids", ArrayList(matchingIds))
                             putStringArrayListExtra("selectedSeasons", ArrayList(seasons))
-                            putStringArrayListExtra("selectedTags", ArrayList(selectedTags))
-                        }
-                        if (selectedTempRanges.isNotEmpty()) {
-                            val tempValue = (selectedTempRanges.first().first + selectedTempRanges.first().second) / 2
-                            resultIntent.putExtra("selectedTemperature", tempValue)
-                        }
-                        if (binding.cbNotTemperature.isChecked) {
-                            resultIntent.putExtra("selectedNotTemperature", true)
+                            putStringArrayListExtra("selectedTags", ArrayList(tags))
+                            putStringArrayListExtra("selectedTempLabels", ArrayList(selectedTempLabels))
+                            if (isNotTemperature) {
+                                putExtra("selectedNotTemperature", true)
+                            }
                         }
                         setResult(Activity.RESULT_OK, resultIntent)
                         finish()
