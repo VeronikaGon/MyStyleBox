@@ -25,6 +25,8 @@ import com.hfad.mystylebox.adapter.OutfitAdapter
 import com.hfad.mystylebox.database.AppDatabase
 import kotlinx.coroutines.launch
 import com.github.mikephil.charting.data.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -35,6 +37,8 @@ import java.util.Locale
 class PlanningStatsFragment : Fragment(R.layout.fragment_plan_stats), SecondFragment.StatsUpdatable {
     private lateinit var mostAdapter: OutfitAdapter
     private lateinit var leastAdapter: OutfitAdapter
+    private lateinit var scrollContent: View
+    private lateinit var tvEmptyPlanning: TextView
 
     private val db by lazy { AppDatabase.getInstance(requireContext()) }
     private val dailyPlanDao by lazy { db.dailyPlanDao() }
@@ -44,6 +48,8 @@ class PlanningStatsFragment : Fragment(R.layout.fragment_plan_stats), SecondFrag
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        scrollContent     = view.findViewById(R.id.scrollContent)
+        tvEmptyPlanning   = view.findViewById(R.id.tvEmptyPlan)
         val tvFavDay = view.findViewById<TextView>(R.id.tvfavoritedaytoplan)
         val tvTotal = view.findViewById<TextView>(R.id.tvtotaldaysplanned)
         val tvUsually = view.findViewById<TextView>(R.id.tvusuallyinsetofthings)
@@ -227,33 +233,69 @@ class PlanningStatsFragment : Fragment(R.layout.fragment_plan_stats), SecondFrag
         }
     }
     override fun updateStats() {
-        view?.let { root ->
+        val root = view ?: return
+        viewLifecycleOwner.lifecycleScope.launch {
+            val allPlans = withContext(Dispatchers.IO) { dailyPlanDao.getAllDailyPlans() }
+
+            if (allPlans.isEmpty()) {
+                scrollContent.visibility   = View.GONE
+                tvEmptyPlanning.visibility = View.VISIBLE
+                return@launch
+            }
+
+            scrollContent.visibility   = View.VISIBLE
+            tvEmptyPlanning.visibility = View.GONE
+
             val tvTotal   = root.findViewById<TextView>(R.id.tvtotaldaysplanned)
             val tvUsually = root.findViewById<TextView>(R.id.tvusuallyinsetofthings)
             val tvInRow   = root.findViewById<TextView>(R.id.tvplanneddaysinrow)
             val barChart  = root.findViewById<BarChart>(R.id.barChart)
             val pieChart  = root.findViewById<PieChart>(R.id.pieChart)
+            val tvMostLabel  = root.findViewById<TextView>(R.id.tvMostLabel)
+            val tvLeastLabel = root.findViewById<TextView>(R.id.tvLeastLabel)
+            val tvFavHeader  = root.findViewById<TextView>(R.id.tvfavoritedaytoplanning)
+            val tvFavValue   = root.findViewById<TextView>(R.id.tvfavoritedaytoplan)
 
-            lifecycleScope.launch {
-                val allPlans = dailyPlanDao.getAllDailyPlans()
-                tvTotal.text = allPlans.map { it.planDate }.distinct().size.toString()
-                val totalItems = allPlans.sumOf { plan ->
-                    outfitDao.getClothingItemsForOutfit(plan.outfitId).size
-                }
-                tvUsually.text = if (allPlans.isEmpty()) "0" else (totalItems / allPlans.size).toString()
-                tvInRow.text = computeMaxStreak(allPlans).toString()
-                setupBarChart(barChart, computeMonthlyPlanCounts(allPlans))
-                setupPieChart(pieChart, computeUsedPercent(allPlans))
-                val usage = dailyPlanDao.getMostFrequent(Int.MAX_VALUE)
-                val maxCnt = usage.maxOfOrNull { it.cnt } ?: 0
-                val minCnt = usage.minOfOrNull { it.cnt } ?: 0
-                val mostIds = usage.filter { it.cnt == maxCnt }.map { it.outfitId }
-                val leastIds = usage.filter { it.cnt == minCnt }.map { it.outfitId }
-                mostAdapter.updateData(outfitDao.getOutfitsByIds(mostIds))
-                leastAdapter.updateData(outfitDao.getOutfitsByIds(leastIds))
+            val distinctDates = allPlans.map { it.planDate }.distinct().size
+            tvTotal.text      = distinctDates.toString()
+
+            val totalItems = allPlans.sumOf { plan ->
+                outfitDao.getClothingItemsForOutfit(plan.outfitId).size
             }
+            tvUsually.text = if (allPlans.isEmpty()) "0" else (totalItems / allPlans.size).toString()
+
+            val maxStreak = computeMaxStreak(allPlans)
+            tvInRow.text  = maxStreak.toString()
+            val monthlyCounts = computeMonthlyPlanCounts(allPlans)
+            setupBarChart(barChart, monthlyCounts)
+            val weekCounts = dailyPlanDao.getCountByWeekday()
+            val maxCnt     = weekCounts.maxOfOrNull { it.cnt } ?: 0
+            val favDays    = weekCounts.filter { it.cnt == maxCnt }
+                .map { it.weekday.toWeekdayName() }
+            tvFavValue.text = favDays.joinToString(",\n")
+            val usageAll = dailyPlanDao.getMostFrequent(Int.MAX_VALUE)
+            val maxUse   = usageAll.maxOfOrNull { it.cnt } ?: 0
+            val minUse   = usageAll.minOfOrNull { it.cnt } ?: 0
+            val mostIds  = usageAll.filter { it.cnt == maxUse }.map { it.outfitId }
+            val leastIds = usageAll.filter { it.cnt == minUse }.map { it.outfitId }
+            val mostList  = outfitDao.getOutfitsByIds(mostIds)
+            val leastList = outfitDao.getOutfitsByIds(leastIds)
+
+            tvMostLabel.text  = if (mostList.size > 1)
+                "Самые часто надеваемые комплекты:"
+            else
+                "Самый часто надеваемый комплект:"
+            tvLeastLabel.text = if (leastList.size > 1)
+                "Самые редко используемые комплекты:"
+            else
+                "Самый редко используемый комплект:"
+            mostAdapter.updateData(mostList)
+            leastAdapter.updateData(leastList)
+            val usedPercent = computeUsedPercent(allPlans)
+            setupPieChart(pieChart, usedPercent)
         }
     }
+
     private fun computeMaxStreak(plans: List<com.hfad.mystylebox.database.entity.DailyPlan>): Int {
         val fmt = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val dates = plans.mapNotNull { runCatching { fmt.parse(it.planDate) }.getOrNull() }

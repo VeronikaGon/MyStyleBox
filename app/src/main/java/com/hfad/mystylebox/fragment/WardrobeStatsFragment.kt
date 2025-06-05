@@ -16,6 +16,7 @@ import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
+import com.google.android.flexbox.FlexboxLayout
 import com.hfad.mystylebox.R
 import com.hfad.mystylebox.database.AppDatabase
 import com.hfad.mystylebox.database.entity.CategoryCount
@@ -43,11 +44,14 @@ class WardrobeStatsFragment : Fragment(R.layout.fragment_wardrobe_stats), Second
     private lateinit var rbBySize:     RadioButton
     private lateinit var rbByTemperature: RadioButton
     private var selectedFilterId: Int = R.id.rbByCategory
+    private lateinit var flsorting: FlexboxLayout
 
     private lateinit var rbThings: RadioButton
     private lateinit var rbOutfits: RadioButton
     private lateinit var pieChart: PieChart
     private lateinit var llScales: LinearLayout
+    private lateinit var scrollContent: View
+    private lateinit var tvEmptyWardrobe: TextView
 
     private val repo: StatsRepository by lazy { StatsRepository(requireContext()) }
     private var onlyThings = true
@@ -56,7 +60,10 @@ class WardrobeStatsFragment : Fragment(R.layout.fragment_wardrobe_stats), Second
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        scrollContent    = view.findViewById(R.id.scrollContent)
+        tvEmptyWardrobe  = view.findViewById(R.id.tvEmptyWardrobe)
         rbByCategory    = view.findViewById(R.id.rbByCategory)
+        flsorting= view.findViewById(R.id.flsorting)
         rbBySeason      = view.findViewById(R.id.rbBySeason)
         rbByStatus      = view.findViewById(R.id.rbByStatus)
         rbByTegi        = view.findViewById(R.id.rbByTegi)
@@ -134,148 +141,153 @@ class WardrobeStatsFragment : Fragment(R.layout.fragment_wardrobe_stats), Second
     override fun updateStats() {
         view?.let { root ->
             lifecycleScope.launch {
-                val items: List<ClothingItemFull> = StatsRepository(requireContext()).allItemsFull().first()
-                renderItems(root, items)
+                val items: List<ClothingItemFull> =
+                    StatsRepository(requireContext()).allItemsFull().first()
+                lastItems = items
+                renderCurrent()
             }
         }
     }
 
-    private fun renderItems(root: View, items: List<ClothingItemFull>) {
+    private fun renderCurrent() {
+        val allItems = lastItems
+        if (onlyThings) {
+            if (allItems.isEmpty()) {
+                scrollContent.visibility   = View.GONE
+                tvEmptyWardrobe.visibility = View.VISIBLE
+                tvEmptyWardrobe.text = "У вас пока нет вещей и комплектов.\nЧтобы увидеть статистику гардероба, сначала добавьте хотя бы одну вещь или комплект."
+                return
+            }
+        } else {
+            viewLifecycleOwner.lifecycleScope.launch {
+                val countOutfits = withContext(Dispatchers.IO) {
+                    AppDatabase.getInstance(requireContext()).outfitDao().getAllOutfits().size
+                }
+                if (countOutfits == 0) {
+                    scrollContent.visibility   = View.VISIBLE
+                    tvEmptyWardrobe.visibility = View.VISIBLE
+                    pieChart.visibility = View.GONE
+                    flsorting.visibility = View.GONE
+                    llScales.removeAllViews()
+                    tvEmptyWardrobe.text = "Нет комплектов"
+                    return@launch
+                } else {
+                    scrollContent.visibility   = View.VISIBLE
+                    tvEmptyWardrobe.visibility = View.GONE
+                    renderChartForOutfits()
+                }
+            }
+            return
+        }
+        scrollContent.visibility   = View.VISIBLE
+        pieChart.visibility = View.VISIBLE
+        flsorting.visibility = View.VISIBLE
+        tvEmptyWardrobe.visibility = View.GONE
+
+        renderChartForThings(allItems)
+    }
+
+    // Рисуем PieChart и шкалы для раздела «Вещи» (по выбранному фильтру)
+    private fun renderChartForThings(items: List<ClothingItemFull>) {
         val total = items.size
-        val grouped = items.groupingBy { it.categoryName }.eachCount().toList()
-        val entries = grouped.map { PieEntry(it.second.toFloat(), it.first) }
-        val colors  = grouped.mapIndexed { idx, _ -> ContextCompat.getColor(requireContext(), R.color.pie1 + idx % 10) }
+        val pairs: List<Pair<String, Int>> = when (selectedFilterId) {
+            R.id.rbByCategory -> items
+                .groupingBy { it.categoryName }
+                .eachCount()
+                .toList()
 
-        val pie = root.findViewById<PieChart>(R.id.pieChart)
-        pie.data = PieData(PieDataSet(entries, "").apply { this.colors = colors; setDrawValues(false) })
-        pie.centerText = "$total\nвещей"
-        pie.invalidate()
+            R.id.rbBySeason -> {
+                val raw = items.flatMap { item ->
+                    val seasons = item.clothingItem.seasons
+                    if (seasons.isNullOrEmpty()) listOf("Без сезона")
+                    else seasons
+                }
+                raw.groupingBy { it }
+                    .eachCount()
+                    .toList()
+            }
 
-        val ll = root.findViewById<LinearLayout>(R.id.llScales)
-        ll.removeAllViews()
-        grouped.forEachIndexed { idx, (label, count) ->
-            val percent = if (total > 0) count * 100 / total else 0
-            val row = layoutInflater.inflate(R.layout.item_scale, ll, false)
-            row.findViewById<TextView>(R.id.tvName).text = label
-            row.findViewById<TextView>(R.id.tvCount).text = count.toString()
-            row.findViewById<TextView>(R.id.tvPercent).text = "$percent%"
-            val pb = row.findViewById<ProgressBar>(R.id.progressBar)
-            pb.max = 100; pb.progress = percent
-            pb.progressTintList = ColorStateList.valueOf(colors[idx])
-            ll.addView(row)
+            R.id.rbByStatus -> items
+                .groupingBy { it.clothingItem.status.ifBlank { "Без статуса" } }
+                .eachCount()
+                .toList()
+
+            R.id.rbBySize -> items
+                .groupingBy { it.clothingItem.size.ifBlank { "Без размера" } }
+                .eachCount()
+                .toList()
+
+            R.id.rbByTegi -> items
+                .flatMap { item ->
+                    val names = item.tags.map { it.name }
+                    if (names.isEmpty()) listOf("Без тега") else names
+                }
+                .groupingBy { it }
+                .eachCount()
+                .toList()
+
+            else -> emptyList()
+        }
+
+        when (selectedFilterId) {
+            R.id.rbBySeason -> {
+                val seasonList = pairs.map { SeasonCount(it.first, it.second) }
+                updateUiBySeasonLike(total, seasonList, "$total\nвещей")
+            }
+            else -> {
+                val catList = pairs.map { CategoryCount(it.first, it.second) }
+                updateUiByCategoryLike(total, catList, "$total\nвещей")
+            }
         }
     }
 
+    // Рисуем PieChart и шкалы для раздела «Комплекты»
+    private fun renderChartForOutfits() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val db = AppDatabase.getInstance(requireContext())
+            val outfitsWithTags = withContext(Dispatchers.IO) {
+                db.outfitDao().getAllOutfitsWithTags()
+            }
+            val total = outfitsWithTags.size
 
-    private fun renderCurrent() {
-        if (onlyThings) {
-            val filtered = lastItems.filter { true }
-            val total = filtered.size
-
-            // 2) Составляем пары (ключ, count)
             val pairs: List<Pair<String, Int>> = when (selectedFilterId) {
-                R.id.rbByCategory ->
-                    filtered.groupingBy { it.categoryName }
-                        .eachCount()
-                        .toList()
-
-                R.id.rbBySeason -> {
-                    val raw = filtered.flatMap { item ->
-                        val seasons = item.clothingItem.seasons
-                        if (seasons.isNullOrEmpty()) {
-                            listOf("Без сезона")
-                        } else {
-                            seasons
-                        }
+                R.id.rbBySeason -> outfitsWithTags
+                    .flatMap { o ->
+                        val seasons = o.outfit.seasons ?: emptyList()
+                        if (seasons.isEmpty()) listOf("Без сезона") else seasons
                     }
-                    raw.groupingBy { it }
-                        .eachCount()
-                        .toList()
-                }
+                    .groupingBy { it }
+                    .eachCount()
+                    .toList()
 
-                R.id.rbByStatus ->
-                    filtered.groupingBy { it.clothingItem.status.ifBlank { "Без статуса" } }
-                        .eachCount()
-                        .toList()
+                R.id.rbByTegi -> outfitsWithTags
+                    .flatMap { ot ->
+                        val tags = ot.tags ?: emptyList()
+                        val names = tags.map { it.name }
+                        if (names.isEmpty()) listOf("Без тега") else names
+                    }
+                    .groupingBy { it }
+                    .eachCount()
+                    .toList()
 
-                R.id.rbBySize ->
-                    filtered.groupingBy { it.clothingItem.size.ifBlank { "Без размера" } }
-                        .eachCount()
-                        .toList()
-
-                R.id.rbByTegi ->
-                    filtered
-                        .flatMap { item ->
-                            val names = item.tags.map { it.name }
-                            if (names.isEmpty()) listOf("Без тега") else names
-                        }
-                        .groupingBy { it }
-                        .eachCount()
-                        .toList()
+                R.id.rbByTemperature -> outfitsWithTags
+                    .map { ot ->
+                        classifyTemperature(ot.outfit.minTemp, ot.outfit.maxTemp)
+                            .let { (title, range) -> "$title\n$range" }
+                    }
+                    .groupingBy { it }
+                    .eachCount()
+                    .toList()
 
                 else -> emptyList()
             }
 
             if (selectedFilterId == R.id.rbBySeason) {
-                updateUiBySeasonLike(total, pairs.map { SeasonCount(it.first, it.second) }, "$total\nвещей")
+                val seasonList = pairs.map { SeasonCount(it.first, it.second) }
+                updateUiBySeasonLike(total, seasonList, "$total\nкомплектов")
             } else {
-                val listCounts = pairs.map { CategoryCount(it.first, it.second) }
-                val center = when (selectedFilterId) {
-                    R.id.rbByCategory -> "$total\nвещей"
-                    else -> "$total\nвещей"
-                }
-                updateUiByCategoryLike(total, listCounts, center)
-            }
-        }
-        else {
-            viewLifecycleOwner.lifecycleScope.launch {
-                // 1) В IO-потоке забираем все комплекты
-                val outfits = withContext(Dispatchers.IO) {
-                    AppDatabase.getInstance(requireContext())
-                        .outfitDao()
-                        .getAllOutfitsWithTags()
-                }
-                val total = outfits.size
-
-                val pairs: List<Pair<String, Int>> = when (selectedFilterId) {
-                    R.id.rbBySeason -> outfits
-                        .flatMap { o ->
-                            val seasons = o.outfit.seasons ?: emptyList()
-                            if (seasons.isEmpty()) listOf("Без сезона") else seasons
-                        }
-                        .groupingBy { it }
-                        .eachCount()
-                        .toList()
-
-                    R.id.rbByTegi -> outfits
-                        .flatMap { ot ->
-                            val tags = ot.tags ?: emptyList()
-                            val names = tags.map { it.name }
-                            if (names.isEmpty()) listOf("Без тега") else names
-                        }
-                        .groupingBy { it }
-                        .eachCount()
-                        .toList()
-
-                    R.id.rbByTemperature -> outfits
-                        .map { ot ->
-                            classifyTemperature(ot.outfit.minTemp, ot.outfit.maxTemp)
-                                .let { (title, range) -> "$title\n$range" }
-                        }
-                        .groupingBy { it }
-                        .eachCount()
-                        .toList()
-
-                    else -> emptyList()
-                }
-
-                if (selectedFilterId == R.id.rbBySeason) {
-                    updateUiBySeasonLike(total, pairs.map { SeasonCount(it.first, it.second) } ,"$total\nкомплектов")
-                } else {
-                    val listCounts = pairs.map { CategoryCount(it.first, it.second) }
-                    val center = "$total\nкомплектов"
-                    updateUiByCategoryLike(total, listCounts, center)
-                }
+                val catList = pairs.map { CategoryCount(it.first, it.second) }
+                updateUiByCategoryLike(total, catList, "$total\nкомплектов")
             }
         }
     }

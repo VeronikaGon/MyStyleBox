@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginTop="16dp"
     xmlns:tools="http://schemas.android.com/tools">
+    <ScrollView
+        android:id="@+id/scrollContent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="16dp">
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -164,3 +168,14 @@
             app:layout_constraintEnd_toEndOf="parent"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>
+<TextView
+android:id="@+id/tvEmptyWardrobe"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+android:gravity="center"
+android:text="У вас пока нет вещей и комплектов.\nЧтобы увидеть статистику гардероба, сначала добавьте хотя бы одну вещь или комплект."
+android:textColor="@color/gray"
+android:textSize="18sp"
+android:visibility="gone"
+android:padding="24dp"/>
+    </FrameLayout>

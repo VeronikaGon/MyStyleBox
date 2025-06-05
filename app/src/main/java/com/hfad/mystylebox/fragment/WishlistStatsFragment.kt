@@ -30,10 +30,14 @@ class WishlistStatsFragment : Fragment(R.layout.fragment_wishlist_stats), Second
     private lateinit var tvCheapest: TextView
     private lateinit var tvWishlistCost: TextView
     private lateinit var tvAverageWishlistCost: TextView
+    private lateinit var scrollContent: View
+    private lateinit var tvEmptyWishlist: TextView
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        scrollContent      = view.findViewById(R.id.scrollContent)
+        tvEmptyWishlist    = view.findViewById(R.id.tvEmptyWishlist)
         pieChart        = view.findViewById(R.id.pieChart)
         llScales        = view.findViewById(R.id.llScales)
         tvMostExpensive = view.findViewById(R.id.tvmostexpensiveitem)
@@ -65,12 +69,21 @@ class WishlistStatsFragment : Fragment(R.layout.fragment_wishlist_stats), Second
         }
     }
     override fun updateStats() {
-        view?.let { root ->
-            lifecycleScope.launch {
-                val dao = AppDatabase.getInstance(requireContext()).wishListItemDao()
-                val items = withContext(Dispatchers.IO) { dao.getAll() }
-                renderWishlist(root, items, dao.getCountByCategory())
+        val root = view ?: return
+        lifecycleScope.launch {
+            val dao      = AppDatabase.getInstance(requireContext()).wishListItemDao()
+            val items    = withContext(Dispatchers.IO) { dao.getAll() }
+            val stats    = withContext(Dispatchers.IO) { dao.getCountByCategory() }
+
+            if (items.isEmpty()) {
+                scrollContent.visibility   = View.GONE
+                tvEmptyWishlist.visibility = View.VISIBLE
+                return@launch
+            } else {
+                scrollContent.visibility   = View.VISIBLE
+                tvEmptyWishlist.visibility = View.GONE
             }
+            renderWishlist(root, items, stats)
         }
     }
 
