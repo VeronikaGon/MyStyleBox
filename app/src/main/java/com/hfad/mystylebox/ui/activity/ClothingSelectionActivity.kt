@@ -71,6 +71,7 @@ class ClothingSelectionActivity : AppCompatActivity() {
                 finish()
             } else {
                 val intent = Intent(this, BoardActivity::class.java).apply {
+                    putExtra("isNewOutfit", true)
                     putIntegerArrayListExtra("selected_item_ids", selectedIds)
                     putStringArrayListExtra("selected_image_paths", selectedImagePaths)
                 }

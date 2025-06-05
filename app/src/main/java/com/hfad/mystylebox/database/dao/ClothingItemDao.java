@@ -33,6 +33,9 @@ public interface ClothingItemDao {
     @Update
     void update(ClothingItem item);
 
+    @Query("SELECT COUNT(*) FROM clothing_item")
+    int getCount();
+
     @Delete
     void delete(ClothingItem item);
 

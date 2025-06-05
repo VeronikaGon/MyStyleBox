@@ -17,10 +17,12 @@
         android:id="@+id/text"
         android:textColor="#000000"
         android:textSize="16sp"
-        android:layout_width="180dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@drawable/dialog_item_background"
         android:padding="8dp"
         android:gravity="center"
+        android:hyphenationFrequency="none"
+        android:breakStrategy="simple"
         android:textAlignment="center"/>
 </LinearLayout>

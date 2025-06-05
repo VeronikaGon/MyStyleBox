@@ -22,15 +22,9 @@ class BottomSheetScheduleFragment : BottomSheetDialogFragment() {
 
     companion object {
         private const val ARG_DATE = "arg_date"
-        private const val ARG_OUTFIT_NAME = "arg_outfit_name" // null если пустой день
-
-        /**
-         * @param date         — дата в формате LocalDate
-         * @param outfitName   — название комплекта, если показываем для конкретного элемента;
-         *                      null, если ничего не запланировано и показываем просто дату
-         */
+        private const val ARG_OUTFIT_NAME = "arg_outfit_name"
         fun newInstance(date: LocalDate, outfitName: String?): BottomSheetScheduleFragment {
-            val fmtDate = date.toString() // ISO
+            val fmtDate = date.toString()
             val fragment = BottomSheetScheduleFragment()
             fragment.arguments = Bundle().apply {
                 putString(ARG_DATE, fmtDate)
@@ -44,7 +38,6 @@ class BottomSheetScheduleFragment : BottomSheetDialogFragment() {
     private var outfitName: String? = null
     private var callback: Callback? = null
 
-    /** Fluent-setter для колбэка */
     fun setCallback(cb: Callback) = apply { this.callback = cb }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,7 +53,7 @@ class BottomSheetScheduleFragment : BottomSheetDialogFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View = inflater.inflate(R.layout.bottom_sheet_schedule, container, false).also { view ->
-        // 1) Заголовок
+
         val tvDate = view.findViewById<TextView>(R.id.tvSheetDate)
         tvDate.text = buildHeaderText()
 
@@ -68,12 +61,11 @@ class BottomSheetScheduleFragment : BottomSheetDialogFragment() {
         val btnRemove  = view.findViewById<Button>(R.id.btnRemove)
         val btnCancel  = view.findViewById<Button>(R.id.btnCancel)
 
-        // 2) Если outfitName != null — у нас уже был запланирован хотя бы 1 комплект
         if (outfitName != null) {
-            btnPrimary.text     = getString(R.string.sheet_schedule_more)  // "Запланировать ещё"
-            btnRemove.visibility = View.VISIBLE                            // показываем "Убрать комплект"
+            btnPrimary.text     = getString(R.string.sheet_schedule_more)
+            btnRemove.visibility = View.VISIBLE
         } else {
-            btnPrimary.text     = getString(R.string.sheet_schedule)       // "Запланировать комплект"
+            btnPrimary.text     = getString(R.string.sheet_schedule)
             btnRemove.visibility = View.GONE
         }
 
@@ -89,11 +81,6 @@ class BottomSheetScheduleFragment : BottomSheetDialogFragment() {
         btnCancel.setOnClickListener { dismiss() }
     }
 
-    /**
-     * Собирает строку заголовка:
-     * «Сегодня, d MMMM yyyy г.» / «Завтра, …» / «d MMMM yyyy г.»
-     * + « — названиеКомплекта» если outfitName != null
-     */
     private fun buildHeaderText(): String {
         val formattedDate = formatFullDate(date)
         val prefix = when {
@@ -104,7 +91,6 @@ class BottomSheetScheduleFragment : BottomSheetDialogFragment() {
         return if (outfitName != null) "$prefix — $outfitName" else prefix
     }
 
-    /** DateTimeFormatter ThreeTenBP */
     private fun formatFullDate(d: LocalDate): String {
         val fmt = DateTimeFormatter.ofPattern("d MMMM yyyy 'г.'", Locale("ru"))
         return d.format(fmt)

@@ -52,8 +52,26 @@
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/ic_search" />
 
+        <TextView
+            android:id="@+id/emptyTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Здесь пока нет комплектов, добавьте комплекты"
+            android:textColor="@color/gray"
+            android:textSize="18sp"
+            android:gravity="center"
+            android:visibility="gone"
+            android:breakStrategy="balanced"
+            android:hyphenationFrequency="full"
+            app:layout_constraintTop_toBottomOf="@+id/textView2"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/addoutfit"
+            android:padding="16dp" />
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView"
+            android:layout_marginTop="8dp"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:padding="8dp"

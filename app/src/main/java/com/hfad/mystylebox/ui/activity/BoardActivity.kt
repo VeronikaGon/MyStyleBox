@@ -17,6 +17,9 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -87,8 +90,11 @@ class BoardActivity : AppCompatActivity() {
 
     companion object {
         private const val REQUEST_CODE_ADD_ITEMS = 1001
-        private const val EXTRA_ITEM_STATES = "item_states"
+        private const val REQUEST_CODE_TO_FORM = 2001
+        const val EXTRA_IS_NEW_OUTFIT = "isNewOutfit"
     }
+
+    private lateinit var addClothesLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -110,26 +116,24 @@ class BoardActivity : AppCompatActivity() {
         btnDelete = findViewById(R.id.btnDelete)
         addClothesButton = findViewById(R.id.addclothes)
         val saveButton = findViewById<Button>(R.id.saveButton)
-        saveButton.setOnClickListener {
-            AlertDialog.Builder(this)
-                .setTitle("Подтверждение сохранения")
-                .setMessage("Вы уверены, что хотите сохранить этот комплект?")
-                .setPositiveButton("Да") { dialog, which ->
-                    saveBoardImage()
-                }
-                .setNegativeButton("Нет", null)
-                .show()
+        saveButton.setOnClickListener { AlertDialog.Builder(this)
+            .setTitle("Подтвердить сохранение")
+            .setMessage("Сохранить этот комплект?")
+            .setPositiveButton("Да") { _, _ ->
+                saveBoardImage()
+            }
+            .setNegativeButton("Нет", null)
+            .show()
         }
 
         setAdjustmentContainerVisibility(View.GONE)
 
-        viewModel = ViewModelProvider(this).get(BoardViewModel::class.java)
-        val passedImagePaths =
-            intent.getStringArrayListExtra("selected_image_paths") ?: arrayListOf()
-        val passedIds = intent.getIntegerArrayListExtra("selected_item_ids") ?: arrayListOf()
-        Log.d("BoardActivity", "Полученные пути изображений: $passedImagePaths")
-        Log.d("BoardActivity", "Полученные идентификаторы: $passedIds")
+        val isNewOutfit = intent.getBooleanExtra(EXTRA_IS_NEW_OUTFIT, false)
+        Log.d("BoardActivity", "isNewOutfit = $isNewOutfit")
 
+        viewModel = ViewModelProvider(this).get(BoardViewModel::class.java)
+        val passedImagePaths = intent.getStringArrayListExtra("selected_image_paths") ?: arrayListOf()
+        val passedIds = intent.getIntegerArrayListExtra("selected_item_ids") ?: arrayListOf()
         val statesJson = intent.getStringExtra("item_states_json")
         val initialStates: Map<String, ImageState> = if (!statesJson.isNullOrEmpty()) {
             val type = object : TypeToken<Map<String, ImageState>>() {}.type
@@ -138,6 +142,7 @@ class BoardActivity : AppCompatActivity() {
             emptyMap()
         }
 
+
         selectedIds.addAll(passedIds)
         for (i in passedImagePaths.indices) {
             addBoardItem(
@@ -145,6 +150,25 @@ class BoardActivity : AppCompatActivity() {
                 clothingItemId = passedIds[i],
                 initialState = initialStates[passedImagePaths[i]]
             )
+        }
+        addClothesLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result: ActivityResult ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val data: Intent? = result.data
+                val newPaths = data?.getStringArrayListExtra("selected_image_paths")
+                val newIds = data?.getIntegerArrayListExtra("selected_item_ids")
+                if (newPaths != null && newIds != null && newPaths.size == newIds.size) {
+                    for (i in newPaths.indices) {
+                        // Если такого пути ещё нет на доске — добавляем
+                        if (boardItems.none { it.tag == newPaths[i] }) {
+                            addBoardItem(newPaths[i], newIds[i])
+                        }
+                    }
+                } else {
+                    Toast.makeText(this, "Данные о новых вещах не получены", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
 
         btnForeground.setOnClickListener {
@@ -222,6 +246,7 @@ class BoardActivity : AppCompatActivity() {
         val bitmap = Bitmap.createBitmap(boardView.width, boardView.height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         boardView.draw(canvas)
+        selectedView?.background = originalBackground
 
         val uniqueFileName = "boardImage_${System.currentTimeMillis()}.png"
         val file = File(externalCacheDir, uniqueFileName)
@@ -229,27 +254,53 @@ class BoardActivity : AppCompatActivity() {
             FileOutputStream(file).use { fos ->
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)
             }
-            selectedView?.background = originalBackground
 
-            val allStates = viewModel.imageStates.value ?: emptyMap()
+            val allStates = viewModel.imageStates.value ?: emptyMap<String, ImageState>()
             val json = Gson().toJson(allStates)
 
-            val resultIntent = Intent().apply {
+            val intent = Intent(this, OutfitActivity::class.java).apply {
                 putExtra("imagePath", file.path)
-                putIntegerArrayListExtra(
-                    "selected_item_ids",
-                    ArrayList(itemIdMapping.values.distinct())
-                )
+                putIntegerArrayListExtra("selected_item_ids", ArrayList(itemIdMapping.values.distinct()))
                 val allPaths = boardItems.map { it.tag.toString() }
                 putStringArrayListExtra("selected_image_paths", ArrayList(allPaths))
                 putExtra("item_states_json", json)
+                putExtra("fromBoard", true)
             }
-            setResult(Activity.RESULT_OK, resultIntent)
+            startActivityForResult(intent, REQUEST_CODE_TO_FORM)
 
-            finish()
         } catch (e: Exception) {
             e.printStackTrace()
             Toast.makeText(this, "Ошибка сохранения изображения", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_CODE_ADD_ITEMS && resultCode == Activity.RESULT_OK) {
+            val newPaths = data?.getStringArrayListExtra("selected_image_paths")
+            val newIds = data?.getIntegerArrayListExtra("selected_item_ids")
+            if (newPaths != null && newIds != null && newPaths.size == newIds.size) {
+                for (i in newPaths.indices) {
+                    if (boardItems.none { it.tag == newPaths[i] }) {
+                        addBoardItem(newPaths[i], newIds[i])
+                    }
+                }
+            } else {
+                Toast.makeText(this, "Данные о новых вещах не получены", Toast.LENGTH_SHORT).show()
+            }
+        }
+        if (requestCode == REQUEST_CODE_TO_FORM && resultCode == Activity.RESULT_OK) {
+            val returnedJson = data?.getStringExtra("item_states_json")
+            if (returnedJson != null) {
+                val type = object : TypeToken<Map<String, ImageState>>() {}.type
+                val statesFromForm: Map<String, ImageState> = Gson().fromJson(returnedJson, type)
+                statesFromForm.forEach { (path, state) ->
+                    boardItems.find { it.tag == path }?.let { imageView ->
+                        viewModel.updateImageState(path, state)
+                        applyNewState(imageView, state)
+                    }
+                }
+            }
         }
     }
 
@@ -314,24 +365,6 @@ class BoardActivity : AppCompatActivity() {
         selectedIds.add(clothingItemId)
         itemIdMapping[imageView] = clothingItemId
         selectBoardItem(imageView)
-    }
-
-    // Обработка результата из ClothingSelectionActivity
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_CODE_ADD_ITEMS && resultCode == RESULT_OK) {
-            val newPaths = data?.getStringArrayListExtra("selected_image_paths")
-            val newIds = data?.getIntegerArrayListExtra("selected_item_ids")
-            if (newPaths != null && newIds != null && newPaths.size == newIds.size) {
-                for (i in newPaths.indices) {
-                    if (boardItems.none { it.tag == newPaths[i] }) {
-                        addBoardItem(newPaths[i], newIds[i])
-                    }
-                }
-            } else {
-                Toast.makeText(this, "Данные о новых вещах не получены", Toast.LENGTH_SHORT).show()
-            }
-        }
     }
 
     // Добавление миниатюры для изображения

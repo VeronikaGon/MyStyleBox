@@ -126,17 +126,31 @@ class FirstFragment : Fragment() {
             ll.setOnLongClickListener {
                 val date = currentWeekStart!!.plusDays(idx.toLong())
                 CoroutineScope(Dispatchers.IO).launch {
-                    val has = AppDatabase.getInstance(requireContext())
-                        .dailyPlanDao().getDailyPlansForDate(date.toString()).isNotEmpty()
+                    val exists = hasAnyOutfits()
                     withContext(Dispatchers.Main) {
-                        BottomSheetScheduleFragment
-                            .newInstance(date, outfitName = null)
-                            .setCallback(object : BottomSheetScheduleFragment.Callback {
-                                override fun onSchedule(date: LocalDate) { /*…*/ }
-                                override fun onScheduleMore(date: LocalDate) { /*…*/ }
-                                override fun onRemoveOne(date: LocalDate) { /*…*/ }
-                            })
-                            .show(parentFragmentManager, "sheet")
+                        if (!exists) {
+                            Toast.makeText(
+                                requireContext(),
+                                "Сначала добавьте хотя бы один комплект",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else {
+                            selectedDate = date
+                            updateWeekView()
+                            BottomSheetScheduleFragment
+                                .newInstance(date, outfitName = null)
+                                .setCallback(object : BottomSheetScheduleFragment.Callback {
+                                    override fun onSchedule(d: LocalDate) {
+                                        outfitSelectionLauncher.launch(
+                                            Intent(requireContext(), OutfitSelectionActivity::class.java)
+                                                .putExtra("EXTRA_SELECTED_DATE", d.toString())
+                                        )
+                                    }
+                                    override fun onScheduleMore(d: LocalDate) = Unit
+                                    override fun onRemoveOne(d: LocalDate) = Unit
+                                })
+                                .show(parentFragmentManager, "sheet_empty")
+                        }
                     }
                 }
                 true
@@ -153,27 +167,76 @@ class FirstFragment : Fragment() {
         }
 
         btnCalendarAddOutfit.setOnLongClickListener {
-            BottomSheetScheduleFragment
-                .newInstance(selectedDate!!, outfitName = null)
-                .setCallback(object : BottomSheetScheduleFragment.Callback {
-                    override fun onSchedule(date: LocalDate) {
-                        outfitSelectionLauncher.launch(
-                            Intent(requireContext(), OutfitSelectionActivity::class.java)
-                                .putExtra("EXTRA_SELECTED_DATE", date.toString())
-                        )
+            CoroutineScope(Dispatchers.IO).launch {
+                val exists = hasAnyOutfits()
+                withContext(Dispatchers.Main) {
+                    if (!exists) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Сначала добавьте хотя бы один комплект",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        BottomSheetScheduleFragment
+                            .newInstance(selectedDate!!, outfitName = null)
+                            .setCallback(object : BottomSheetScheduleFragment.Callback {
+                                override fun onSchedule(d: LocalDate) {
+                                    outfitSelectionLauncher.launch(
+                                        Intent(requireContext(), OutfitSelectionActivity::class.java)
+                                            .putExtra("EXTRA_SELECTED_DATE", d.toString())
+                                    )
+                                }
+                                override fun onScheduleMore(d: LocalDate) = Unit
+                                override fun onRemoveOne(d: LocalDate) = Unit
+                            })
+                            .show(parentFragmentManager, "sheet_empty")
                     }
-                    override fun onScheduleMore(date: LocalDate) = Unit
-                    override fun onRemoveOne(date: LocalDate) = Unit
-                })
-                .show(parentFragmentManager, "sheet_empty")
+                }
+            }
             true
         }
+
+        btnCalendarAddOutfit.setOnClickListener{ CoroutineScope(Dispatchers.IO).launch {
+            val exists = hasAnyOutfits()
+            withContext(Dispatchers.Main) {
+                if (!exists) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Сначала добавьте хотя бы один комплект",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                else {
+                    BottomSheetScheduleFragment
+                        .newInstance(selectedDate!!, outfitName = null)
+                        .setCallback(object : BottomSheetScheduleFragment.Callback {
+                            override fun onSchedule(d: LocalDate) {
+                                outfitSelectionLauncher.launch(
+                                    Intent(requireContext(), OutfitSelectionActivity::class.java)
+                                        .putExtra("EXTRA_SELECTED_DATE", d.toString())
+                                )
+                            }
+                            override fun onScheduleMore(d: LocalDate) = Unit
+                            override fun onRemoveOne(d: LocalDate) = Unit
+                        })
+                        .show(parentFragmentManager, "sheet_empty")
+                    true
+                }
+            }
+        }
+        }
+
         btnCalendarMonth.setOnClickListener {
             val intent = Intent(requireContext(), CalendarActivity::class.java)
             calendarLauncher.launch(intent)
         }
         updateWeekView()
         return view
+    }
+    //проверка есть ли комплекты
+    private suspend fun hasAnyOutfits(): Boolean {
+        val db = AppDatabase.getInstance(requireContext())
+        return db.outfitDao().getCount() > 0
     }
 
     //метод обновления отображения недели

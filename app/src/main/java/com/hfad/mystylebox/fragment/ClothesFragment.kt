@@ -15,6 +15,7 @@ import android.widget.BaseAdapter
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity.RESULT_OK
 import androidx.core.content.FileProvider
@@ -51,7 +52,7 @@ class ClothesFragment : Fragment() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var imageFilter: ImageButton
     private var photoUri: Uri? = null
-
+    private lateinit var emptyTextView: TextView
     private val filterActivityLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -114,6 +115,7 @@ class ClothesFragment : Fragment() {
             withContext(Dispatchers.Main) {
                 currentItems = filteredItems
                 isFilterActive = true
+                updateEmptyView()
                 (recyclerView.adapter as? ClothingAdapter)?.updateData(filteredItems)
             }
         }
@@ -130,6 +132,7 @@ class ClothesFragment : Fragment() {
                 currentItems = items
                 isFilterActive = false
                 (recyclerView.adapter as? ClothingAdapter)?.updateData(items)
+                updateEmptyView()
             }
         }
     }
@@ -139,6 +142,7 @@ class ClothesFragment : Fragment() {
         if (currentFilters == null || currentFilters?.isEmpty == true) {
             loadClothingItems()
         }
+        updateCategoryTabs()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -147,28 +151,7 @@ class ClothesFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val tabLayout = view.findViewById<TabLayout>(R.id.tabLayout)
-        CoroutineScope(Dispatchers.IO).launch {
-            val db = Room.databaseBuilder(
-                requireContext(), AppDatabase::class.java, "wardrobe_db"
-            ).build()
-            val allItemsFull: List<ClothingItemFull> = db.clothingItemDao().getAllItemsFull()
-            val categories = allItemsFull.map { it.categoryName }.distinct().sorted()
-            withContext(Dispatchers.Main) {
-                tabLayout.removeAllTabs()
-                tabLayout.addTab(tabLayout.newTab().setText("Все"))
-                for (cat in categories) {
-                    tabLayout.addTab(tabLayout.newTab().setText(cat))
-                }
-                for (i in 0 until tabLayout.tabCount) {
-                    val tab = (tabLayout.getChildAt(0) as ViewGroup).getChildAt(i)
-                    val layoutParams = tab.layoutParams as ViewGroup.MarginLayoutParams
-                    layoutParams.setMargins(4, 0, 4, 0)
-                    tab.requestLayout()
-                }
-            }
-        }
-
+        updateCategoryTabs()
         recyclerView = view.findViewById(R.id.recyclerView)
         recyclerView.layoutManager = GridLayoutManager(context, 2)
         recyclerView.adapter = ClothingAdapter(emptyList(), R.layout.item_clothing).apply {
@@ -210,14 +193,56 @@ class ClothesFragment : Fragment() {
                 }
             }
         }
+        emptyTextView = view.findViewById(R.id.emptyTextView)
         loadClothingItems()
 
         val selectPhotoButton = view.findViewById<ImageButton>(R.id.selectPhotoButton)
         selectPhotoButton.setOnClickListener { showImagePickerDialog() }
+
         val imageSearch = view.findViewById<ImageButton>(R.id.imageSearch)
-        imageSearch.setOnClickListener { startSearchClothingActivity() }
-        imageFilter = view.findViewById(R.id.imageFilter)
-        imageFilter.setOnClickListener { startFilterActivity() }
+        imageSearch.setOnClickListener {
+            CoroutineScope(Dispatchers.IO).launch {
+                val db = Room.databaseBuilder(
+                    requireContext(),
+                    AppDatabase::class.java,
+                    "wardrobe_db"
+                ).build()
+                val count = db.clothingItemDao().getCount()
+                withContext(Dispatchers.Main) {
+                    if (count <= 4) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Добавьте ещё вещей для поиска",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        startSearchClothingActivity()
+                    }
+                }
+            }
+        }
+        val imageFilter = view.findViewById<ImageButton>(R.id.imageFilter)
+        imageFilter.setOnClickListener {
+            CoroutineScope(Dispatchers.IO).launch {
+                val db = Room.databaseBuilder(
+                    requireContext(),
+                    AppDatabase::class.java,
+                    "wardrobe_db"
+                ).build()
+                val count = db.clothingItemDao().getCount()
+                withContext(Dispatchers.Main) {
+                    if (count <= 4) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Добавьте ещё вещей для фильтрации",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        startFilterActivity()
+                    }
+                }
+            }
+        }
 
         val tabLayoutView = view.findViewById<TabLayout>(R.id.tabLayout)
         tabLayoutView.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
@@ -228,10 +253,40 @@ class ClothesFragment : Fragment() {
                 else
                     currentItems.filter { it.categoryName.equals(selectedCategory, ignoreCase = true) }
                 (recyclerView.adapter as? ClothingAdapter)?.updateData(filtered)
+                updateEmptyView()
             }
             override fun onTabUnselected(tab: TabLayout.Tab) {}
             override fun onTabReselected(tab: TabLayout.Tab) {}
         })
+    }
+
+    private fun updateCategoryTabs() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val db = Room.databaseBuilder(
+                requireContext(), AppDatabase::class.java, "wardrobe_db"
+            ).build()
+            val allItemsFull: List<ClothingItemFull> = db.clothingItemDao().getAllItemsFull()
+            val categories = allItemsFull.map { it.categoryName }.distinct().sorted()
+
+            withContext(Dispatchers.Main) {
+                val tabLayout = view?.findViewById<TabLayout>(R.id.tabLayout) ?: return@withContext
+                tabLayout.removeAllTabs()
+
+                if (allItemsFull.isNotEmpty()) {
+                    tabLayout.addTab(tabLayout.newTab().setText("Все"))
+                    for (cat in categories) {
+                        tabLayout.addTab(tabLayout.newTab().setText(cat))
+                    }
+                }
+
+                for (i in 0 until tabLayout.tabCount) {
+                    val tab = (tabLayout.getChildAt(0) as ViewGroup).getChildAt(i)
+                    val layoutParams = tab.layoutParams as ViewGroup.MarginLayoutParams
+                    layoutParams.setMargins(4, 0, 4, 0)
+                    tab.requestLayout()
+                }
+            }
+        }
     }
 
     private fun deleteItem(item: ClothingItem) {
@@ -240,7 +295,9 @@ class ClothesFragment : Fragment() {
                 requireContext(), AppDatabase::class.java, "wardrobe_db"
             ).build()
             db.clothingItemDao().delete(item)
-            withContext(Dispatchers.Main) { loadClothingItems() }
+            withContext(Dispatchers.Main) {
+                loadClothingItems()
+                updateCategoryTabs()}
         }
     }
 
@@ -272,6 +329,16 @@ class ClothesFragment : Fragment() {
                 }
             }
             .show()
+    }
+
+    private fun updateEmptyView() {
+        if ((recyclerView.adapter as? ClothingAdapter)?.itemCount == 0) {
+            recyclerView.visibility = View.GONE
+            emptyTextView.visibility = View.VISIBLE
+        } else {
+            emptyTextView.visibility = View.GONE
+            recyclerView.visibility = View.VISIBLE
+        }
     }
 
     private fun openGallery() {

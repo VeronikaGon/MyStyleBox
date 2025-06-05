@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
@@ -22,6 +23,7 @@ import com.hfad.mystylebox.database.AppDatabase
 import com.hfad.mystylebox.database.entity.DailyPlan
 import com.hfad.mystylebox.database.dao.DailyPlanDao
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.threeten.bp.LocalDate
@@ -100,15 +102,31 @@ class DayDetailsBottomSheet : BottomSheetDialogFragment() {
                     btnAction.text = "Запланировать ещё"
                 }
                 btnAction.setOnClickListener {
-                    val intent = Intent(requireContext(), OutfitSelectionActivity::class.java).apply {
-                        if (outfits.isNotEmpty()) {
-                            putStringArrayListExtra(
-                                "EXTRA_SELECTED_IDS",
-                                ArrayList(outfits.map { it.id.toString() })
-                            )
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        val anyOutfits = AppDatabase
+                            .getInstance(requireContext())
+                            .outfitDao()
+                            .getCount() > 0
+                        withContext(Main) {
+                            if (!anyOutfits) {
+                                Toast.makeText(
+                                    requireContext(),
+                                    "Сначала добавьте хотя бы один комплект",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } else {
+                                val intent = Intent(requireContext(), OutfitSelectionActivity::class.java).apply {
+                                    if (outfits.isNotEmpty()) {
+                                        putStringArrayListExtra(
+                                            "EXTRA_SELECTED_IDS",
+                                            ArrayList(outfits.map { it.id.toString() })
+                                        )
+                                    }
+                                }
+                                outfitSelectionLauncher.launch(intent)
+                            }
                         }
                     }
-                    outfitSelectionLauncher.launch(intent)
                 }
 
                 rvOutfits.adapter = PlannedOutfitAdapter(outfits) { outfit ->

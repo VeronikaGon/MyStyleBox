@@ -8,9 +8,9 @@
 
     <TextView
         android:id="@+id/tvPercent"
-        android:layout_width="40dp"
+        android:layout_width="45dp"
         android:layout_height="wrap_content"
-        android:text="40%"
+        android:text="100%"
         android:textSize="14sp"/>
 
     <TextView

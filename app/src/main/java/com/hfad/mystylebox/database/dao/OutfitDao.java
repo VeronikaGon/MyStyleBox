@@ -65,4 +65,10 @@ public interface OutfitDao {
 
     @Query("SELECT * FROM outfits WHERE id IN (:outfitIds)")
     List<Outfit> getOutfitsByIds(List<Integer> outfitIds);
+
+    @Query("SELECT * FROM outfits  WHERE id NOT IN (SELECT DISTINCT outfitId FROM daily_plan WHERE plan_date >= :date )")
+    List<Outfit> getStaleOutfitsSince(String date);
+
+    @Query("SELECT COUNT(*) FROM outfits")
+    int getCount();
    }

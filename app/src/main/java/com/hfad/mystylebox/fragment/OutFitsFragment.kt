@@ -5,8 +5,10 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import androidx.fragment.app.Fragment
 import android.widget.ImageButton
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.recyclerview.widget.GridLayoutManager
@@ -34,6 +36,7 @@ class OutFitsFragment : Fragment() {
     private var isFilterActive: Boolean = false
     private var currentFilters: Bundle? = null
     private val NOT_TEMPERATURE = -99
+    private lateinit var emptyTextView: TextView
 
     override fun onCreateView(
         inflater: android.view.LayoutInflater, container: android.view.ViewGroup?,
@@ -46,7 +49,7 @@ class OutFitsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         val addOutfitButton = view.findViewById<ImageButton>(R.id.addoutfit)
         addOutfitButton.setOnClickListener { startOutfitActivity() }
-
+        emptyTextView = view.findViewById(R.id.emptyTextView)
         recyclerView = view.findViewById(R.id.recyclerView)
         recyclerView.layoutManager = GridLayoutManager(context, 2)
         outfitAdapter = OutfitAdapter(emptyList(), R.layout.item_clothing)
@@ -77,13 +80,72 @@ class OutFitsFragment : Fragment() {
             }
         }
 
-        // Загружаем все комплекты по умолчанию
-        loadOutfits()
-
         val imageSearch = view.findViewById<ImageButton>(R.id.imageSearch)
-        imageSearch.setOnClickListener { startSearchClothingActivity() }
+        imageSearch.setOnClickListener {
+            CoroutineScope(Dispatchers.IO).launch {
+                val db = Room.databaseBuilder(
+                    requireContext(),
+                    AppDatabase::class.java,
+                    "wardrobe_db"
+                ).build()
+                val alloutfits = db.outfitDao().getAllOutfits()
+                withContext(Dispatchers.Main) {
+                    if (alloutfits.size <= 4) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Добавьте ещё комплектов для поиска",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        startSearchClothingActivity()
+                    }
+                }
+            }
+        }
+
         imageFilter = view.findViewById(R.id.imageFilter)
-        imageFilter.setOnClickListener { startFilterActivity() }
+        imageFilter.setOnClickListener {
+            CoroutineScope(Dispatchers.IO).launch {
+                val db = Room.databaseBuilder(
+                    requireContext(),
+                    AppDatabase::class.java,
+                    "wardrobe_db"
+                ).build()
+                val alloutfits = db.outfitDao().getAllOutfits()
+                withContext(Dispatchers.Main) {
+                    if (alloutfits.size <= 4) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Добавьте ещё комплектов для фильтрации",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        startFilterActivity()
+                    }
+                }
+            }
+        }
+        loadOutfits()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!isFilterActive) {
+            loadOutfits()
+        } else {
+            currentFilters?.let { loadFilteredOutfits(it) }
+        }
+    }
+
+    private fun updateEmptyView() {
+        val itemCount = (recyclerView.adapter as? OutfitAdapter)?.itemCount ?: 0
+        if (itemCount == 0) {
+            recyclerView.visibility = View.GONE
+            emptyTextView.visibility = View.VISIBLE
+        } else {
+            emptyTextView.visibility = View.GONE
+            recyclerView.visibility = View.VISIBLE
+        }
     }
 
     private fun startSearchClothingActivity() {
@@ -142,8 +204,25 @@ class OutFitsFragment : Fragment() {
     }
 
     private fun startOutfitActivity() {
-        val intent = Intent(requireContext(), ClothingSelectionActivity::class.java)
-        startActivity(intent)
+        CoroutineScope(Dispatchers.IO).launch {
+            val db = Room.databaseBuilder(
+                requireContext(), AppDatabase::class.java, "wardrobe_db"
+            ).build()
+            val itemCount = db.clothingItemDao().getCount()
+
+            withContext(Dispatchers.Main) {
+                if (itemCount < 2) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Добавьте хотя бы 2 вещи, чтобы создать комплект",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else {
+                    val intent = Intent(requireContext(), ClothingSelectionActivity::class.java)
+                    startActivity(intent)
+                }
+            }
+        }
     }
 
     // Загрузка всех комплектов (без фильтра)
@@ -152,10 +231,10 @@ class OutFitsFragment : Fragment() {
             val db = Room.databaseBuilder(
                 requireContext(), AppDatabase::class.java, "wardrobe_db"
             ).build()
-            // Если возможно, используйте метод, возвращающий OutfitWithTags:
-            val outfits = db.outfitDao().getAllOutfits()  // или getAllOutfitsWithTags(), если хотите работать с тегами
+            val outfits = db.outfitDao().getAllOutfits()
             withContext(Dispatchers.Main) {
                 outfitAdapter.updateData(outfits)
+                updateEmptyView()
             }
         }
     }

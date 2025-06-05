@@ -22,7 +22,7 @@
             <RadioButton
                 android:id="@+id/rbThings"
                 style="@style/Widget.AppCompat.CompoundButton.RadioButton"
-                android:layout_width="100dp"
+                android:layout_width="120dp"
                 android:textAlignment="center"
                 android:layout_height="wrap_content"
                 android:button="@null"
@@ -36,8 +36,7 @@
             <RadioButton
                 android:id="@+id/rbOutfits"
                 style="@style/Widget.AppCompat.CompoundButton.RadioButton"
-                android:layout_width="100dp"
-
+                android:layout_width="120dp"
                 android:textAlignment="center"
                 android:layout_height="wrap_content"
                 android:button="@null"

@@ -63,6 +63,8 @@ class ThirdFragment : Fragment() {
     private lateinit var rv: RecyclerView
     private lateinit var adapter: WishListAdapter
     private lateinit var imageFilter: ImageButton
+    private lateinit var emptyTextView: TextView
+    private lateinit var selectPhotoButton: ImageButton
 
     private var allItems = listOf<WishListItem>()
     private var categories = listOf<Category>()
@@ -108,17 +110,18 @@ class ThirdFragment : Fragment() {
     override fun onViewCreated(view: View, saved: Bundle?) {
         super.onViewCreated(view, saved)
 
-        // Инициализируем view
         searchView = view.findViewById(R.id.searchView)
         rbGrid = view.findViewById(R.id.rbGrid)
         rbList = view.findViewById(R.id.rbList)
         tabLayout = view.findViewById(R.id.tabLayout)
         rv = view.findViewById(R.id.recyclerView)
-        imageFilter = view.findViewById(R.id.imageFilter) // найдём ImageButton
+        imageFilter = view.findViewById(R.id.imageFilter)
+        emptyTextView = view.findViewById(R.id.emptyTextView)
+        selectPhotoButton = view.findViewById(R.id.selectPhotoButton)
         val toggleGroup    = view.findViewById<LinearLayout>(R.id.toggleGroup)
         val llSearch       = view.findViewById<LinearLayout>(R.id.llsearch)
         val lp             = llSearch.layoutParams as LinearLayout.LayoutParams
-        // Настройка RecyclerView и адаптера
+
         rv.layoutManager = GridLayoutManager(context, 2)
         adapter = WishListAdapter(emptyList(), R.layout.item_clothing,
             onClick = { item -> showItemBottomSheet(item) },
@@ -147,13 +150,10 @@ class ThirdFragment : Fragment() {
                     searchView.clearFocus()
                     applyCombinedFilters(text = "", categoryId = null)
                 } else {
-                    // Скрываем и растягиваем на весь экран
                     imageFilter.visibility = View.GONE
                     toggleGroup.visibility = View.GONE
                     lp.weight = 0f
                     llSearch.layoutParams = lp
-
-
                     applyCombinedFilters(
                         text = q.orEmpty(),
                         categoryId = tabLayout.selectedTabPosition.takeIf { it != 0 }
@@ -167,7 +167,6 @@ class ThirdFragment : Fragment() {
             true
         }
 
-
         // Grid/List переключение
         fun selectGrid() {
             rbGrid.setBackgroundResource(R.drawable.edittext_background)
@@ -176,6 +175,7 @@ class ThirdFragment : Fragment() {
             adapter.layoutRes = R.layout.item_clothing
             adapter.notifyDataSetChanged()
         }
+
         fun selectList() {
             rbList.setBackgroundResource(R.drawable.edittext_background)
             rbGrid.setBackgroundResource(0)
@@ -183,46 +183,68 @@ class ThirdFragment : Fragment() {
             adapter.layoutRes = R.layout.item_wishlist
             adapter.notifyDataSetChanged()
         }
+
         rbGrid.setOnClickListener {
             if (!rbGrid.isChecked) rbGrid.isChecked = true
             rbList.isChecked = false
             selectGrid()
         }
+
         rbList.setOnClickListener {
             if (!rbList.isChecked) rbList.isChecked = true
             rbGrid.isChecked = false
             selectList()
         }
+
         rbGrid.isChecked = true
         selectGrid()
 
         imageFilter.setOnClickListener {
-            val intent = Intent(requireContext(), FilterWishlistActivity::class.java).apply {
-                putStringArrayListExtra("selectedGender", currentFilters.getStringArrayList("gender"))
-                putStringArrayListExtra("selectedSize",   currentFilters.getStringArrayList("size"))
-                putStringArrayListExtra("selectedCount",  currentFilters.getStringArrayList("count"))
+            if (allItems.size <= 4) {
+                Toast.makeText(
+                    requireContext(),
+                    "Добавьте ещё желанных вещей для фильтрации",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else {
+                val intent = Intent(requireContext(), FilterWishlistActivity::class.java).apply {
+                    putStringArrayListExtra(
+                        "selectedGender",
+                        currentFilters.getStringArrayList("gender")
+                    )
+                    putStringArrayListExtra(
+                        "selectedSize",
+                        currentFilters.getStringArrayList("size")
+                    )
+                    putStringArrayListExtra(
+                        "selectedCount",
+                        currentFilters.getStringArrayList("count")
+                    )
+                }
+                filterLauncher.launch(intent)
             }
-            filterLauncher.launch(intent)
         }
 
-        // Запуск остальных лончеров (галерея/камера/файлы)
         galleryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == android.app.Activity.RESULT_OK) {
                 val selectedImageUri: Uri? = result.data?.data
                 startEditActivity(selectedImageUri)
             }
         }
+
         cameraLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == android.app.Activity.RESULT_OK) {
                 startEditActivity(photoUri)
             }
         }
+
         fileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == android.app.Activity.RESULT_OK) {
                 val selectedImageUri: Uri? = result.data?.data
                 startEditActivity(selectedImageUri)
             }
         }
+
         editLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == android.app.Activity.RESULT_OK) {
                 val editedImageUriString = result.data?.getStringExtra("result_image_uri")
@@ -264,7 +286,7 @@ class ThirdFragment : Fragment() {
                             .build().wishListItemDao().delete(item)
                         allItems = allItems.filterNot { it.id == item.id }
                         withContext(Dispatchers.Main) {
-                            adapter.updateData(allItems)
+                            updateEmptyOrLimitedMode()
                         }
                     }
                 }
@@ -286,7 +308,7 @@ class ThirdFragment : Fragment() {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(requireContext(),
                         "Перенесено в гардероб", Toast.LENGTH_SHORT).show()
-                    adapter.updateData(allItems)
+                    updateEmptyOrLimitedMode()
                 }
             }
         }
@@ -312,25 +334,7 @@ class ThirdFragment : Fragment() {
             displayedCategories = categories.filter { it.id in usedCategoryIds }
 
             withContext(Dispatchers.Main) {
-                tabLayout.removeAllTabs()
-                tabLayout.addTab(tabLayout.newTab().setText("Все"))
-                for (i in 0 until tabLayout.tabCount) {
-                    val tab = (tabLayout.getChildAt(0) as ViewGroup).getChildAt(i)
-                    val layoutParams = tab.layoutParams as ViewGroup.MarginLayoutParams
-                    layoutParams.setMargins(4, 0, 4, 0)
-                    tab.requestLayout()
-                }
-                displayedCategories.forEach { tabLayout.addTab(tabLayout.newTab().setText(it.name)) }
-
-                tabLayout.addOnTabSelectedListener(object: TabLayout.OnTabSelectedListener {
-                    override fun onTabSelected(tab: TabLayout.Tab) {
-                        val catId = if (tab.position == 0) null else displayedCategories[tab.position - 1].id
-                        applyCombinedFilters(categoryId = catId)
-                    }
-                    override fun onTabUnselected(tab: TabLayout.Tab)=Unit
-                    override fun onTabReselected(tab: TabLayout.Tab)=Unit
-                })
-                applyCombinedFilters(categoryId = null)
+                updateEmptyOrLimitedMode()
             }
         }
     }
@@ -377,6 +381,90 @@ class ThirdFragment : Fragment() {
 
         // 6) **Обновляем адаптер** — без этого RecyclerView останется пустым!
         adapter.updateData(finalFiltered)
+    }
+
+    private fun updateEmptyOrLimitedMode() {
+        when {
+            allItems.isEmpty() -> {
+                emptyTextView.visibility = View.VISIBLE
+                rv.visibility = View.GONE
+                tabLayout.visibility = View.GONE
+                searchView.visibility = View.GONE
+                imageFilter.visibility = View.VISIBLE
+                selectPhotoButton.visibility = View.VISIBLE
+                adapter.updateData(emptyList())
+            }
+
+            allItems.size <= 4 -> {
+                emptyTextView.visibility = View.GONE
+                tabLayout.visibility = View.VISIBLE
+                rv.visibility = View.VISIBLE
+                setupTabs()
+                searchView.visibility = View.VISIBLE
+                imageFilter.visibility = View.VISIBLE
+                selectPhotoButton.visibility = View.VISIBLE
+                imageFilter.setColorFilter(ContextCompat.getColor(requireContext(), R.color.black))
+                adapter.updateData(allItems)
+            }
+
+            else -> {
+                emptyTextView.visibility = View.GONE
+                rv.visibility = View.VISIBLE
+                setupTabs()
+                searchView.visibility = View.VISIBLE
+                imageFilter.visibility = View.VISIBLE
+                selectPhotoButton.visibility = View.VISIBLE
+
+                applyCombinedFilters()
+            }
+        }
+    }
+
+    private fun setupTabs() {
+        tabLayout.removeAllTabs()
+
+        if (allItems.isNotEmpty()) {
+            tabLayout.addTab(tabLayout.newTab().setText("Все"))
+        }
+
+        displayedCategories.forEach { cat ->
+            tabLayout.addTab(tabLayout.newTab().setText(cat.name))
+        }
+
+        tabLayout.post {
+            setTabMargins()
+        }
+
+        tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab) {
+                val categoryId: Int? = if (tab.position == 0 && allItems.isNotEmpty()) {
+                    null
+                } else {
+                    val index = if (allItems.isNotEmpty()) tab.position - 1 else tab.position
+                    if (index in displayedCategories.indices) displayedCategories[index].id else null
+                }
+                applyCombinedFilters(categoryId = categoryId)
+            }
+            override fun onTabUnselected(tab: TabLayout.Tab) = Unit
+            override fun onTabReselected(tab: TabLayout.Tab) = Unit
+        })
+    }
+
+    private fun setTabMargins() {
+        val marginPx = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            4f,
+            resources.displayMetrics
+        ).toInt()
+
+        val tabStrip = (tabLayout.getChildAt(0) as? ViewGroup) ?: return
+
+        for (i in 0 until tabStrip.childCount) {
+            val tabView = tabStrip.getChildAt(i)
+            val params = tabView.layoutParams as ViewGroup.MarginLayoutParams
+            params.setMargins(marginPx, 0, marginPx, 0)
+            tabView.requestLayout()
+        }
     }
 
 
@@ -459,10 +547,12 @@ class ThirdFragment : Fragment() {
             putExtra("source", "ThirdFragment")
         }.also { editLauncher.launch(it) }
     }
+
     override fun onResume() {
         super.onResume()
         loadDataAndSetupTabs()
     }
+
     //Вставляем в БД и обновляем список
     private fun insertNewItem(imageUrl: String) {
         val newItem = WishListItem(imageUrl, "Новая вещь", 0.0, "", "", subcategories.firstOrNull()?.id ?: 1, "")

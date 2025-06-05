@@ -4,6 +4,7 @@ import android.content.Context
 import android.Manifest
 import android.app.ProgressDialog
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Color
@@ -21,7 +22,9 @@ import android.util.Log
 import android.view.Gravity
 import android.view.MenuItem
 import android.view.View
+import android.widget.CompoundButton
 import android.widget.ImageView
+import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -55,6 +58,8 @@ import java.io.OutputStreamWriter
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import com.google.gson.Gson
+import com.hfad.mystylebox.notifications.AlarmScheduler
+import com.hfad.mystylebox.notifications.NotificationHelper
 import com.hfad.mystylebox.ui.activity.AboutActivity
 import com.hfad.mystylebox.ui.activity.AccountActivity
 import com.hfad.mystylebox.ui.activity.ImportActivity
@@ -65,6 +70,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var navView: NavigationView
     private lateinit var database: AppDatabase
     private lateinit var bottomNavView: BottomNavigationView
+    private lateinit var sharedPrefs: SharedPreferences
+    private val requestNotifLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        }
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -86,11 +95,51 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         super.onCreate(savedInstanceState)
         installSplashScreen()
         setContentView(R.layout.activity_main)
+        NotificationHelper.createNotificationChannel(this)
+        sharedPrefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
 
         drawerLayout = findViewById(R.id.drawer_layout)
         navView = findViewById(R.id.nav_view)
         navView.setNavigationItemSelectedListener(this)
 
+        val notificationsMenuItem = navView.menu.findItem(R.id.nav_notifications)
+        val switchView = notificationsMenuItem.actionView
+            ?.findViewById<androidx.appcompat.widget.SwitchCompat>(R.id.switch_notifications)
+        if (switchView == null) {
+            Log.w("MainActivity", "Не удалось найти SwitchCompat в пункте меню nav_notifications")
+        } else {
+            val notificationsEnabled = sharedPrefs.getBoolean("notifications_enabled", false)
+            switchView.isChecked = notificationsEnabled
+
+            switchView.setOnCheckedChangeListener { _, isChecked ->
+                if (isChecked) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        val permState = ContextCompat.checkSelfPermission(
+                            this, Manifest.permission.POST_NOTIFICATIONS
+                        )
+                        if (permState != PackageManager.PERMISSION_GRANTED) {
+                            if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+                                requestNotifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            } else {
+                                requestNotifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                showGoToSettingsDialog()
+                            }
+                            switchView.isChecked = false
+                            return@setOnCheckedChangeListener
+                        }
+                    sharedPrefs.edit().putBoolean("notifications_enabled", true).apply()
+                    AlarmScheduler.scheduleMorningReminder(this)
+                    AlarmScheduler.scheduleEveningReminder(this)
+                    AlarmScheduler.scheduleStaleItemsCheck(this)
+                    Toast.makeText(this, "Уведомления включены", Toast.LENGTH_SHORT).show()
+                } else {
+                    sharedPrefs.edit().putBoolean("notifications_enabled", false).apply()
+                    AlarmScheduler.cancelAllReminders(this)
+                    Toast.makeText(this, "Уведомления выключены", Toast.LENGTH_SHORT).show()
+                  }
+                }
+            }
+        }
         val user = FirebaseAuth.getInstance().currentUser
         val header = navView.getHeaderView(0)
         val ivAvatar = header.findViewById<ImageView>(R.id.header_avatar)
@@ -475,6 +524,24 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 }
             }
         }
+    }
+
+    private fun showGoToSettingsDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Необходимо разрешение на уведомления")
+            .setMessage(
+                "Чтобы получать напоминания и уведомления, " +
+                        "необходимо разрешить доступ в настройках. " +
+                        "Откройте настройки приложения и включите «Разрешить уведомления»."
+            )
+            .setPositiveButton("Перейти в настройки") { _, _ ->
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.parse("package:$packageName")
+                }
+                startActivity(intent)
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
     }
 
     fun disableMenuItem(id: Int) {
