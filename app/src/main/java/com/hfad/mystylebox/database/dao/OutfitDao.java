@@ -3,6 +3,7 @@ package com.hfad.mystylebox.database.dao;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
+import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Transaction;
 import androidx.room.Update;
@@ -13,11 +14,14 @@ import com.hfad.mystylebox.database.entity.Outfit;
 import com.hfad.mystylebox.database.entity.OutfitClothingItem;
 import com.hfad.mystylebox.database.entity.OutfitUsage;
 import com.hfad.mystylebox.database.entity.OutfitWithTags;
+import com.hfad.mystylebox.database.entity.Tag;
 import com.hfad.mystylebox.database.entity.WeekdayCount;
 
 import java.util.List;
 @Dao
 public interface OutfitDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertAll(List<Outfit> list);
     @Insert
     long insertOutfit(Outfit outfit);
 
@@ -27,6 +31,9 @@ public interface OutfitDao {
 
     @Query("DELETE FROM outfits")
     void deleteAll();
+
+    @Query("SELECT id FROM outfits")
+    List<Long> getAllIds();
 
     @Update
     void update(Outfit outfit);

@@ -1,18 +1,23 @@
 package com.hfad.mystylebox.database.dao;
 
+
+
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
-import com.hfad.mystylebox.database.entity.ClothingItem;
 import com.hfad.mystylebox.database.entity.ClothingItemTag;
 import com.hfad.mystylebox.database.entity.Tag;
 
 import java.util.List;
 
+
 @Dao
 public interface ClothingItemTagDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertAll(List<ClothingItemTag> list);
+
     @Query("SELECT * FROM clothing_item_tag")
     List<ClothingItemTag> getAllClothingItemTags();
 

@@ -264,23 +264,14 @@ class EditoutfitActivity : AppCompatActivity() {
     private fun loadImage() {
         val outfitImageView = findViewById<ImageView>(R.id.outfitImageView)
         imageUri?.let { uri ->
-            val uriString = uri.toString()
-            val correctedUriString = if (!uriString.startsWith("file://") && !uriString.startsWith("content://"))
-                "file://$uriString" else uriString
-
-            val filePath = Uri.parse(correctedUriString).path ?: ""
-            val file = File(filePath)
-            Log.d("EditoutfitActivity", "Проверка файла: exists=${file.exists()}, path=$filePath")
-            if (!file.exists()) {
-                Toast.makeText(this, "Файл изображения не найден", Toast.LENGTH_SHORT).show()
-                return
-            }
+            // Просто передаём контент-URI Glide
             Glide.with(this)
-                .load(Uri.parse(correctedUriString))
-                .apply(RequestOptions()
-                    .diskCacheStrategy(DiskCacheStrategy.NONE)
-                    .skipMemoryCache(true)
-                    .format(DecodeFormat.PREFER_ARGB_8888)
+                .load(uri)
+                .apply(
+                    RequestOptions()
+                        .diskCacheStrategy(DiskCacheStrategy.NONE)
+                        .skipMemoryCache(true)
+                        .format(DecodeFormat.PREFER_ARGB_8888)
                 )
                 .listener(object : RequestListener<Drawable> {
                     override fun onLoadFailed(
@@ -290,6 +281,11 @@ class EditoutfitActivity : AppCompatActivity() {
                         isFirstResource: Boolean
                     ): Boolean {
                         Log.e("EditoutfitActivity", "Ошибка загрузки изображения", e)
+                        Toast.makeText(
+                            this@EditoutfitActivity,
+                            "Не удалось загрузить изображение",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         return false
                     }
                     override fun onResourceReady(

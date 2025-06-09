@@ -2,23 +2,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/nav_account"
-        android:title="Аккаунт"
-        android:iconTint="@android:color/transparent"
-        android:icon="@drawable/ic_account" />
-    <item
-        android:id="@+id/nav_synchronization"
-        android:title="Синхронизация"
-        android:icon="@drawable/ic_synchronization" />
-    <item
-        android:id="@+id/newpassword"
-        android:title="Установить новый пароль"
-        android:icon="@drawable/ic_newpassword" />
-    <item
-        android:id="@+id/nav_changeemail"
-        android:title="Изменить почту"
-        android:icon="@drawable/ic_changeemail" />
-    <item
         android:id="@+id/nav_importdatabase"
         android:title="Импорт базы"
         android:icon="@drawable/ic_importdatabase" />
@@ -43,12 +26,4 @@
         android:title="О приложении"
         android:iconTint="@android:color/transparent"
         android:icon="@drawable/ic_help" />
-    <item
-        android:id="@+id/nav_logout"
-        android:title="Выйти"
-         />
-    <item
-        android:id="@+id/nav_deleteaccount"
-        android:title="Удалить аккаунт"
-        />
 </menu>

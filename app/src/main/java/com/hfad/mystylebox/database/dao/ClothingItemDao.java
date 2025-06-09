@@ -8,6 +8,7 @@ import androidx.room.Query;
 import androidx.room.Transaction;
 import androidx.room.Update;
 
+import com.hfad.mystylebox.database.entity.Category;
 import com.hfad.mystylebox.database.entity.CategoryCount;
 import com.hfad.mystylebox.database.entity.ClothingItem;
 import com.hfad.mystylebox.database.entity.ClothingItemFull;
@@ -21,6 +22,12 @@ import kotlinx.coroutines.flow.Flow;
 
 @Dao
 public interface ClothingItemDao {
+    @Query("SELECT id FROM clothing_item")
+    List<Long> getAllIds();
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertAll(List<ClothingItem> list);
+
     @Query("DELETE FROM clothing_item")
     void deleteAll();
 

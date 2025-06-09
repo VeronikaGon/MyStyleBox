@@ -67,8 +67,49 @@ public abstract class AppDatabase extends RoomDatabase {
     private static Context appContext;
 
     static final Migration MIGRATION_2_3 = new Migration(2, 3) {
-        @Override public void migrate(@NonNull SupportSQLiteDatabase db) { }
+        @Override public void migrate(@NonNull SupportSQLiteDatabase db) {  }
     };
+    static final Migration MIGRATION_3_4 = new Migration(3, 4) {
+        @Override public void migrate(@NonNull SupportSQLiteDatabase db) {  }
+    };
+    static final Migration MIGRATION_4_5 = new Migration(4, 5) {
+        @Override public void migrate(@NonNull SupportSQLiteDatabase db) {
+            // 1) Переименовываем старую
+            db.execSQL("ALTER TABLE `outfits` RENAME TO `outfits_old`");
+
+            // 2) Создаём новую таблицу с той же схемой, что в @Entity
+            db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `outfits` (" +
+                            " `seasons` TEXT DEFAULT 'undefined', " +
+                            " `imagePath` TEXT DEFAULT 'undefined', " +
+                            " `name` TEXT NOT NULL DEFAULT 'undefined', " +
+                            " `maxTemp` INTEGER NOT NULL DEFAULT 0, " +
+                            " `description` TEXT DEFAULT 'undefined', " +
+                            " `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                            " `minTemp` INTEGER NOT NULL DEFAULT 0" +
+                            ")"
+            );
+
+            // 3) Копируем данные из старой, для новых колонок оставляем дефолт
+            db.execSQL(
+                    "INSERT INTO `outfits` (id, name, seasons, minTemp, maxTemp) " +
+                            "SELECT id, name, seasons, minTemp, maxTemp FROM `outfits_old`"
+            );
+
+            // 4) Удаляем временную
+            db.execSQL("DROP TABLE `outfits_old`");
+
+            db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `outfit_tag` (" +
+                            " `outfitId` INTEGER NOT NULL, " +
+                            " `tagId` INTEGER NOT NULL, " +
+                            " PRIMARY KEY(`outfitId`,`tagId`), " +
+                            " FOREIGN KEY(`outfitId`) REFERENCES `outfits`(`id`) ON DELETE CASCADE, " +
+                            " FOREIGN KEY(`tagId`)   REFERENCES `tag`(`id`)     ON DELETE CASCADE" +
+                            ")"
+            );
+        }
+        };
     static final Migration MIGRATION_5_6 = new Migration(5, 6) {
         @Override public void migrate(@NonNull SupportSQLiteDatabase db) {
             db.execSQL(
@@ -76,19 +117,19 @@ public abstract class AppDatabase extends RoomDatabase {
                             " `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
                             " `plan_date` TEXT, " +
                             " `outfitId` INTEGER NOT NULL, " +
-                            " FOREIGN KEY(`outfitId`) REFERENCES `outfits`(`id`) ON DELETE CASCADE" +
+                            " FOREIGN KEY(`outfitId`) " +
+                            "   REFERENCES `outfits`(`id`) ON DELETE CASCADE" +
                             ")"
             );
             db.execSQL(
-                    "CREATE INDEX IF NOT EXISTS `index_daily_plan_outfitId` ON `daily_plan`(`outfitId`)"
+                    "CREATE INDEX IF NOT EXISTS " +
+                            "`index_daily_plan_outfitId` ON `daily_plan`(`outfitId`)"
             );
         }
     };
 
     static final Migration MIGRATION_6_7 = new Migration(6, 7) {
-        @Override
-        public void migrate(@NonNull SupportSQLiteDatabase db) {
-            // Просто создаём новую таблицу по вашей Entity
+        @Override public void migrate(@NonNull SupportSQLiteDatabase db) {
             db.execSQL(
                     "CREATE TABLE IF NOT EXISTS `wish_list_item` (" +
                             " `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
@@ -117,7 +158,13 @@ public abstract class AppDatabase extends RoomDatabase {
                 if (INSTANCE == null) {
                     appContext = context.getApplicationContext();
                     INSTANCE = Room.databaseBuilder(appContext, AppDatabase.class, "wardrobe_db")
-                            .addMigrations(MIGRATION_2_3, MIGRATION_5_6, MIGRATION_6_7)
+                            .addMigrations(
+                                    MIGRATION_2_3,
+                                    MIGRATION_3_4,
+                                    MIGRATION_4_5,
+                                    MIGRATION_5_6,
+                                    MIGRATION_6_7
+                            )
                             .allowMainThreadQueries()
                             .build();
                 }

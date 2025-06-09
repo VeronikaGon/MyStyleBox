@@ -19,7 +19,7 @@ class StaleOutfitsReceiver : BroadcastReceiver() {
             if (staleOutfits.isNotEmpty()) {
                 val outfit = staleOutfits.first()
                 NotificationHelper.createNotificationChannel(context)
-                val title = "Напоминание о давно не надевшемся комплекте"
+                val title = "Напоминание о давно не используемом комплекте"
                 val message = "Вы не надевали комплект «${outfit.name}» более месяца. Не пора ли снова его использовать?"
                 val notification = NotificationHelper.buildNotification(context, title, message, 1003)
                 NotificationHelper.showNotification(context, 1003, notification)

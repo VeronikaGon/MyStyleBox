@@ -70,6 +70,7 @@
         <activity android:name=".ui.activity.OutfitActivity"
             android:screenOrientation="portrait"
         android:exported="false"/>
+
         <activity android:name=".ui.activity.AboutActivity"
             android:screenOrientation="portrait"/>
         <activity android:name=".ui.activity.WishListActivity"
@@ -104,15 +105,6 @@
             android:name=".ui.activity.OutfitSelectionActivity"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".ui.activity.WelcomeActivity"
-            android:screenOrientation="portrait" />
-        <activity
-            android:name=".ui.activity.LoginActivity"
-            android:screenOrientation="portrait" />
-        <activity
-            android:name=".ui.activity.RegistrationActivity"
-            android:screenOrientation="portrait" />
-        <activity
             android:name=".ui.activity.CalendarActivity"
             android:screenOrientation="portrait" />
         <provider
@@ -128,9 +120,6 @@
 
         <activity
             android:name=".ui.activity.ClothesActivity"
-            android:screenOrientation="portrait" />
-        <activity
-            android:name=".ui.activity.AccountActivity"
             android:screenOrientation="portrait" />
         <activity
             android:name=".ui.activity.ImportActivity"

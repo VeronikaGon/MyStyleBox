@@ -6,12 +6,19 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
+import com.hfad.mystylebox.database.entity.Subcategory;
 import com.hfad.mystylebox.database.entity.Tag;
 
 import java.util.List;
 
 @Dao
 public interface TagDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertAll(List<Tag> list);
+
+    @Query("SELECT id FROM tag")
+    List<Long> getAllIds();
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     long insert(Tag tag);
 

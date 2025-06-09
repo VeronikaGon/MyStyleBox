@@ -19,4 +19,7 @@ public interface CategoryDao {
 
     @Query("DELETE FROM categories")
     void deleteAllCategories();
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertAll(List<Category> list);
 }

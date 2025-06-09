@@ -18,6 +18,7 @@ import androidx.core.view.WindowInsetsCompat
 import com.hfad.mystylebox.database.entity.ClothingItem
 import android.Manifest
 import android.content.Intent
+import android.util.Log
 import android.widget.Button
 import android.widget.ImageButton
 import androidx.activity.result.contract.ActivityResultContracts
@@ -230,78 +231,80 @@ class EditclothesActivity : AppCompatActivity() {
             }
         }
            clothingItem?.let { item ->
-            genderTextView.text = item.gender
-            nameTextView.text = item.name
-            statusTextView.text = item.status
-            if (item.cost == 0f) {
-                llStoimost.visibility = View.GONE
-            } else {
-                llStoimost.visibility = View.VISIBLE
-                textViewStoimost.text = item.cost.toString()
-            }
-            if (item.size.isNullOrEmpty()) {
-                llSize.visibility = View.GONE
-            } else {
-                llSize.visibility = View.VISIBLE
-                sizeTextView.text = item.size
-            }
-            if (item.brend.isNullOrEmpty()) {
-                llBrend.visibility = View.GONE
-            } else {
-                llBrend.visibility = View.VISIBLE
-                brendTextView.text = item.brend
-            }
-            if (item.notes.isNullOrEmpty()) {
-                llNotes.visibility = View.GONE
-            } else {
-                llNotes.visibility = View.VISIBLE
-                notesTextView.text = item.notes
-            }
-            // Обработка сезонов
-            if (item.seasons.isNullOrEmpty()) {
-                llSeason.visibility = View.GONE
-            } else {
-                llSeason.visibility = View.VISIBLE
-                checkboxSummer.isChecked = item.seasons.contains("Лето")
-                checkboxSpring.isChecked = item.seasons.contains("Весна")
-                checkboxAutumn.isChecked = item.seasons.contains("Осень")
-                checkboxWinter.isChecked = item.seasons.contains("Зима")
-            }
-            // Получение названия подкатегории в фоновом потоке
-            lifecycleScope.launch {
-                val subcategoryName = withContext(Dispatchers.IO) {
-                    subcategoryDao.getSubcategoryNameById(item.subcategoryId)
-                }
-                subcategoryTextView.text = subcategoryName
-            }
-            lifecycleScope.launch(Dispatchers.IO) {
-                val tags = clothingItemTagDao.getTagsForClothingItem(item.id)
-                withContext(Dispatchers.Main) {
-                    if (tags.isNotEmpty()) {
-                        llTegi.visibility = View.VISIBLE
-                        displayTagsForPreview(tags)
-                    } else {
-                        llTegi.visibility = View.GONE
-                    }
-                }
-            }
-            // Установка изображения
-            val imageUriString = intent.getStringExtra("image_uri")
-            if (!imageUriString.isNullOrEmpty()) {
-                try {
-                    val uri = Uri.parse(imageUriString)
-                    Glide.with(this)
-                        .load(uri)
-                        .into(imageView)
-                } catch (e: Exception) {
-                    Toast.makeText(this, "Некорректный URI изображения", Toast.LENGTH_SHORT).show()
-                }
-            } else {
-                Toast.makeText(this, "Изображение не найдено", Toast.LENGTH_SHORT).show()
-            }
-        } ?: run {
-            Toast.makeText(this, "Данные не получены", Toast.LENGTH_SHORT).show()
-        }
+               genderTextView.text = item.gender
+               nameTextView.text = item.name
+               statusTextView.text = item.status
+               if (item.cost == 0f) {
+                   llStoimost.visibility = View.GONE
+               } else {
+                   llStoimost.visibility = View.VISIBLE
+                   textViewStoimost.text = item.cost.toString()
+               }
+               if (item.size.isNullOrEmpty()) {
+                   llSize.visibility = View.GONE
+               } else {
+                   llSize.visibility = View.VISIBLE
+                   sizeTextView.text = item.size
+               }
+               if (item.brend.isNullOrEmpty()) {
+                   llBrend.visibility = View.GONE
+               } else {
+                   llBrend.visibility = View.VISIBLE
+                   brendTextView.text = item.brend
+               }
+               if (item.notes.isNullOrEmpty()) {
+                   llNotes.visibility = View.GONE
+               } else {
+                   llNotes.visibility = View.VISIBLE
+                   notesTextView.text = item.notes
+               }
+               // Обработка сезонов
+               if (item.seasons.isNullOrEmpty()) {
+                   llSeason.visibility = View.GONE
+               } else {
+                   llSeason.visibility = View.VISIBLE
+                   checkboxSummer.isChecked = item.seasons.contains("Лето")
+                   checkboxSpring.isChecked = item.seasons.contains("Весна")
+                   checkboxAutumn.isChecked = item.seasons.contains("Осень")
+                   checkboxWinter.isChecked = item.seasons.contains("Зима")
+               }
+               // Получение названия подкатегории в фоновом потоке
+               lifecycleScope.launch {
+                   val subcategoryName = withContext(Dispatchers.IO) {
+                       subcategoryDao.getSubcategoryNameById(item.subcategoryId)
+                   }
+                   subcategoryTextView.text = subcategoryName
+               }
+               lifecycleScope.launch(Dispatchers.IO) {
+                   val tags = clothingItemTagDao.getTagsForClothingItem(item.id)
+                   withContext(Dispatchers.Main) {
+                       if (tags.isNotEmpty()) {
+                           llTegi.visibility = View.VISIBLE
+                           displayTagsForPreview(tags)
+                       } else {
+                           llTegi.visibility = View.GONE
+                       }
+                   }
+               }
+               val imagePath = item.imagePath
+               if (!imagePath.isNullOrEmpty()) {
+                   try {
+                       val uri = Uri.parse(imagePath)
+                       Glide.with(this)
+                           .load(uri)          // Glide примет и content://, и file://
+                           .into(imageView)
+                   } catch (e: Exception) {
+                       Toast.makeText(
+                           this,
+                           "Не удалось загрузить изображение: ${e.message}",
+                           Toast.LENGTH_SHORT
+                       ).show()
+                       Log.e("EDIT_DEBUG", "Ошибка загрузки картинки: ${e.localizedMessage}", e)
+                   }
+               } else {
+                   Toast.makeText(this, "Изображение не найдено", Toast.LENGTH_SHORT).show()
+               }
+           }
     }
     //Обновление после редактирования
     private fun updatePreviewUI(item: ClothingItem) {
@@ -345,15 +348,15 @@ class EditclothesActivity : AppCompatActivity() {
 
         // Обновление изображения
         val imageView = findViewById<ImageView>(R.id.clothingImageView)
-        val imageUriString = item.imagePath ?: intent.getStringExtra("image_uri")
-        if (!imageUriString.isNullOrEmpty()) {
+        val imagePath = item.imagePath
+        if (!imagePath.isNullOrEmpty()) {
             try {
-                val uri = Uri.parse(imageUriString)
                 Glide.with(this)
-                    .load(uri)
+                    .load(File(imagePath))
                     .into(imageView)
             } catch (e: Exception) {
-                Toast.makeText(this, "Некорректный URI изображения", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Не удалось загрузить изображение: ${e.message}", Toast.LENGTH_SHORT).show()
+                Log.e("EDIT_DEBUG", "Ошибка загрузки картинки: ${e.localizedMessage}", e)
             }
         }
         val llTegi = findViewById<LinearLayout>(R.id.llTegi)

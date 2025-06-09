@@ -2,11 +2,15 @@ package com.hfad.mystylebox.database.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.hfad.mystylebox.database.entity.OutfitClothingItem
 
 @Dao
 interface OutfitClothingItemDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertAll(list: List<OutfitClothingItem>)
+
     @Query("SELECT * FROM outfit_clothing_item")
     fun getAllOutfitClothingItems(): List<OutfitClothingItem>
 

@@ -92,6 +92,15 @@ class OutfitActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_outfit)
 
+        db = Room.databaseBuilder(
+            applicationContext,
+            AppDatabase::class.java,
+            "wardrobe_db"
+        ).allowMainThreadQueries().build()
+        outfitDao      = db.outfitDao()
+        outfitTagDao   = db.outfitTagDao()
+        clothingItemDao= db.clothingItemDao()
+
         flexboxTags = findViewById(R.id.Tags)
         outfitNameEditText = findViewById(R.id.enterName)
         outfitDescriptionEditText = findViewById(R.id.enterNotes)
@@ -185,15 +194,6 @@ class OutfitActivity : AppCompatActivity() {
                 Toast.makeText(this, "Сначала соберите комплект через доску", Toast.LENGTH_SHORT).show()
             }
         }
-
-        db = Room.databaseBuilder(
-            applicationContext,
-            AppDatabase::class.java,
-            "wardrobe_db"
-        ).allowMainThreadQueries().build()
-        outfitDao      = db.outfitDao()
-        outfitTagDao   = db.outfitTagDao()
-        clothingItemDao= db.clothingItemDao()
 
         if (isInEditMode && currentOutfit != null
             && currentOutfit!!.minTemp != -99 && currentOutfit!!.maxTemp != -99
