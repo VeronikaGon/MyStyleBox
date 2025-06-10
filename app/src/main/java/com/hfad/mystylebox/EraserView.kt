@@ -19,7 +19,6 @@ class EraserView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : View(context, attrs) {
 
-    // Класс для хранения пути и его параметров (например, толщины кисти)
     data class ErasePath(val path: Path, val strokeWidth: Float)
 
     private var baseBitmap: Bitmap? = null
@@ -50,7 +49,7 @@ class EraserView @JvmOverloads constructor(
     private val minScale = 1.0f
     private val maxScale = 5.0f
 
-    // Детектор зума
+    // Детектор масштабирования пальцами (зум)
     private val scaleDetector = ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
         override fun onScale(detector: ScaleGestureDetector): Boolean {
             val scaleFactor = detector.scaleFactor
@@ -63,7 +62,7 @@ class EraserView @JvmOverloads constructor(
         }
     })
 
-    // Детектор панорамирования
+    // Детектор для панорамирования (перемещение изображения)
     private val panDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
         override fun onScroll(
             e1: MotionEvent?, e2: MotionEvent,
@@ -75,13 +74,11 @@ class EraserView @JvmOverloads constructor(
         }
     })
 
-    // Флаг режима ластика
     var isEraserEnabled = false
 
 
     //Устанавливает изображение для редактирования с сохранением пропорций и альфа-канала.
     fun setBitmap(bitmap: Bitmap) {
-        // Создаем копию с конфигурацией ARGB_8888
         baseBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true)
         if (width > 0 && height > 0) {
             drawingBitmap = createScaledBitmapPreservingRatio(baseBitmap!!, width, height)
@@ -108,29 +105,22 @@ class EraserView @JvmOverloads constructor(
             scaledHeight = viewHeight
             scaledWidth = (viewHeight * bitmapRatio).toInt()
         }
-        // Создаем новый Bitmap, наследующий конфигурацию исходного (ARGB_8888)
         return Bitmap.createScaledBitmap(bitmap, scaledWidth, scaledHeight, true)
             .copy(Bitmap.Config.ARGB_8888, true)
     }
 
-    /**
-     * Возвращает текущее редактируемое изображение.
-     */
+    // Возвращение текущего редактируемоего изображения
     fun getBitmap(): Bitmap? {
         return drawingBitmap
     }
 
-    /**
-     * Устанавливает размер ластика (в пикселях).
-     */
+    // Установка размера ластика (в пикселях).
     fun setEraserSize(size: Float) {
         currentStrokeWidth = size
         eraserPaint.strokeWidth = size
     }
 
-    /**
-     * Undo: удаляем последний штрих.
-     */
+    //удаляем последний штрих.
     fun undo() {
         if (erasePaths.isNotEmpty()) {
             val removed = erasePaths.removeAt(erasePaths.lastIndex)
@@ -139,9 +129,7 @@ class EraserView @JvmOverloads constructor(
         }
     }
 
-    /**
-     * Redo: возвращаем отмененный штрих.
-     */
+    //возвращаем отмененный штрих.
     fun redo() {
         if (redoPaths.isNotEmpty()) {
             val path = redoPaths.removeAt(redoPaths.lastIndex)
@@ -150,18 +138,14 @@ class EraserView @JvmOverloads constructor(
         }
     }
 
-    /**
-     * Создаем локальную копию Paint с нужной толщиной для каждого штриха.
-     */
+    //Создается копия Paint для конкретного штриха с заданной толщиной.
     private fun getPaintForStroke(strokeWidth: Float): Paint {
         return Paint(eraserPaint).apply {
             this.strokeWidth = strokeWidth
         }
     }
 
-    /**
-     * Перерисовывает drawingBitmap: базовое изображение + все сохраненные штрихи.
-     */
+    // Перерисовывает drawingBitmap: чистое базовое изображение и все сохраненные штрихи стирания.
     private fun redrawBitmap() {
         baseBitmap?.let { base ->
             drawingBitmap = createScaledBitmapPreservingRatio(base, width, height)
@@ -174,7 +158,7 @@ class EraserView @JvmOverloads constructor(
         }
     }
 
-    // При изменении размеров View масштабируем изображение и центрируем его.
+    // Обрабатывается изменение размеров View.
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         baseBitmap?.let { base ->
@@ -189,9 +173,7 @@ class EraserView @JvmOverloads constructor(
         }
     }
 
-    /**
-     * Сбрасывает матрицу, центрируя изображение.
-     */
+    // Сбрасывает матрицу трансформации и центрирует изображение на View.
     private fun resetMatrix() {
         drawingBitmap?.let { bmp ->
             drawMatrix.reset()
@@ -202,6 +184,7 @@ class EraserView @JvmOverloads constructor(
         }
     }
 
+    //Основной метод отрисовки View.
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         drawingBitmap?.let { bitmap ->
@@ -216,6 +199,7 @@ class EraserView @JvmOverloads constructor(
     }
     var multiTouchListener: (() -> Unit)? = null
 
+    //обработка касаний пользователя
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (event.pointerCount > 1) {
             scaleDetector.onTouchEvent(event)

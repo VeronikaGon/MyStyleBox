@@ -12,15 +12,15 @@
         />
     <item
         android:id="@+id/nav_downloadarchive"
-        android:title="Скачать архив"
-        android:tooltipText="Будет сформирован ZIP-архив с вещами, комплектами и их изображениями в формате CSV. Внимание: архив нельзя загрузить обратно в приложение."
+        android:title=""
+        app:actionLayout="@layout/menu_item_with_subtitle"
         android:iconTint="@android:color/transparent" />
 
     <item
         android:id="@+id/nav_savebackupdatabase"
-        android:title="Сохранить резервную копию базы (JSON-файл)"
-        android:tooltipText="Будет сгенерирован единый JSON-файл со всей базой. При импорте приложение принимает только файл в этом формате."
-        android:iconTint="@android:color/transparent" />
+        android:title=""
+        app:actionLayout="@layout/menu_item_with_subtitle"
+         android:iconTint="@android:color/transparent" />
     <item
         android:id="@+id/nav_help"
         android:title="О приложении"

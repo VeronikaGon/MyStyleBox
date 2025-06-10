@@ -1,6 +1,7 @@
 package com.hfad.mystylebox.adapter
 
 import android.graphics.Color
+import android.net.Uri
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -109,8 +110,9 @@ class MonthsAdapter(
 
                 if (paths.isNotEmpty()) {
                     ivOutfit.visibility = View.VISIBLE
+                    val uri = Uri.parse(paths[0])
                     Glide.with(ivOutfit.context)
-                        .load( File(paths[0]) )
+                        .load(uri)
                         .into(ivOutfit)
 
                     tvDayNumber.visibility = View.GONE

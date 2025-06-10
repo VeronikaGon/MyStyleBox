@@ -100,7 +100,7 @@ class EditclothesActivity : AppCompatActivity() {
             }
         }
         val recyclerViewOutfits = findViewById<RecyclerView>(R.id.recyclerViewOutfits)
-        outfitAdapter = OutfitAdapter(emptyList(), R.layout.item_clothing)
+        outfitAdapter = OutfitAdapter(emptyList(), R.layout.item_vivod)
         recyclerViewOutfits.layoutManager = GridLayoutManager(this, 1, GridLayoutManager.HORIZONTAL, false)
         recyclerViewOutfits.adapter = outfitAdapter
 

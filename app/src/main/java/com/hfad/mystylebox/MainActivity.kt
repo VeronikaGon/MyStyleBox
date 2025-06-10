@@ -17,6 +17,7 @@ import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import android.util.Log
 import android.view.MenuItem
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -86,6 +87,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         navView = findViewById(R.id.nav_view)
         navView.setNavigationItemSelectedListener(this)
 
+        setupMenuSubtitles()
+
         val notificationsMenuItem = navView.menu.findItem(R.id.nav_notifications)
         val switchView = notificationsMenuItem.actionView
             ?.findViewById<androidx.appcompat.widget.SwitchCompat>(R.id.switch_notifications)
@@ -153,6 +156,33 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
+    private fun setupMenuSubtitles() {
+        val items = listOf(
+            R.id.nav_downloadarchive to Pair(
+                "Скачать архив",
+                "Будет сформирован \nZIP-архив с вещами, комплектами и их изображениями \nв формате CSV"
+            ),
+            R.id.nav_savebackupdatabase to Pair(
+                "Сохранить резервную копию базы данных",
+                "Будет сформирован \nZIP-архив с фото и \nJSON-файлом"
+            )
+        )
+
+        items.forEach { (itemId, texts) ->
+            val (titleText, subtitleText) = texts
+            val menuItem = navView.menu.findItem(itemId)
+            val actionView = menuItem.actionView
+            if (actionView != null) {
+                val titleView = actionView.findViewById<TextView>(R.id.menu_item_title)
+                val subtitleView = actionView.findViewById<TextView>(R.id.menu_item_subtitle)
+                titleView.text = titleText
+                subtitleView.text = subtitleText
+            } else {
+                Log.w("MainActivity", "actionView for item $itemId is null")
+            }
+        }
+    }
+
     override fun onResume() {
         super.onResume()
     }
@@ -200,7 +230,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     @Suppress("DEPRECATION")
     private fun exportDatabaseToZip() {
-        // 1) Создаём и показываем ProgressDialog
         val progressDialog = ProgressDialog(this).apply {
             setTitle("Создание архива")
             setMessage("Пожалуйста, подождите…")
@@ -209,7 +238,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             show()
         }
 
-        // 2) Запускаем работу в фоне
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val downloadDir = Environment
@@ -219,7 +247,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use { zos ->
                     val db = database.openHelper.readableDatabase
 
-                    // Экспорт таблиц
                     db.query("SELECT name FROM sqlite_master WHERE type='table'", arrayOfNulls<Any>(0)).use { cursor ->
                         while (cursor.moveToNext()) {
                             val table = cursor.getString(0)
@@ -244,13 +271,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         }
                     }
 
-                    // Добавление фото (как было ранее)
                     val roots = listOfNotNull(
                         File(filesDir, "photos"),
                         getExternalFilesDir("photos")?.let { File(it.absolutePath) },
                         getExternalFilesDir(Environment.DIRECTORY_PICTURES)?.let { File(it.absolutePath) },
-                        File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "MyStyleBox")
+                        File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "MyStyleBox"),
+                        getExternalCacheDir()?.let { File(it.absolutePath) }
                     )
+
                     val seen = mutableSetOf<String>()
                     fun zipRec(dir: File, base: String) {
                         if (!dir.exists()) return
@@ -264,10 +292,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             }
                         }
                     }
-                    roots.forEach { zipRec(it, "photos") }
+                    roots.forEach { zipRec(it, it.name) }
                 }
 
-                // 3) Всё готово — назад в UI-поток
                 runOnUiThread {
                     progressDialog.dismiss()
                     AlertDialog.Builder(this@MainActivity)
@@ -282,9 +309,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     progressDialog.dismiss()
                     AlertDialog.Builder(this@MainActivity)
                         .setTitle("Ошибка")
-                        .setMessage("Не удалось создать архив:\n${e.localizedMessage}")
-                        .setPositiveButton("ОК", null)
-                        .show()
+                        .setMessage("Не удалось создать архив:${e.localizedMessage}")
+                    .setPositiveButton("ОК", null)
+                    .show()
                 }
             }
         }
@@ -375,7 +402,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     progressDialog.dismiss()
                     AlertDialog.Builder(this@MainActivity)
                         .setTitle("Готово")
-                        .setMessage("Резервная копия (JSON + фото) сохранена в папке Download:\n$zipFileName")
+                        .setMessage("Резервная копия базы данных сохранена в папке Download:\n$zipFileName")
                         .setPositiveButton("ОК", null)
                         .show()
                 }
@@ -412,14 +439,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             .show()
     }
 
-    fun disableMenuItem(id: Int) {
-        val item = navView.menu.findItem(id)
-        item.isEnabled = false
-        val gray = ContextCompat.getColor(this, android.R.color.darker_gray)
-        val span = SpannableString(item.title)
-        span.setSpan(ForegroundColorSpan(gray), 0, span.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        item.title = span
-    }
     override fun onBackPressed() {
         drawerLayout.setDrawerElevation(20f)
         drawerLayout.setScrimColor(Color.TRANSPARENT)

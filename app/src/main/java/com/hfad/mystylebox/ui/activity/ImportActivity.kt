@@ -242,7 +242,7 @@ class ImportActivity : AppCompatActivity() {
                 }
             }
         }
-        throw IOException("backup_data.json not found")
+        throw IOException("backup_data.json не найден")
     }
 
     @Throws(IOException::class)

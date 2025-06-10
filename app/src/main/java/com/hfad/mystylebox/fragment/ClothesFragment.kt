@@ -221,7 +221,7 @@ class ClothesFragment : Fragment() {
                 }
             }
         }
-        val imageFilter = view.findViewById<ImageButton>(R.id.imageFilter)
+        imageFilter = view.findViewById<ImageButton>(R.id.imageFilter)
         imageFilter.setOnClickListener {
             CoroutineScope(Dispatchers.IO).launch {
                 val db = Room.databaseBuilder(

@@ -30,12 +30,14 @@
 
         <TextView
             android:id="@+id/textView12"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:text="@string/importingdatabase"
             android:textColor="@color/black"
             android:textSize="32sp"
+            android:maxLines="5"
+            android:hyphenationFrequency="full"
             app:layout_constraintStart_toEndOf="@id/imageButton2"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"

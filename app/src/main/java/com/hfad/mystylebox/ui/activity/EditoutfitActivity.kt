@@ -107,7 +107,7 @@ class EditoutfitActivity : AppCompatActivity() {
         flexboxTags = findViewById(R.id.Tags)
         recyclerViewClothes = findViewById(R.id.recyclerViewClothes)
         recyclerViewClothes.layoutManager = GridLayoutManager(this, 1, GridLayoutManager.HORIZONTAL, false)
-        recyclerViewClothes.adapter = ClothingAdapter(emptyList(), R.layout.item_clothing)
+        recyclerViewClothes.adapter = ClothingAdapter(emptyList(), R.layout.item_vivod)
 
         // Проверка разрешений
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
