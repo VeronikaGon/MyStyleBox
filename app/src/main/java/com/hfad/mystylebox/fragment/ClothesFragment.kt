@@ -210,9 +210,15 @@ class ClothesFragment : Fragment() {
                 val count = db.clothingItemDao().getCount()
                 withContext(Dispatchers.Main) {
                     if (count <= 4) {
+                        val needed = 4 - count
+                        val word = when {
+                            needed % 10 == 1 && needed % 100 != 11 -> "вещь"
+                            needed % 10 in 2..4 && needed % 100 !in 12..14 -> "вещи"
+                            else -> "вещей"
+                        }
                         Toast.makeText(
                             requireContext(),
-                            "Добавьте ещё вещей для поиска",
+                            "Добавьте ещё $needed $word для поиска",
                             Toast.LENGTH_SHORT
                         ).show()
                     } else {
@@ -232,9 +238,15 @@ class ClothesFragment : Fragment() {
                 val count = db.clothingItemDao().getCount()
                 withContext(Dispatchers.Main) {
                     if (count <= 4) {
+                        val needed = 4 - count
+                        val word = when {
+                            needed % 10 == 1 && needed % 100 != 11 -> "вещь"
+                            needed % 10 in 2..4 && needed % 100 !in 12..14 -> "вещи"
+                            else -> "вещей"
+                        }
                         Toast.makeText(
                             requireContext(),
-                            "Добавьте ещё вещей для фильтрации",
+                            "Добавьте ещё $needed $word для фильтрации",
                             Toast.LENGTH_SHORT
                         ).show()
                     } else {

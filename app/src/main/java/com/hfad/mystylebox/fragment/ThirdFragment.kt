@@ -1,31 +1,26 @@
 package com.hfad.mystylebox.fragment
+
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
-import android.graphics.Color
-import android.graphics.Rect
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.text.InputType
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.Button
-import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RadioButton
 import androidx.appcompat.widget.SearchView
-import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
@@ -136,7 +131,6 @@ class ThirdFragment : Fragment() {
             searchView.clearFocus()
         }
 
-        // Поиск по тексту
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(q: String?) = false
             override fun onQueryTextChange(q: String?): Boolean {
@@ -201,6 +195,17 @@ class ThirdFragment : Fragment() {
 
         imageFilter.setOnClickListener {
             if (allItems.size <= 4) {
+                val needed = 4 - allItems.size
+                val word = when {
+                    needed % 10 == 1 && needed % 100 != 11 -> "желанную вещь"
+                    needed % 10 in 2..4 && needed % 100 !in 12..14 -> "желанные вещи"
+                    else -> "желанных вещей"
+                }
+                Toast.makeText(
+                    requireContext(),
+                    "Добавьте ещё $needed $word для фильтрации",
+                    Toast.LENGTH_SHORT
+                ).show()
                 Toast.makeText(
                     requireContext(),
                     "Добавьте ещё желанных вещей для фильтрации",
@@ -467,7 +472,6 @@ class ThirdFragment : Fragment() {
         }
     }
 
-
     companion object {
         val priceRanges = mapOf(
             "до 1000" to (0 to 1000),
@@ -551,19 +555,5 @@ class ThirdFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         loadDataAndSetupTabs()
-    }
-
-    //Вставляем в БД и обновляем список
-    private fun insertNewItem(imageUrl: String) {
-        val newItem = WishListItem(imageUrl, "Новая вещь", 0.0, "", "", subcategories.firstOrNull()?.id ?: 1, "")
-        CoroutineScope(Dispatchers.IO).launch {
-            val db = Room.databaseBuilder(
-                requireContext(),
-                AppDatabase::class.java,
-                "wardrobe_db"
-            ).build()
-            db.wishListItemDao().insert(newItem)
-            allItems = db.wishListItemDao().getAll()
-        }
     }
 }
