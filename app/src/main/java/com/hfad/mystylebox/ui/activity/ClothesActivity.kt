@@ -78,7 +78,6 @@ class ClothesActivity : AppCompatActivity(), ImageOptionsBottomSheet.ImageOption
 
     private lateinit var categoryResultLauncher: ActivityResultLauncher<Intent>
     private lateinit var tagEditingLauncher: ActivityResultLauncher<Intent>
-    private var selectedTags: List<Tag> = listOf()
     private lateinit var editImageActivityLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {

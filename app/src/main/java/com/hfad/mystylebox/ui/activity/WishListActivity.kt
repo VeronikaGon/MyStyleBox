@@ -1,21 +1,12 @@
 package com.hfad.mystylebox.ui.activity
 
 import android.app.Activity
-import android.content.DialogInterface
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.BaseAdapter
 import android.widget.Button
-import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TextView
@@ -24,31 +15,19 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.FileProvider
 import androidx.core.view.children
 import androidx.lifecycle.lifecycleScope
-import androidx.room.Room
 import com.bumptech.glide.Glide
 import com.google.android.flexbox.FlexboxLayout
 import com.hfad.mystylebox.R
 import com.hfad.mystylebox.database.AppDatabase
-import com.hfad.mystylebox.database.entity.ClothingItem
-import com.hfad.mystylebox.database.dao.ClothingItemDao
-import com.hfad.mystylebox.database.entity.ClothingItemTag
-import com.hfad.mystylebox.database.dao.ClothingItemTagDao
 import com.hfad.mystylebox.database.dao.SubcategoryDao
 import com.hfad.mystylebox.database.dao.WishListItemDao
-import com.hfad.mystylebox.database.entity.Tag
 import com.hfad.mystylebox.database.entity.WishListItem
 import com.hfad.mystylebox.ui.bottomsheet.ImageOptionsBottomSheet
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class WishListActivity : AppCompatActivity(), ImageOptionsBottomSheet.ImageOptionsListener {
     private lateinit var db: AppDatabase
@@ -97,7 +76,11 @@ class WishListActivity : AppCompatActivity(), ImageOptionsBottomSheet.ImageOptio
             btnSave.text = "Обновить"
             populateFields(editingItem!!)
         }
+        val subcategoryName = intent.getStringExtra("subcategory")
         tvCategory.text = subcatDao.getSubcategoryNameById(subcatId)
+        if (!isInEditMode && !subcategoryName.isNullOrEmpty() && etName.text.isEmpty()) {
+            etName.setText(subcategoryName)
+        }
         val imageUriString = intent.getStringExtra("image_uri").orEmpty()
         imagePath = imageUriString
         findViewById<ImageView>(R.id.clothingImageView).let {

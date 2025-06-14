@@ -134,6 +134,7 @@ class CategorySelectionActivity : AppCompatActivity() {
                 putExtra("image_uri", imageUri?.toString().orEmpty())
                 putExtra("subcategory_id", selectedSubcategoryId)
                 putExtra("is_reselection", isReselection)
+                putExtra("subcategory", subcategory)
             }
             startActivity(intent)
             finish()
