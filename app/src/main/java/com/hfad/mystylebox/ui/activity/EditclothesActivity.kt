@@ -309,7 +309,6 @@ class EditclothesActivity : AppCompatActivity() {
     //Обновление после редактирования
     private fun updatePreviewUI(item: ClothingItem) {
         currentClothingItem = item
-        // Обновление текстовых полей
         findViewById<TextView>(R.id.status).text = item.status
         findViewById<TextView>(R.id.textviewsize).text = item.size
         findViewById<TextView>(R.id.textviewbrend).text = item.brend
@@ -324,7 +323,7 @@ class EditclothesActivity : AppCompatActivity() {
             }
             findViewById<TextView>(R.id.textviewcategory).text  = subcategoryName
         }
-// Обновление видимости контейнеров в зависимости от наличия данных
+
         val llNotes = findViewById<LinearLayout>(R.id.llNotes)
         llNotes.visibility = if (!item.notes.isNullOrEmpty()) View.VISIBLE else View.GONE
 
@@ -340,27 +339,21 @@ class EditclothesActivity : AppCompatActivity() {
         val llSeason = findViewById<LinearLayout>(R.id.llseason)
         llSeason.visibility = if (!item.seasons.isNullOrEmpty()) View.VISIBLE else View.GONE
 
-        // Обновление состояний сезонов
         findViewById<CheckBox>(R.id.cbSummer).isChecked = item.seasons.contains("Лето")
         findViewById<CheckBox>(R.id.cbSpring).isChecked = item.seasons.contains("Весна")
         findViewById<CheckBox>(R.id.cbAutumn).isChecked = item.seasons.contains("Осень")
         findViewById<CheckBox>(R.id.cbWinter).isChecked = item.seasons.contains("Зима")
 
-        // Обновление изображения
         val imageView = findViewById<ImageView>(R.id.clothingImageView)
-        val imagePath = item.imagePath
-        if (!imagePath.isNullOrEmpty()) {
-            try {
-                Glide.with(this)
-                    .load(File(imagePath))
-                    .into(imageView)
-            } catch (e: Exception) {
-                Toast.makeText(this, "Не удалось загрузить изображение: ${e.message}", Toast.LENGTH_SHORT).show()
-                Log.e("EDIT_DEBUG", "Ошибка загрузки картинки: ${e.localizedMessage}", e)
-            }
+
+        item.imagePath?.takeIf { it.isNotEmpty() }?.let { path ->
+            val uri = Uri.parse(path)
+            Glide.with(this)
+                .load(uri)
+                .into(imageView)
         }
+
         val llTegi = findViewById<LinearLayout>(R.id.llTegi)
-        // Обновление тегов
         lifecycleScope.launch(Dispatchers.IO) {
             val tags = clothingItemTagDao.getTagsForClothingItem(item.id)
             withContext(Dispatchers.Main) {
@@ -403,13 +396,21 @@ class EditclothesActivity : AppCompatActivity() {
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int, permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_READ_STORAGE) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (grantResults.isNotEmpty()
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED
+            ) {
                 setupUI()
             } else {
-                Toast.makeText(this, "Нет доступа к внешнему хранилищу", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this,
+                    "Доступ к фото не предоставлен. Закрытие экрана.",
+                    Toast.LENGTH_LONG).show()
+                finish()
             }
         }
     }
