@@ -316,7 +316,7 @@ class ClothesFragment : Fragment() {
     // Метод для выбора изображения (галерея, камера, файлы)
     private fun showImagePickerDialog() {
         val options = arrayOf("Выбрать из галереи", "Сфотографировать", "Выбрать из файлов")
-        val icons = arrayOf(R.drawable.gallery, R.drawable.ic_camera, R.drawable.ic_file)
+        val icons = arrayOf(R.drawable.ic_gallery, R.drawable.ic_camera, R.drawable.ic_file)
         val adapterDialog = object : BaseAdapter() {
             override fun getCount() = options.size
             override fun getItem(position: Int) = options[position]
