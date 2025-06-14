@@ -1,5 +1,6 @@
 package com.hfad.mystylebox.fragment
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.Gravity
@@ -20,26 +21,16 @@ import com.hfad.mystylebox.R
 import com.hfad.mystylebox.adapter.ViewPagerAdapter
 import com.hfad.mystylebox.ui.activity.AboutActivity
 
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
+private const val PREFS_NAME = "home_prefs"
+private const val KEY_LAST_TAB = "last_tab"
 
 class HomeFragment : Fragment() {
 
     private lateinit var btnImageHelp: ImageButton
-    private var param1: String? = null
-    private var param2: String? = null
     private lateinit var viewPager: ViewPager2
     private lateinit var tabLayout: TabLayout
 
     private val tabTitles = listOf("Планирование", "Статистика", "Список желаний")
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -51,33 +42,31 @@ class HomeFragment : Fragment() {
             val intent = Intent(requireContext(), AboutActivity::class.java)
             startActivity(intent)
         }
-        viewPager = view.findViewById(R.id.viewPager)
-        tabLayout = view.findViewById(R.id.tabLayout)
 
-        val btnAccount: ImageButton = view.findViewById(R.id.imageAccount)
-        btnAccount.setOnClickListener {
+        val btnBDsetings: ImageButton = view.findViewById(R.id.imageBDsetings)
+        btnBDsetings.setOnClickListener {
             (activity as? MainActivity)?.drawerLayout?.openDrawer(GravityCompat.START)
         }
+
+        viewPager = view.findViewById(R.id.viewPager)
         viewPager.adapter = ViewPagerAdapter(requireActivity())
         viewPager.isUserInputEnabled = false
 
+        tabLayout = view.findViewById(R.id.tabLayout)
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
             tab.text = tabTitles[position]
         }.attach()
 
-        viewPager.currentItem = 1
+        val prefs = requireContext()
+            .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val lastTab = prefs.getInt(KEY_LAST_TAB, 1)
+        viewPager.currentItem = lastTab
 
-        return view
-    }
-
-    companion object {
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            HomeFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
+        viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                prefs.edit().putInt(KEY_LAST_TAB, position).apply()
             }
+        })
+        return view
     }
 }
