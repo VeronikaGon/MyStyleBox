@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
@@ -36,6 +37,7 @@ class ClothingSelectionActivity : AppCompatActivity() {
     private lateinit var tabLayout: TabLayout
     private lateinit var imageBack: ImageButton
     private lateinit var selectclothingButton: ImageButton
+    private var fromBoard: Boolean = false
 
     private val selectedItems = mutableSetOf<ClothingItemFull>()
 
@@ -57,7 +59,7 @@ class ClothingSelectionActivity : AppCompatActivity() {
 
         imageBack.setOnClickListener { finish() }
 
-        val fromBoard = intent.getBooleanExtra("fromBoard", false)
+        fromBoard = intent.getBooleanExtra("fromBoard", false)
         selectclothingButton.setOnClickListener {
             val selectedIds = ArrayList(selectedItems.map { it.clothingItem.id })
             val selectedImagePaths = ArrayList(selectedItems.map { it.clothingItem.imagePath })
@@ -104,11 +106,11 @@ class ClothingSelectionActivity : AppCompatActivity() {
     // Обновление счетчика выбранных элементов и цвета/видимости контейнера clayout
     private fun updateSelectionCount() {
         selectedCountText.text = selectedItems.size.toString()
-        if (selectedItems.isEmpty()|| selectedItems.size < 2 ) {
-            clayout.visibility = View.GONE
-        } else {
-            clayout.visibility = View.VISIBLE
-        }
+        val minRequired = if (fromBoard) 1 else 2
+        clayout.visibility = if (selectedItems.size >= minRequired)
+            View.VISIBLE
+        else
+            View.GONE
     }
 
     // Загрузка полного списка вещей из БД

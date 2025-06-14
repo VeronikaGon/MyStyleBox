@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -23,6 +24,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
+import com.bumptech.glide.Glide
 import com.google.android.flexbox.FlexboxLayout
 import com.google.android.material.slider.RangeSlider
 import com.hfad.mystylebox.MainActivity
@@ -42,8 +44,6 @@ import kotlinx.coroutines.withContext
 class OutfitActivity : AppCompatActivity() {
 
     companion object {
-        private const val REQUEST_CODE_EDIT_IMAGE = 2001
-        private const val REQUEST_CODE_EDIT_TAGS  = 2002
         private const val REQUEST_CODE_EDIT_BOARD = 3001
     }
 
@@ -59,7 +59,7 @@ class OutfitActivity : AppCompatActivity() {
     private lateinit var outfitImageView: ImageView
     private var isFromBoard: Boolean = false
 
-    private var ImagePath: String? = null
+    private var imageUriString: String? = null
     private var isInEditMode: Boolean = false
     private var currentOutfit: Outfit? = null
     private var isUpdatingFromCode: Boolean = false
@@ -142,14 +142,17 @@ class OutfitActivity : AppCompatActivity() {
             else if (isFromBoard) {
                 btnSave.text = "Сохранить"
                 outfitNameEditText.setText("Комплект")
-                val imagePath = intent.getStringExtra("imagePath")
+                val uriString = intent.getStringExtra("image_uri")
                 val ids       = intent.getIntegerArrayListExtra("selected_item_ids")
                 val paths     = intent.getStringArrayListExtra("selected_image_paths")
                 val statesJson = intent.getStringExtra("item_states_json")
 
-                if (!imagePath.isNullOrEmpty()) {
-                    ImagePath = imagePath
-                    outfitImageView.setImageBitmap(BitmapFactory.decodeFile(imagePath))
+                if (!uriString.isNullOrEmpty()) {
+                    imageUriString = uriString
+                    val uri = Uri.parse(uriString)
+                    Glide.with(this)
+                        .load(uri)
+                        .into(outfitImageView)
                 }
                 if (ids != null && paths != null) {
                     selectedClothingItemIds.clear()
@@ -180,18 +183,29 @@ class OutfitActivity : AppCompatActivity() {
         }
 
         editImageButton.setOnClickListener {
-            if (selectedClothingImagePaths.isNotEmpty()) {
+            if (isInEditMode || selectedClothingImagePaths.isNotEmpty()) {
                 val intent = Intent(this, BoardActivity::class.java).apply {
+                    putExtra("launchedFromForm", true)
                     if (!savedItemStatesJson.isNullOrEmpty()) {
                         putExtra("item_states_json", savedItemStatesJson)
                     }
-                    putStringArrayListExtra("selected_image_paths", ArrayList(selectedClothingImagePaths))
-                    putIntegerArrayListExtra("selected_item_ids", ArrayList(selectedClothingItemIds))
-                    putExtra("launchedFromForm", true)
+                    putStringArrayListExtra(
+                        "selected_image_paths",
+                        ArrayList(selectedClothingImagePaths)
+                    )
+                    putIntegerArrayListExtra(
+                        "selected_item_ids",
+                        ArrayList(selectedClothingItemIds)
+                    )
+                    putExtra("fromBoard", true)
                 }
                 startActivityForResult(intent, REQUEST_CODE_EDIT_BOARD)
             } else {
-                Toast.makeText(this, "Сначала соберите комплект через доску", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    "Сначала соберите комплект через доску",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
 
@@ -273,7 +287,6 @@ class OutfitActivity : AppCompatActivity() {
             }
         }
 
-        // 11. Слушатели для чекбоксов температуры
         val checkBoxListener = CompoundButton.OnCheckedChangeListener { _, isChecked ->
             if (isCheckboxUpdating) return@OnCheckedChangeListener
             val totalSelected = countSelectedRanges()
@@ -315,15 +328,17 @@ class OutfitActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CODE_EDIT_BOARD && resultCode == Activity.RESULT_OK) {
-            val newImagePath = data?.getStringExtra("imagePath")
+            val newUriString = data?.getStringExtra("image_uri")
+            if (!newUriString.isNullOrEmpty()) {
+                imageUriString = newUriString
+                Glide.with(this)
+                    .load(Uri.parse(newUriString))
+                    .into(outfitImageView)
+            }
             val newIds = data?.getIntegerArrayListExtra("selected_item_ids")
             val newPaths = data?.getStringArrayListExtra("selected_image_paths")
             val newStatesJson = data?.getStringExtra("item_states_json")
 
-            if (!newImagePath.isNullOrEmpty()) {
-                ImagePath = newImagePath
-                outfitImageView.setImageBitmap(BitmapFactory.decodeFile(newImagePath))
-            }
             if (newIds != null && newPaths != null) {
                 selectedClothingItemIds.clear()
                 selectedClothingItemIds.addAll(newIds)
@@ -385,12 +400,28 @@ class OutfitActivity : AppCompatActivity() {
             cbAutumn.isChecked = seasons.contains("Осень")
         }
 
+        if (!outfit.imagePath.isNullOrEmpty()) {
+            imageUriString = outfit.imagePath
+            selectedClothingImagePaths.clear()
+            selectedClothingImagePaths.add(outfit.imagePath)
+            Glide.with(this)
+                .load(Uri.parse(outfit.imagePath))
+                .into(outfitImageView)
+        }
+
         lifecycleScope.launch(Dispatchers.IO) {
+            val clothes = db.outfitClothingItemDao().getItemsForOutfit(outfit.id)
+            val ids = clothes.map { it.clothingItemId }
+            val paths = clothes.map { clothingItemDao.getById(it.clothingItemId).imagePath }
             val savedTagIds = outfitTagDao.getTagsForOutfit(outfit.id).map { it.id }.toSet()
             selectedTagIds.clear()
             selectedTagIds.addAll(savedTagIds)
             val allTags = db.tagDao().getAllTags()
             withContext(Dispatchers.Main) {
+                selectedClothingItemIds.clear()
+                selectedClothingItemIds.addAll(ids)
+                selectedClothingImagePaths.clear()
+                selectedClothingImagePaths.addAll(paths)
                 displayTagsAsCheckboxes(allTags, selectedTagIds)
             }
         }
@@ -419,7 +450,7 @@ class OutfitActivity : AppCompatActivity() {
                 this.seasons = seasons
                 this.minTemp = minTemp
                 this.maxTemp = maxTemp
-                this.imagePath = ImagePath ?: ""
+                this.imagePath = imageUriString ?: ""
             }
         } else {
             Outfit().apply {
@@ -428,7 +459,7 @@ class OutfitActivity : AppCompatActivity() {
                 this.seasons = seasons
                 this.minTemp = minTemp
                 this.maxTemp = maxTemp
-                this.imagePath = ImagePath ?: ""
+                this.imagePath = imageUriString ?: ""
             }
         }
 
@@ -441,6 +472,7 @@ class OutfitActivity : AppCompatActivity() {
             lifecycleScope.launch(Dispatchers.Main) {
                 Toast.makeText(this@OutfitActivity, "Комплект обновлён", Toast.LENGTH_SHORT).show()
                 val resultIntent = Intent().apply {
+                    putExtra("image_uri", imageUriString)
                     putExtra("updated_item", outfit)
                 }
                 setResult(RESULT_OK, resultIntent)

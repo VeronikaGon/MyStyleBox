@@ -91,11 +91,22 @@ class OutFitsFragment : Fragment() {
                 val alloutfits = db.outfitDao().getAllOutfits()
                 withContext(Dispatchers.Main) {
                     if (alloutfits.size <= 4) {
-                        Toast.makeText(
-                            requireContext(),
-                            "Добавьте ещё комплектов для поиска",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        try {
+                            val needed = 4 - alloutfits.size
+                            val word = when {
+                                needed % 10 == 1 && needed % 100 != 11 -> "комплект"
+                                needed % 10 in 2..4 && needed % 100 !in 12..14 -> "комплекта"
+                                else -> "комплектов"
+                            }
+                            Toast.makeText(
+                                requireContext(),
+                                "Добавьте ещё $needed $word для поиска",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } catch (e: Exception) {
+                            TODO("Not yet implemented")
+                        } finally {
+                        }
                     } else {
                         startSearchClothingActivity()
                     }
@@ -114,9 +125,15 @@ class OutFitsFragment : Fragment() {
                 val alloutfits = db.outfitDao().getAllOutfits()
                 withContext(Dispatchers.Main) {
                     if (alloutfits.size <= 4) {
+                        val needed = 4 - alloutfits.size
+                        val word = when {
+                            needed % 10 == 1 && needed % 100 != 11 -> "комплект"
+                            needed % 10 in 2..4 && needed % 100 !in 12..14 -> "комплекта"
+                            else -> "комплектов"
+                        }
                         Toast.makeText(
                             requireContext(),
-                            "Добавьте ещё комплектов для фильтрации",
+                            "Добавьте ещё $needed $word для фильтрации",
                             Toast.LENGTH_SHORT
                         ).show()
                     } else {

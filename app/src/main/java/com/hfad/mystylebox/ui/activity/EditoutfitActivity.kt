@@ -23,7 +23,6 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import com.bumptech.glide.Glide
@@ -65,6 +64,10 @@ class EditoutfitActivity : AppCompatActivity() {
             val updatedItem: Outfit? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
                 result.data?.getParcelableExtra("updated_item", Outfit::class.java)
             else result.data?.getParcelableExtra("updated_item")
+            val newUriString = result.data?.getStringExtra("image_uri")
+            if (newUriString != null) {
+                imageUri = Uri.parse(newUriString)
+            }
             if (updatedItem != null) {
                 updatePreviewUI(updatedItem)
             }
@@ -96,20 +99,20 @@ class EditoutfitActivity : AppCompatActivity() {
             Toast.makeText(this, "Данные не получены", Toast.LENGTH_SHORT).show()
         }
 
-        val imageUriString = intent.getStringExtra("image_uri")
-        if (!imageUriString.isNullOrEmpty()) {
-            imageUri = Uri.parse(imageUriString)
-            Log.d("EditoutfitActivity", "Получен imageUri: $imageUri")
-        } else {
-            Log.d("EditoutfitActivity", "image_uri отсутствует в extras")
-        }
+        val uriString = intent.getStringExtra("image_uri")
+           if (uriString.isNullOrEmpty()) {
+                   Log.d("EditoutfitActivity", "image_uri отсутствует в Intent")
+                   Toast.makeText(this, "URI отсутствует", Toast.LENGTH_SHORT).show()
+               } else {
+                   imageUri = Uri.parse(uriString)
+                   Log.d("EditoutfitActivity", "imageUri = $imageUri")
+               }
 
         flexboxTags = findViewById(R.id.Tags)
         recyclerViewClothes = findViewById(R.id.recyclerViewClothes)
         recyclerViewClothes.layoutManager = GridLayoutManager(this, 1, GridLayoutManager.HORIZONTAL, false)
         recyclerViewClothes.adapter = ClothingAdapter(emptyList(), R.layout.item_vivod)
 
-        // Проверка разрешений
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -262,47 +265,40 @@ class EditoutfitActivity : AppCompatActivity() {
 
     // Метод загрузки изображения с проверкой корректности URI и файла
     private fun loadImage() {
-        val outfitImageView = findViewById<ImageView>(R.id.outfitImageView)
+        val iv = findViewById<ImageView>(R.id.outfitImageView)
         imageUri?.let { uri ->
-            // Просто передаём контент-URI Glide
+            val file = File(imageUri?.path ?: "")
+            if (file.exists() && file.length() > 0) {
+                Glide.with(this)
+                    .load(file)
+                    .into(iv)
+            } else {
+                Toast.makeText(this, "Не удалось найти файл изображения", Toast.LENGTH_SHORT).show()
+            }
             Glide.with(this)
                 .load(uri)
-                .apply(
-                    RequestOptions()
-                        .diskCacheStrategy(DiskCacheStrategy.NONE)
-                        .skipMemoryCache(true)
-                        .format(DecodeFormat.PREFER_ARGB_8888)
-                )
+                .apply(RequestOptions()
+                    .diskCacheStrategy(DiskCacheStrategy.NONE)
+                    .skipMemoryCache(true)
+                    .format(DecodeFormat.PREFER_ARGB_8888))
                 .listener(object : RequestListener<Drawable> {
                     override fun onLoadFailed(
-                        e: GlideException?,
-                        model: Any?,
-                        target: Target<Drawable>,
+                        e: GlideException?, model: Any?, target: Target<Drawable>,
                         isFirstResource: Boolean
-                    ): Boolean {
-                        Log.e("EditoutfitActivity", "Ошибка загрузки изображения", e)
-                        Toast.makeText(
-                            this@EditoutfitActivity,
-                            "Не удалось загрузить изображение",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        return false
+                    ) = false.also {
+                        Log.e("EditoutfitActivity", "Glide failed", e)
+                        Toast.makeText(this@EditoutfitActivity,
+                            "Не удалось загрузить изображение", Toast.LENGTH_SHORT).show()
                     }
                     override fun onResourceReady(
-                        resource: Drawable,
-                        model: Any,
-                        target: Target<Drawable>,
-                        dataSource: DataSource,
-                        isFirstResource: Boolean
-                    ): Boolean {
-                        Log.d("EditoutfitActivity", "Изображение успешно загружено")
-                        return false
+                        res: Drawable, model: Any, target: Target<Drawable>,
+                        dataSource: DataSource, isFirstResource: Boolean
+                    ) = false.also {
+                        Log.d("EditoutfitActivity", "Glide success")
                     }
                 })
-                .into(outfitImageView)
-        } ?: run {
-            Toast.makeText(this, "URI изображения отсутствует", Toast.LENGTH_SHORT).show()
-        }
+                .into(iv)
+        } ?: Toast.makeText(this, "URI отсутствует", Toast.LENGTH_SHORT).show()
     }
 
     // Метод обновления интерфейса после редактирования комплекта
@@ -351,7 +347,6 @@ class EditoutfitActivity : AppCompatActivity() {
             }
         }
 
-        // Обновляем изображение
         loadImage()
     }
 
@@ -375,10 +370,10 @@ class EditoutfitActivity : AppCompatActivity() {
 
     // Метод для перехода в активность редактирования комплекта
     private fun navigateToOutfitActivity() {
-        currentOutfit?.let { item ->
+        currentOutfit?.let { outfit  ->
             val intent = Intent(this, OutfitActivity::class.java).apply {
-                putExtra("outfit", item)
-                putExtra("imagePath", item.imagePath)
+                putExtra("outfit", outfit)
+                imageUri?.let { putExtra("image_uri", it) }
             }
             editResultLauncher.launch(intent)
         }
@@ -395,7 +390,9 @@ class EditoutfitActivity : AppCompatActivity() {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 setupUI()
             } else {
-                Toast.makeText(this, "Нет доступа к внешнему хранилищу", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this,  "Доступ к фото не предоставлен. Закрытие экрана.",
+                    Toast.LENGTH_LONG).show()
+                finish()
             }
         }
     }

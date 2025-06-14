@@ -5,6 +5,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.util.TypedValue
@@ -32,8 +33,6 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.hfad.mystylebox.MainActivity
 import com.hfad.mystylebox.R
-import org.json.JSONArray
-import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 
@@ -76,6 +75,8 @@ class BoardActivity : AppCompatActivity() {
     private lateinit var btnScaling: ImageButton
     private lateinit var btnDelete: ImageButton
     private lateinit var addClothesButton: ImageButton
+    private lateinit var saveButton: Button
+    private var launchedFromForm = false
 
     private val boardItems = mutableListOf<ImageView>()
     private val thumbnailMapping = mutableMapOf<ImageView, ImageView>()
@@ -91,7 +92,6 @@ class BoardActivity : AppCompatActivity() {
     companion object {
         private const val REQUEST_CODE_ADD_ITEMS = 1001
         private const val REQUEST_CODE_TO_FORM = 2001
-        const val EXTRA_IS_NEW_OUTFIT = "isNewOutfit"
     }
 
     private lateinit var addClothesLauncher: ActivityResultLauncher<Intent>
@@ -115,7 +115,8 @@ class BoardActivity : AppCompatActivity() {
         btnScaling = findViewById(R.id.btnscaling)
         btnDelete = findViewById(R.id.btnDelete)
         addClothesButton = findViewById(R.id.addclothes)
-        val saveButton = findViewById<Button>(R.id.saveButton)
+        saveButton = findViewById(R.id.saveButton)
+
         saveButton.setOnClickListener { AlertDialog.Builder(this)
             .setTitle("Подтвердить сохранение")
             .setMessage("Сохранить этот комплект?")
@@ -128,8 +129,7 @@ class BoardActivity : AppCompatActivity() {
 
         setAdjustmentContainerVisibility(View.GONE)
 
-        val isNewOutfit = intent.getBooleanExtra(EXTRA_IS_NEW_OUTFIT, false)
-        Log.d("BoardActivity", "isNewOutfit = $isNewOutfit")
+        launchedFromForm = intent.getBooleanExtra("launchedFromForm", false)
 
         viewModel = ViewModelProvider(this).get(BoardViewModel::class.java)
         val passedImagePaths = intent.getStringArrayListExtra("selected_image_paths") ?: arrayListOf()
@@ -142,6 +142,14 @@ class BoardActivity : AppCompatActivity() {
             emptyMap()
         }
 
+        if (passedImagePaths.size != passedIds.size) {
+            Toast.makeText(this, "Неполные данные для редактирования", Toast.LENGTH_SHORT).show()
+            finish(); return
+        }
+        if (passedImagePaths.isEmpty()) {
+            Toast.makeText(this, "Нет путей для отображения", Toast.LENGTH_SHORT).show()
+            finish(); return
+        }
 
         selectedIds.addAll(passedIds)
         for (i in passedImagePaths.indices) {
@@ -233,6 +241,14 @@ class BoardActivity : AppCompatActivity() {
         boardContainer.setOnClickListener {
             deselectAll()
         }
+        updateSaveButtonState()
+    }
+
+    //Включает/выключает кнопку «Сохранить», так как еомплект должен состоять минимум из 2 вещей
+    private fun updateSaveButtonState() {
+        val сount = itemIdMapping.values.distinct().size
+        saveButton.isEnabled = сount >= 2
+        saveButton.alpha = if (saveButton.isEnabled) 1f else 0.5f
     }
 
     private fun saveBoardImage() {
@@ -257,16 +273,30 @@ class BoardActivity : AppCompatActivity() {
 
             val allStates = viewModel.imageStates.value ?: emptyMap<String, ImageState>()
             val json = Gson().toJson(allStates)
+            val uri = Uri.fromFile(file)
 
-            val intent = Intent(this, OutfitActivity::class.java).apply {
-                putExtra("imagePath", file.path)
+
+            val resultIntent = Intent().apply {
+                putExtra("image_uri", uri.toString())
                 putIntegerArrayListExtra("selected_item_ids", ArrayList(itemIdMapping.values.distinct()))
-                val allPaths = boardItems.map { it.tag.toString() }
-                putStringArrayListExtra("selected_image_paths", ArrayList(allPaths))
+                putStringArrayListExtra("selected_image_paths", ArrayList(boardItems.map { it.tag.toString() }))
                 putExtra("item_states_json", json)
-                putExtra("fromBoard", true)
             }
-            startActivityForResult(intent, REQUEST_CODE_TO_FORM)
+
+            if (launchedFromForm) {
+                setResult(Activity.RESULT_OK, resultIntent)
+                finish()
+            } else {
+                val intent = Intent(this, OutfitActivity::class.java).apply {
+                    putExtra("image_uri", uri.toString())
+                    putIntegerArrayListExtra("selected_item_ids", ArrayList(itemIdMapping.values.distinct()))
+                    val allPaths = boardItems.map { it.tag.toString() }
+                    putStringArrayListExtra("selected_image_paths", ArrayList(allPaths))
+                    putExtra("item_states_json", json)
+                    putExtra("fromBoard", true)
+                }
+                startActivityForResult(intent, REQUEST_CODE_TO_FORM)
+            }
 
         } catch (e: Exception) {
             e.printStackTrace()
@@ -364,6 +394,7 @@ class BoardActivity : AppCompatActivity() {
 
         selectedIds.add(clothingItemId)
         itemIdMapping[imageView] = clothingItemId
+        updateSaveButtonState()
         selectBoardItem(imageView)
     }
 
@@ -553,6 +584,7 @@ class BoardActivity : AppCompatActivity() {
                     selectedView = null
                     setAdjustmentContainerVisibility(View.GONE)
                     Toast.makeText(this, "Вещь удалена", Toast.LENGTH_SHORT).show()
+                    updateSaveButtonState()
                 }
                 .setNegativeButton("Отмена", null)
                 .show()
