@@ -1,8 +1,10 @@
 package com.hfad.mystylebox.fragment
 
+import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
@@ -18,6 +20,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity.RESULT_OK
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -53,6 +56,17 @@ class ClothesFragment : Fragment() {
     private lateinit var imageFilter: ImageButton
     private var photoUri: Uri? = null
     private lateinit var emptyTextView: TextView
+
+    private val cameraPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            openCamera()
+        } else {
+            Toast.makeText(requireContext(), "Нужно разрешение на камеру", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private val filterActivityLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -209,7 +223,7 @@ class ClothesFragment : Fragment() {
                 ).build()
                 val count = db.clothingItemDao().getCount()
                 withContext(Dispatchers.Main) {
-                    if (count <= 4) {
+                    if (count < 4) {
                         val needed = 4 - count
                         val word = when {
                             needed % 10 == 1 && needed % 100 != 11 -> "вещь"
@@ -237,7 +251,7 @@ class ClothesFragment : Fragment() {
                 ).build()
                 val count = db.clothingItemDao().getCount()
                 withContext(Dispatchers.Main) {
-                    if (count <= 4) {
+                    if (count < 4) {
                         val needed = 4 - count
                         val word = when {
                             needed % 10 == 1 && needed % 100 != 11 -> "вещь"
@@ -336,11 +350,35 @@ class ClothesFragment : Fragment() {
             .setAdapter(adapterDialog) { _, which ->
                 when (which) {
                     0 -> openGallery()
-                    1 -> openCamera()
+                    1 -> checkCameraPermissionAndOpen()
                     2 -> openFiles()
                 }
             }
             .show()
+    }
+// Метод проверки разрешения
+    private fun checkCameraPermissionAndOpen() {
+        when {
+            ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                openCamera()
+            }
+            shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> {
+                AlertDialog.Builder(requireContext())
+                    .setTitle("Требуется доступ к камере")
+                    .setMessage("Для фотографирования одежды нужно разрешение на камеру.")
+                    .setPositiveButton("Разрешить") { _, _ ->
+                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                    }
+                    .setNegativeButton("Отмена", null)
+                    .show()
+            }
+            else -> {
+                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
+        }
     }
 
     private fun updateEmptyView() {

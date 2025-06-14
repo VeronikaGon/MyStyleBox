@@ -21,11 +21,14 @@
 
         <ImageButton
             android:id="@+id/imageBDsetings"
-            android:layout_width="wrap_content"
+            android:layout_width="40dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="9dp"
             android:background="@android:color/transparent"
+            android:scaleType="fitCenter"
+            app:layout_constraintBottom_toTopOf="@+id/coordinatorLayout"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/ic_database_setting" />
@@ -53,6 +56,7 @@
             app:srcCompat="@drawable/ic_help" />
 
         <androidx.coordinatorlayout.widget.CoordinatorLayout
+            android:id="@+id/coordinatorLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="1dp"
@@ -73,8 +77,8 @@
                     android:layout_height="wrap_content"
                     android:background="@color/white"
                     app:tabIndicatorColor="@color/pink"
-                    app:tabSelectedTextColor="@color/black"
                     app:tabMode="scrollable"
+                    app:tabSelectedTextColor="@color/black"
                     app:tabTextColor="@color/gray" />
             </com.google.android.material.appbar.AppBarLayout>
 

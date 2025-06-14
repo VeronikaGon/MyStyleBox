@@ -434,7 +434,7 @@
         android:layout_height="match_parent"
         android:background="@android:color/transparent"
         android:layout_marginEnd="15dp"
-        app:srcCompat="@drawable/delete" />
+        app:srcCompat="@drawable/ic_delete" />
 
     <ImageButton
         android:id="@+id/buttonedit"

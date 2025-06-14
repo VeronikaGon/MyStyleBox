@@ -1,12 +1,14 @@
 package com.hfad.mystylebox.ui.bottomsheet
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.FileProvider
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.hfad.mystylebox.R
@@ -55,21 +57,29 @@ class OutfitActionsBottomSheet : BottomSheetDialogFragment() {
         }
 
         btnShare.setOnClickListener {
+            val pathRaw = arguments?.getString("outfitImagePath") ?: return@setOnClickListener
+
+            val filePath = if (pathRaw.startsWith("file:")) {
+                Uri.parse(pathRaw).path!!
+            } else pathRaw
+
+            val imageFile = File(filePath)
+            if (!imageFile.exists()) {
+                Toast.makeText(requireContext(), "Файл не найден", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val uri = FileProvider.getUriForFile(
+                requireContext(),
+                "${requireContext().packageName}.fileprovider",
+                imageFile
+            )
+
             val shareIntent = Intent(Intent.ACTION_SEND).apply {
                 type = "image/*"
-                outfitImagePath?.let { path ->
-                    val imageFile = File(path)
-                    if (imageFile.exists()) {
-                        val uri = FileProvider.getUriForFile(
-                            requireContext(),
-                            "${requireContext().packageName}.fileprovider",
-                            imageFile
-                        )
-                        putExtra(Intent.EXTRA_STREAM, uri)
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }
-                }
+                putExtra(Intent.EXTRA_STREAM, uri)
                 putExtra(Intent.EXTRA_TEXT, "Посмотри какой стильный комплект я создала!")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
             startActivity(Intent.createChooser(shareIntent, "Поделиться комплектом"))
             dismiss()

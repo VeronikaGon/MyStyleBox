@@ -1,8 +1,10 @@
 package com.hfad.mystylebox.fragment
 
+import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -63,7 +65,6 @@ class ThirdFragment : Fragment() {
 
     private var allItems = listOf<WishListItem>()
     private var categories = listOf<Category>()
-    private var subcategories = listOf<Subcategory>()
     private var subcats = listOf<Subcategory>()
     private var displayedCategories: List<Category> = emptyList()
     private var photoUri: Uri? = null
@@ -75,6 +76,15 @@ class ThirdFragment : Fragment() {
 
     private var currentFilters: Bundle = Bundle()
 
+    private val cameraPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            openCamera()
+        } else {
+            Toast.makeText(requireContext(), "Нужно разрешение на камеру", Toast.LENGTH_SHORT).show()
+        }
+    }
     private val filterLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -503,11 +513,36 @@ class ThirdFragment : Fragment() {
             .setAdapter(adapterDialog) { _, which ->
                 when (which) {
                     0 -> openGallery()
-                    1 -> openCamera()
+                    1 -> checkCameraPermissionAndOpen()
                     2 -> openFiles()
                 }
             }
             .show()
+    }
+
+    // Метод проверки разрешения
+    private fun checkCameraPermissionAndOpen() {
+        when {
+            ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                openCamera()
+            }
+            shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> {
+                AlertDialog.Builder(requireContext())
+                    .setTitle("Требуется доступ к камере")
+                    .setMessage("Для фотографирования одежды нужно разрешение на камеру.")
+                    .setPositiveButton("Разрешить") { _, _ ->
+                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                    }
+                    .setNegativeButton("Отмена", null)
+                    .show()
+            }
+            else -> {
+                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
+        }
     }
 
     private fun openGallery() {

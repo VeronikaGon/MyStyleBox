@@ -33,7 +33,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/size_button_background"
-            app:srcCompat="@drawable/circle25" />
+            app:srcCompat="@drawable/ic_circle25" />
 
         <ImageButton
             android:id="@+id/size20"
@@ -41,7 +41,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:background="@drawable/size_button_background"
-            app:srcCompat="@drawable/circle30" />
+            app:srcCompat="@drawable/ic_circle30" />
 
         <ImageButton
             android:id="@+id/size30"
@@ -49,7 +49,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:background="@drawable/size_button_background"
-            app:srcCompat="@drawable/circle35" />
+            app:srcCompat="@drawable/ic_circle35" />
 
         <ImageButton
             android:id="@+id/size40"
@@ -57,7 +57,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:background="@drawable/size_button_background"
-            app:srcCompat="@drawable/circle40" />
+            app:srcCompat="@drawable/ic_circle40" />
 
         <ImageButton
             android:id="@+id/size50"
@@ -65,7 +65,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:background="@drawable/size_button_background"
-            app:srcCompat="@drawable/circle50" />
+            app:srcCompat="@drawable/ic_circle50" />
 
         <ImageButton
             android:id="@+id/undoButton"

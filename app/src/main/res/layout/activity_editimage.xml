@@ -46,7 +46,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="32dp"
             android:background="@android:color/transparent"
-            app:srcCompat="@drawable/crop" />
+            app:srcCompat="@drawable/ic_crop" />
 
         <ImageButton
             android:id="@+id/rotateLeftButton"

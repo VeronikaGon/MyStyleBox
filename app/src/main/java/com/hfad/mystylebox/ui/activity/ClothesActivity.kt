@@ -1,8 +1,10 @@
 package com.hfad.mystylebox.ui.activity
 
+import android.Manifest
 import android.app.Activity
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -24,6 +26,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
@@ -80,11 +83,20 @@ class ClothesActivity : AppCompatActivity(), ImageOptionsBottomSheet.ImageOption
     private lateinit var tagEditingLauncher: ActivityResultLauncher<Intent>
     private lateinit var editImageActivityLauncher: ActivityResultLauncher<Intent>
 
+    private val cameraPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            openCamera()
+        } else {
+            Toast.makeText(this, "Нужно разрешение на камеру", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.clothes)
+        setContentView(R.layout.activity_clothes)
 
-        // Инициализация БД и DAO
         db = Room.databaseBuilder(
             applicationContext,
             AppDatabase::class.java,
@@ -195,7 +207,6 @@ class ClothesActivity : AppCompatActivity(), ImageOptionsBottomSheet.ImageOption
             categoryResultLauncher.launch(intent)
         }
 
-        // Восстанавливаем состояние, если оно было сохранено
         savedInstanceState?.let {
             clothingNameEditText.setText(it.getString("name"))
             clothingBrendEditText.setText(it.getString("brend"))
@@ -205,7 +216,6 @@ class ClothesActivity : AppCompatActivity(), ImageOptionsBottomSheet.ImageOption
             imagePath = it.getString("image_path")
         }
 
-        // Получаем данные, переданные через Intent
         subcategory = intent.getStringExtra("subcategory")
         selectedSubcategoryId = intent.getIntExtra("selected_subcategory_id", -1)
         isReselection = intent.getBooleanExtra("is_reselection", false)
@@ -217,7 +227,6 @@ class ClothesActivity : AppCompatActivity(), ImageOptionsBottomSheet.ImageOption
             categoryField.text = it
         }
 
-        // Обработка выбора размера через FlexboxLayout
         val flexboxLayout = findViewById<FlexboxLayout>(R.id.flexboxLayout)
         for (i in 0 until flexboxLayout.childCount) {
             val child = flexboxLayout.getChildAt(i)
@@ -232,7 +241,6 @@ class ClothesActivity : AppCompatActivity(), ImageOptionsBottomSheet.ImageOption
             }
         }
 
-        // Если активность запущена для редактирования, заполняем поля данными существующего элемента
         val editingItem = intent.getParcelableExtra<ClothingItem>("clothingItem")
         imagePath?.let { path ->
             clothingImageView.setImageURI(Uri.parse(path))
@@ -295,11 +303,36 @@ class ClothesActivity : AppCompatActivity(), ImageOptionsBottomSheet.ImageOption
             .setAdapter(adapterDialog) { _, which ->
                 when (which) {
                     0 -> openGallery()
-                    1 -> openCamera()
+                    1 -> checkCameraPermissionAndOpen()
                     2 -> openFiles()
                 }
             }
             .show()
+    }
+
+    // Метод проверки разрешения
+    private fun checkCameraPermissionAndOpen() {
+        when {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                openCamera()
+            }
+            shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> {
+                android.app.AlertDialog.Builder(this)
+                    .setTitle("Требуется доступ к камере")
+                    .setMessage("Для фотографирования одежды нужно разрешение на камеру.")
+                    .setPositiveButton("Разрешить") { _, _ ->
+                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                    }
+                    .setNegativeButton("Отмена", null)
+                    .show()
+            }
+            else -> {
+                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
+        }
     }
 
     private fun openGallery() {

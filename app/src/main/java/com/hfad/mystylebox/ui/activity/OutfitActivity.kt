@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.CompoundButton
@@ -172,14 +173,23 @@ class OutfitActivity : AppCompatActivity() {
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
-                val returnedTags = result.data?.getParcelableArrayListExtra<Tag>("selected_tags")
+                val returnedTags = result.data
+                    ?.getParcelableArrayListExtra<Tag>("selected_tags")
                 if (returnedTags != null) {
                     selectedTagIds.clear()
-                    selectedTags = returnedTags
                     returnedTags.forEach { tag -> selectedTagIds.add(tag.id) }
-                    loadTagsFromDatabase()
                 }
+                loadTagsFromDatabase()
             }
+        }
+
+        findViewById<LinearLayout>(R.id.llTegi).setOnClickListener {
+            val intent = Intent(this, TagEditingActivity::class.java)
+            tagEditingLauncher.launch(intent)
+        }
+        findViewById<ImageButton>(R.id.imageButtonTags).setOnClickListener {
+            val intent = Intent(this, TagEditingActivity::class.java)
+            tagEditingLauncher.launch(intent)
         }
 
         editImageButton.setOnClickListener {
@@ -313,8 +323,8 @@ class OutfitActivity : AppCompatActivity() {
     private fun loadTagsFromDatabase() {
         lifecycleScope.launch(Dispatchers.IO) {
             val allTags = db.tagDao().getAllTags()
-            val preselectedIds = currentOutfit?.let { outfit ->
-                outfitTagDao.getTagsForOutfit(outfit.id).map { it.id }.toSet()
+            val preselectedIds = currentOutfit?.let {
+                outfitTagDao.getTagsForOutfit(it.id).map { it.id }.toSet()
             } ?: emptySet()
             selectedTagIds.clear()
             selectedTagIds.addAll(preselectedIds)
@@ -323,7 +333,10 @@ class OutfitActivity : AppCompatActivity() {
             }
         }
     }
-
+    override fun onResume() {
+        super.onResume()
+        loadTagsFromDatabase()
+    }
     // Обработка результата от BoardActivity (редактирование картинки)
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -354,23 +367,22 @@ class OutfitActivity : AppCompatActivity() {
     private fun displayTagsAsCheckboxes(allTags: List<Tag>, preselectedTagIds: Set<Int> = emptySet()) {
         flexboxTags.removeAllViews()
         allTags.forEach { tag ->
-            val checkBox = CheckBox(this).apply {
+            val cb = CheckBox(this).apply {
                 text = tag.name
                 id = tag.id
                 setBackgroundResource(R.drawable.checkbox_background)
-                setButtonDrawable(null)
+                buttonDrawable = null
                 setPadding(16, 5, 16, 5)
                 isChecked = tag.id in preselectedTagIds
             }
-            checkBox.setOnClickListener {
-                if (checkBox.isChecked) selectedTagIds.add(tag.id)
+            cb.setOnClickListener {
+                if (cb.isChecked) selectedTagIds.add(tag.id)
                 else selectedTagIds.remove(tag.id)
             }
             val params = FlexboxLayout.LayoutParams(
-                FlexboxLayout.LayoutParams.WRAP_CONTENT,
-                FlexboxLayout.LayoutParams.WRAP_CONTENT
-            ).apply { setMargins(5, 5, 5, 5) }
-            flexboxTags.addView(checkBox, params)
+                WRAP_CONTENT, WRAP_CONTENT
+            ).apply { setMargins(5,5,5,5) }
+            flexboxTags.addView(cb, params)
         }
     }
 

@@ -2,8 +2,10 @@ package com.hfad.mystylebox.ui.activity
 
 import android.graphics.Color
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.widget.SearchView
 import android.widget.EditText
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.room.Room
@@ -20,6 +22,8 @@ class SearchOutfitActivity : AppCompatActivity() {
     private lateinit var recyclerView: androidx.recyclerview.widget.RecyclerView
     private lateinit var adapter: OutfitAdapter
     private lateinit var db: AppDatabase
+    private lateinit var allOutfits: List<Outfit>
+    private lateinit var tvEmpty: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,6 +32,7 @@ class SearchOutfitActivity : AppCompatActivity() {
 
         searchView = binding.searchView
         searchView.isIconified = false
+        tvEmpty      = binding.tvEmpty
 
         val searchText = searchView.findViewById<EditText>(androidx.appcompat.R.id.search_src_text)
         searchText.setTextColor(Color.BLACK)
@@ -45,9 +50,8 @@ class SearchOutfitActivity : AppCompatActivity() {
             .allowMainThreadQueries()
             .build()
 
-        val allOutfits: List<Outfit> = db.outfitDao().getAllOutfits()
-
-        adapter = OutfitAdapter(allOutfits, R.layout.item_clothing1)
+        allOutfits = db.outfitDao().getAllOutfits()
+        adapter = OutfitAdapter(allOutfits, R.layout.item_list)
         recyclerView.adapter = adapter
 
         setupSearchView()
@@ -57,35 +61,31 @@ class SearchOutfitActivity : AppCompatActivity() {
     private fun setupSearchView() {
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                query?.let {
-                    performSearch(it)
-                }
+                performSearch(query)
                 return true
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                if (newText.isNullOrBlank()) {
-                    adapter.updateData(emptyList())
-                } else {
-                    performSearch(newText)
-                }
+                performSearch(newText)
                 return true
             }
         })
     }
 
-    private fun performSearch(queryStr: String) {
-        val trimmedQuery = queryStr.trim()
-        if (trimmedQuery.isNotEmpty()) {
-            val queryPattern = "%$trimmedQuery%"
-            var results: List<Outfit> =
-                db.outfitDao().searchByName(queryPattern)
+    private fun performSearch(queryStr: String?) {
+        val trimmed = queryStr?.trim().orEmpty()
+
+        if (trimmed.isEmpty()) {
+            adapter.updateData(allOutfits)
+            tvEmpty.visibility = View.GONE
+        } else {
+            val pattern = "%$trimmed%"
+            var results = db.outfitDao().searchByName(pattern)
             if (results.isEmpty()) {
-                results = db.outfitDao().searchByDescription(queryPattern)
+                results = db.outfitDao().searchByDescription(pattern)
             }
             adapter.updateData(results)
-        } else {
-            adapter.updateData(emptyList())
+            tvEmpty.visibility = if (results.isEmpty()) View.VISIBLE else View.GONE
         }
     }
 

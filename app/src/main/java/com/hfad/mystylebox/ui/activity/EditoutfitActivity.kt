@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.CheckBox
+import android.widget.HorizontalScrollView
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -21,6 +22,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -151,6 +153,7 @@ class EditoutfitActivity : AppCompatActivity() {
         val nameTextView = findViewById<TextView>(R.id.textviewname)
         val llNotes = findViewById<LinearLayout>(R.id.llNotes)
         val llSeason = findViewById<LinearLayout>(R.id.llseason)
+        val scrollviewinfo = findViewById<HorizontalScrollView>(R.id.scrollviewinfo)
         val notesTextView = findViewById<TextView>(R.id.textViewDescription)
         val checkboxSummer = findViewById<CheckBox>(R.id.cbSummer)
         val checkboxSpring = findViewById<CheckBox>(R.id.cbSpring)
@@ -235,6 +238,10 @@ class EditoutfitActivity : AppCompatActivity() {
                 checkboxSpring.isChecked = item.seasons.contains("Весна")
                 checkboxAutumn.isChecked = item.seasons.contains("Осень")
                 checkboxWinter.isChecked = item.seasons.contains("Зима")
+            }
+            if(llSeason.visibility == View.GONE && llTemperature.visibility == View.GONE)
+            {
+                scrollviewinfo.visibility = View.GONE
             }
             loadImage()
 

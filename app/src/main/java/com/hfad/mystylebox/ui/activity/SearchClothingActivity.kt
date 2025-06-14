@@ -4,7 +4,9 @@ import android.os.Bundle
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.app.AppCompatActivity
 import android.graphics.Color
+import android.view.View
 import android.widget.EditText
+import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.room.Room
 import com.hfad.mystylebox.R
@@ -20,6 +22,8 @@ class SearchClothingActivity : AppCompatActivity() {
     private lateinit var recyclerView: androidx.recyclerview.widget.RecyclerView
     private lateinit var adapter: ClothingAdapter
     private lateinit var db: AppDatabase
+    private lateinit var allItems: List<ClothingItemFull>
+    private lateinit var tvEmpty: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,6 +32,7 @@ class SearchClothingActivity : AppCompatActivity() {
 
         searchView = binding.searchView
         searchView.isIconified = false
+        tvEmpty    = binding.root.findViewById(R.id.tvEmpty)
 
         val searchText = searchView.findViewById<EditText>(androidx.appcompat.R.id.search_src_text)
         searchText.setTextColor(Color.BLACK)
@@ -45,9 +50,9 @@ class SearchClothingActivity : AppCompatActivity() {
             .allowMainThreadQueries()
             .build()
 
-        val itemsFull: List<ClothingItemFull> = db.clothingItemDao().getAllItemsFull()
+        allItems = db.clothingItemDao().getAllItemsFull()
 
-        adapter = ClothingAdapter(itemsFull, R.layout.item_clothing1)
+        adapter = ClothingAdapter(allItems , R.layout.item_list)
         recyclerView.adapter = adapter
 
         setupSearchView()
@@ -57,37 +62,33 @@ class SearchClothingActivity : AppCompatActivity() {
     private fun setupSearchView() {
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                query?.let {
-                    val trimmedQuery = it.trim()
-                    if (trimmedQuery.isNotEmpty()) {
-                        val queryPattern = "%$trimmedQuery%"
-                        var results: List<ClothingItemFull> =
-                            db.clothingItemDao().searchByNameWithFull(queryPattern)
-                        if (results.isEmpty()) {
-                            results = db.clothingItemDao().searchByDescriptionWithFull(queryPattern)
-                        }
-                        adapter.updateData(results)
-                    }
-                }
+                performSearch(query)
                 return true
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                val trimmedQuery = newText?.trim() ?: ""
-                if (trimmedQuery.isNotEmpty()) {
-                    val queryPattern = "%$trimmedQuery%"
-                    var results: List<ClothingItemFull> =
-                        db.clothingItemDao().searchByNameWithFull(queryPattern)
-                    if (results.isEmpty()) {
-                        results = db.clothingItemDao().searchByDescriptionWithFull(queryPattern)
-                    }
-                    adapter.updateData(results)
-                } else {
-                    adapter.updateData(emptyList())
-                }
+                performSearch(newText)
                 return true
             }
         })
+    }
+
+    private fun performSearch(text: String?) {
+        val trimmed = text?.trim().orEmpty()
+
+        if (trimmed.isEmpty()) {
+            adapter.updateData(allItems)
+            tvEmpty.visibility = View.GONE
+        } else {
+            val pattern = "%$trimmed%"
+            var results = db.clothingItemDao().searchByNameWithFull(pattern)
+            if (results.isEmpty()) {
+                results = db.clothingItemDao().searchByDescriptionWithFull(pattern)
+            }
+            adapter.updateData(results)
+
+            tvEmpty.visibility = if (results.isEmpty()) View.VISIBLE else View.GONE
+        }
     }
 
     private fun setupItemClick() {

@@ -96,7 +96,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:background="@android:color/transparent"
-            app:srcCompat="@drawable/delete" />
+            app:srcCompat="@drawable/ic_delete" />
     </LinearLayout>
     <LinearLayout
         android:id="@+id/llclothes"

@@ -90,7 +90,7 @@ class OutFitsFragment : Fragment() {
                 ).build()
                 val alloutfits = db.outfitDao().getAllOutfits()
                 withContext(Dispatchers.Main) {
-                    if (alloutfits.size <= 4) {
+                    if (alloutfits.size < 4) {
                         try {
                             val needed = 4 - alloutfits.size
                             val word = when {
@@ -124,7 +124,7 @@ class OutFitsFragment : Fragment() {
                 ).build()
                 val alloutfits = db.outfitDao().getAllOutfits()
                 withContext(Dispatchers.Main) {
-                    if (alloutfits.size <= 4) {
+                    if (alloutfits.size < 4) {
                         val needed = 4 - alloutfits.size
                         val word = when {
                             needed % 10 == 1 && needed % 100 != 11 -> "комплект"
