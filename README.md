@@ -19,7 +19,4 @@
 =
 ## 🚀 Установка из исходников
 
-1. Клонируйте репозиторий:  
-   ```bash
-   git clone https://github.com/VeronikaGon/MyStyleBox.git
-   cd MyStyleBox
+[![Скачать APK](https://img.shields.io/badge/Скачать-APK-blue)](https://github.com/VeronikaGon/MyStyleBox/releases/tag/v1.0/MyStyleBox.apk)
