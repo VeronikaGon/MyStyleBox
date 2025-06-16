@@ -30,6 +30,9 @@ public interface OutfitTagDao {
             "WHERE outfit_tag.outfitId = :outfitId")
     List<Tag> getTagsForOutfit(int outfitId);
 
+    @Query("SELECT COUNT(DISTINCT outfitId) FROM outfit_tag WHERE tagId = :tagId")
+    int getCountForTag(int tagId);
+
     @Query("DELETE FROM outfit_tag WHERE outfitId = :outfitId")
     void deleteTagsForOutfit(int outfitId);
 }

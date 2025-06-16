@@ -1,5 +1,6 @@
 package com.hfad.mystylebox.ui.bottomsheet
 
+import android.content.ContentResolver
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -57,31 +58,45 @@ class OutfitActionsBottomSheet : BottomSheetDialogFragment() {
         }
 
         btnShare.setOnClickListener {
-            val pathRaw = arguments?.getString("outfitImagePath") ?: return@setOnClickListener
-
-            val filePath = if (pathRaw.startsWith("file:")) {
-                Uri.parse(pathRaw).path!!
-            } else pathRaw
-
-            val imageFile = File(filePath)
-            if (!imageFile.exists()) {
-                Toast.makeText(requireContext(), "Файл не найден", Toast.LENGTH_SHORT).show()
+            val rawPath = arguments?.getString("outfitImagePath")
+            if (rawPath.isNullOrBlank()) {
+                Toast.makeText(requireContext(), "Изображение не найдено", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            val uri = FileProvider.getUriForFile(
-                requireContext(),
-                "${requireContext().packageName}.fileprovider",
-                imageFile
-            )
+            try {
+                val parsedUri = Uri.parse(rawPath)
+                val contentUri: Uri = when (parsedUri.scheme) {
+                    ContentResolver.SCHEME_CONTENT -> parsedUri
+                    ContentResolver.SCHEME_FILE -> {
+                        val file = File(parsedUri.path!!)
+                        FileProvider.getUriForFile(
+                            requireContext(),
+                            "${requireContext().packageName}.fileprovider",
+                            file
+                        )
+                    }
+                    else -> {
+                        val file = File(rawPath)
+                        FileProvider.getUriForFile(
+                            requireContext(),
+                            "${requireContext().packageName}.fileprovider",
+                            file
+                        )
+                    }
+                }
 
-            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                type = "image/*"
-                putExtra(Intent.EXTRA_STREAM, uri)
-                putExtra(Intent.EXTRA_TEXT, "Посмотри какой стильный комплект я создала!")
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "image/*"
+                    putExtra(Intent.EXTRA_STREAM, contentUri)
+                    putExtra(Intent.EXTRA_TEXT, "Посмотри какой стильный комплект я создала!")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                startActivity(Intent.createChooser(shareIntent, "Поделиться комплектом"))
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Не удалось поделиться: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
             }
-            startActivity(Intent.createChooser(shareIntent, "Поделиться комплектом"))
+
             dismiss()
         }
     }

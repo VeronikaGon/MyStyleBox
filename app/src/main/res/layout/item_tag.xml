@@ -25,6 +25,7 @@
             android:background="@color/white"
             android:orientation="vertical"
             android:paddingStart="8dp"
+            android:paddingBottom="8dp"
             android:paddingEnd="8dp">
 
             <TextView
@@ -42,13 +43,20 @@
                 android:text="@string/clothingtagscount"
                 android:textAppearance="@style/TextAppearance.AppCompat.Small"
                 android:textColor="@android:color/darker_gray" />
+            <TextView
+                android:id="@+id/tvOutfitCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Комплектов с тегом: 3"
+                android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                android:textColor="@android:color/darker_gray" />
 
         </LinearLayout>
         <ImageButton
             android:id="@+id/btnDeleteTag"
             android:padding="8dp"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:background="?attr/selectableItemBackgroundBorderless"
             app:srcCompat="@drawable/ic_delete"
             app:layout_constraintEnd_toEndOf="parent"

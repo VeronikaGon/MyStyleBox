@@ -16,6 +16,7 @@ import com.hfad.mystylebox.R
 import com.hfad.mystylebox.adapter.TagAdapter
 import com.hfad.mystylebox.database.AppDatabase
 import com.hfad.mystylebox.database.dao.ClothingItemTagDao
+import com.hfad.mystylebox.database.dao.OutfitTagDao
 import com.hfad.mystylebox.database.entity.Tag
 import com.hfad.mystylebox.database.dao.TagDao
 import com.hfad.mystylebox.fragment.TagCreationDialogFragment
@@ -29,6 +30,7 @@ class TagEditingActivity : AppCompatActivity() {
     private lateinit var adapter: TagAdapter
     private lateinit var db: AppDatabase
     private lateinit var tagDao: TagDao
+    private lateinit var outfitTagDao: OutfitTagDao
     private val tags = mutableListOf<Tag>()
     private val selectedTagIds = mutableSetOf<Int>()
 
@@ -45,6 +47,7 @@ class TagEditingActivity : AppCompatActivity() {
             .build()
         tagDao = db.tagDao()
         clothingItemTagDao = db.clothingItemTagDao()
+        outfitTagDao = db.outfitTagDao()
         tags.addAll(tagDao.getAllTags())
 
         val initialSelectedIds = intent.getIntegerArrayListExtra("selected_ids")
@@ -54,6 +57,7 @@ class TagEditingActivity : AppCompatActivity() {
             tags,
             selectedTagIds,
             clothingItemTagDao,
+            outfitTagDao,
             onDelete = { tag -> confirmDeleteTag(tag) },
             onItemClick = { tag -> toggleSelection(tag) }
         )

@@ -17,6 +17,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.hfad.mystylebox.database.entity.ClothingItem
 import android.Manifest
+import android.content.ContentResolver
 import android.content.Intent
 import android.util.Log
 import android.widget.Button
@@ -210,24 +211,47 @@ class EditclothesActivity : AppCompatActivity() {
             }
         }
         val shareButton = findViewById<ImageButton>(R.id.buttonshareit)
-        shareButton.setOnClickListener {
-            val imageUriString = intent.getStringExtra("image_uri")
-            if (!imageUriString.isNullOrEmpty()) {
-                try {
-                    val file = File(Uri.parse(imageUriString).path!!)
-                    val contentUri = FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
-                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                        type = "image/*"
-                        putExtra(Intent.EXTRA_STREAM, contentUri)
-                        putExtra(Intent.EXTRA_TEXT, "Посмотрите на эту вещь!")
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }
-                    startActivity(Intent.createChooser(shareIntent, "Поделиться изображением"))
-                } catch (e: Exception) {
-                    Toast.makeText(this, "Ошибка при подготовке изображения: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-            } else {
+        shareButton.setOnClickListener { val imagePath = currentClothingItem?.imagePath
+            if (imagePath.isNullOrBlank()) {
                 Toast.makeText(this, "Изображение не найдено", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            try {
+                val originalUri = Uri.parse(imagePath)
+                val contentUri: Uri = when (originalUri.scheme) {
+                    ContentResolver.SCHEME_CONTENT -> originalUri
+                    ContentResolver.SCHEME_FILE    -> {
+                        val file = File(originalUri.path!!)
+                        FileProvider.getUriForFile(
+                            this,
+                            "$packageName.fileprovider",
+                            file
+                        )
+                    }
+                    else -> {
+                        val file = File(imagePath)
+                        FileProvider.getUriForFile(
+                            this,
+                            "$packageName.fileprovider",
+                            file
+                        )
+                    }
+                }
+
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "image/*"
+                    putExtra(Intent.EXTRA_STREAM, contentUri)
+                    putExtra(Intent.EXTRA_TEXT, "Посмотрите, какая у меня вещь!")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                startActivity(Intent.createChooser(shareIntent, "Поделиться изображением"))
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this,
+                    "Ошибка при подготовке изображения: ${e.localizedMessage}",
+                    Toast.LENGTH_SHORT
+                ).show()
+                Log.e("EDIT_DEBUG", "Ошибка шаринга", e)
             }
         }
            clothingItem?.let { item ->

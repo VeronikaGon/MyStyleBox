@@ -1,6 +1,7 @@
 package com.hfad.mystylebox.ui.activity
 
 import android.Manifest
+import android.content.ContentResolver
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
@@ -20,6 +21,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
@@ -192,27 +194,51 @@ class EditoutfitActivity : AppCompatActivity() {
 
         val shareButton = findViewById<ImageButton>(R.id.buttonshareit)
         shareButton.setOnClickListener {
-            val imageUriString = intent.getStringExtra("image_uri")
-            if (!imageUriString.isNullOrEmpty()) {
-                try {
-                    val file = File(Uri.parse(imageUriString).path!!)
-                    val contentUri = androidx.core.content.FileProvider.getUriForFile(
-                        this,
-                        "$packageName.fileprovider",
-                        file
-                    )
-                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                        type = "image/*"
-                        putExtra(Intent.EXTRA_STREAM, contentUri)
-                        putExtra(Intent.EXTRA_TEXT, "Посмотрите на этот комплект!")
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }
-                    startActivity(Intent.createChooser(shareIntent, "Поделиться изображением"))
-                } catch (e: Exception) {
-                    Toast.makeText(this, "Ошибка подготовки изображения: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-            } else {
+            val uri = imageUri
+            if (uri == null) {
                 Toast.makeText(this, "Изображение не найдено", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            try {
+                val contentUri = when (uri.scheme) {
+                    ContentResolver.SCHEME_CONTENT -> {
+                        uri
+                    }
+                    ContentResolver.SCHEME_FILE -> {
+                        val file = File(uri.path!!)
+                        FileProvider.getUriForFile(
+                            this,
+                            "$packageName.fileprovider",
+                            file
+                        )
+                    }
+                    else -> {
+                        val file = File(uri.path ?: uri.toString())
+                        FileProvider.getUriForFile(
+                            this,
+                            "$packageName.fileprovider",
+                            file
+                        )
+                    }
+                }
+
+                // 3) Запускаем Intent ACTION_SEND
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "image/*"
+                    putExtra(Intent.EXTRA_STREAM, contentUri)
+                    putExtra(Intent.EXTRA_TEXT, "Посмотрите на этот комплект!")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                startActivity(Intent.createChooser(shareIntent, "Поделиться изображением"))
+
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this,
+                    "Ошибка подготовки шаринга: ${e.localizedMessage}",
+                    Toast.LENGTH_SHORT
+                ).show()
+                Log.e("EDIT_DEBUG", "Ошибка шаринга", e)
             }
         }
 
@@ -273,39 +299,39 @@ class EditoutfitActivity : AppCompatActivity() {
     // Метод загрузки изображения с проверкой корректности URI и файла
     private fun loadImage() {
         val iv = findViewById<ImageView>(R.id.outfitImageView)
-        imageUri?.let { uri ->
-            val file = File(imageUri?.path ?: "")
-            if (file.exists() && file.length() > 0) {
+        val uri = imageUri
+        if (uri == null) {
+            Toast.makeText(this, "URI отсутствует", Toast.LENGTH_SHORT).show()
+            return
+        }
+        when (uri.scheme) {
+            ContentResolver.SCHEME_CONTENT -> {
                 Glide.with(this)
-                    .load(file)
+                    .load(uri)
+                    .apply(RequestOptions()
+                        .diskCacheStrategy(DiskCacheStrategy.NONE)
+                        .skipMemoryCache(true)
+                        .format(DecodeFormat.PREFER_ARGB_8888))
                     .into(iv)
-            } else {
-                Toast.makeText(this, "Не удалось найти файл изображения", Toast.LENGTH_SHORT).show()
             }
-            Glide.with(this)
-                .load(uri)
-                .apply(RequestOptions()
-                    .diskCacheStrategy(DiskCacheStrategy.NONE)
-                    .skipMemoryCache(true)
-                    .format(DecodeFormat.PREFER_ARGB_8888))
-                .listener(object : RequestListener<Drawable> {
-                    override fun onLoadFailed(
-                        e: GlideException?, model: Any?, target: Target<Drawable>,
-                        isFirstResource: Boolean
-                    ) = false.also {
-                        Log.e("EditoutfitActivity", "Glide failed", e)
-                        Toast.makeText(this@EditoutfitActivity,
-                            "Не удалось загрузить изображение", Toast.LENGTH_SHORT).show()
-                    }
-                    override fun onResourceReady(
-                        res: Drawable, model: Any, target: Target<Drawable>,
-                        dataSource: DataSource, isFirstResource: Boolean
-                    ) = false.also {
-                        Log.d("EditoutfitActivity", "Glide success")
-                    }
-                })
-                .into(iv)
-        } ?: Toast.makeText(this, "URI отсутствует", Toast.LENGTH_SHORT).show()
+            ContentResolver.SCHEME_FILE -> {
+                val file = File(uri.path!!)
+                if (file.exists()) {
+                    Glide.with(this).load(file).into(iv)
+                } else {
+                    Toast.makeText(this, "Файл не найден", Toast.LENGTH_SHORT).show()
+                }
+            }
+            else -> {
+                val file = File(uri.path ?: uri.toString())
+                if (file.exists()) {
+                    Glide.with(this).load(file).into(iv)
+                } else {
+                    Glide.with(this).load(uri).into(iv)
+                    Toast.makeText(this, "Невозможно проверить файл, пытаюсь загрузить URI", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 
     // Метод обновления интерфейса после редактирования комплекта
