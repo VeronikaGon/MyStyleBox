@@ -19,4 +19,4 @@
 =
 ## 🚀 Установка из исходников
 
-[![Скачать APK](https://img.shields.io/badge/Скачать-APK-blue)](https://github.com/VeronikaGon/MyStyleBox/releases/tag/v1.0/MyStyleBox.apk)
+[![Скачать Приложение](https://img.shields.io/badge/Скачать-APK-blue)](https://github.com/VeronikaGon/MyStyleBox/releases/download/v1.0/MyStyleBox.apk)
