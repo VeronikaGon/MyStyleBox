@@ -28,7 +28,7 @@
 
 ## 📥 Скачать приложение
 
-[![Скачать APK](https://img.shields.io/badge/📲_Скачать_APK-blue)](https://github.com/VeronikaGon/MyStyleBox/releases/download/v1.0/MyStyleBox.apk)
+[![Скачать APK](https://img.shields.io/badge/📲_Скачать_MyStyleBox-FFB5A7)](https://github.com/VeronikaGon/MyStyleBox/releases/download/v1.0/MyStyleBox.apk)
 
 ---
 
